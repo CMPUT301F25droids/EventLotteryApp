@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">EventLotteryApp</string>
+    <string name="welcome_message">Welcome Back</string>
+
 </resources>
