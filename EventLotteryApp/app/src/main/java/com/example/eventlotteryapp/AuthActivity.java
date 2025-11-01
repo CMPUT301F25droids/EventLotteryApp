@@ -1,14 +1,8 @@
 package com.example.eventlotteryapp;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.eventlotteryapp.Authorization.AuthViewPagerAdapter;
@@ -16,7 +10,7 @@ import com.google.android.material.tabs.TabLayout;
 
 import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity {
+public class AuthActivity extends AppCompatActivity {
     TabLayout tabLayout;
     ViewPager2 viewPager2;
     AuthViewPagerAdapter viewPagerAdapter;
@@ -25,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_auth);
 
         tabLayout = findViewById(R.id.authorization_tabs);
         viewPager2 = findViewById(R.id.auth_view_pager);
