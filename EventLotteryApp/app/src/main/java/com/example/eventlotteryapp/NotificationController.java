@@ -61,15 +61,6 @@ public class NotificationController {
         String entrantId = entrantDoc.getId();
         String entrantEmail = entrantDoc.getString("email");
 
-        // Optional: use FCM topic-based or token-based message here
-        Map<String, Object> notif = new HashMap<>();
-        notif.put("title", title);
-        notif.put("message", message);
-        notif.put("recipientId", entrantId);
-        notif.put("recipientEmail", entrantEmail);
-        notif.put("eventId", eventId);
-        notif.put("timestamp", new Date());
 
-        db.collection("notifications").add(notif);
     }
 }

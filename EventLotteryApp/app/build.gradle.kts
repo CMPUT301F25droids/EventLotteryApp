@@ -56,5 +56,5 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
 }
 
-// Apply Google Services plugin at the bottom
+// Apply Google Services plugin
 apply(plugin = "com.google.gms.google-services")
