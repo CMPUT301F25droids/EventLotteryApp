@@ -19,7 +19,6 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.Collections;
 
-// Create a new Fragment every time it is to be displayed
 public class NotificationsFragment extends Fragment {
     private ListView notifications;
     private FirebaseFirestore db;
@@ -38,7 +37,7 @@ public class NotificationsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        //Initialize views
+        // Initialize views
         notifications = view.findViewById(R.id.lvNotifications);
         progressBar = view.findViewById(R.id.progressBar);
 
@@ -50,28 +49,30 @@ public class NotificationsFragment extends Fragment {
         notifications.setVisibility(View.GONE);
 
         notificationsRef = db.collection("notifications");
+
         notificationsRef.addSnapshotListener((value, error) -> {
             if (error != null) {
                 Log.e("Firestore", error.toString());
             }
         });
+
         notificationsRef.get()
-                        .addOnCompleteListener(task -> {
-                            notificationsArray.clear(); // Sanity check
+                .addOnCompleteListener(task -> {
+                    notificationsArray.clear(); // Sanity check
 
-                            if (task.isSuccessful()) {
-                                for (DocumentSnapshot doc : task.getResult()) {
-                                    Notification notification = Notification.fromDocument(doc);
-                                    notificationsArray.add(notification);
-                            }
-                            } else {
-                                progressBar.setVisibility(View.VISIBLE);
-                            }
-                        });
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        for (DocumentSnapshot doc : task.getResult()) {
+                            Notification notification = Notification.fromDocument(doc);
+                            notificationsArray.add(notification);
+                        }
+                    } else {
+                        Log.e("NotificationsFragment", "Failed to load notifications");
+                    }
 
-        // Sort by timestamp descending (newest first)
-        Collections.sort(notificationsArray);
-        updateUI();
+                    // Sort by timestamp descending (newest first)
+                    Collections.sort(notificationsArray);
+                    updateUI();
+                });
     }
 
     private void updateUI() {
@@ -86,12 +87,19 @@ public class NotificationsFragment extends Fragment {
         }
     }
 
+    // Add dummy notifications for testing
     public void addDummyNotifications() {
         notificationsArray.clear();
-        Notification notification1 = new Notification(DateTimeFormat.toDate("2025-11-04 20:20:20"), Notification.NotificationType.LOTTERY, "YOU WON THe lottery");
-        Notification notification2 = new Notification(DateTimeFormat.toDate("2025-11-04 21:20:20"), Notification.NotificationType.MESSAGE, "testing Dummy message");
-        notificationsArray.add(notification1);
-        notificationsArray.add(notification2);
+        notificationsArray.add(new Notification(
+                DateTimeFormat.toDate("2025-11-04 20:20:20"),
+                Notification.NotificationType.LOTTERY,
+                "YOU WON THE lottery"
+        ));
+        notificationsArray.add(new Notification(
+                DateTimeFormat.toDate("2025-11-04 21:20:20"),
+                Notification.NotificationType.MESSAGE,
+                "Testing dummy message"
+        ));
 
         Collections.sort(notificationsArray);
         updateUI();

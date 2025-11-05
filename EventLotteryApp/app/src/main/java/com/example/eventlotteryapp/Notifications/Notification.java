@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.Date;
 
 public class Notification implements Comparable<Notification>{
+    public static Object Helpers;
+
     public enum NotificationType{
         LOTTERY,
         MESSAGE
