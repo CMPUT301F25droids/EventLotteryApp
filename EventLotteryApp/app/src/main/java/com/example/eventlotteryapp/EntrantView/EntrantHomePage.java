@@ -1,29 +1,33 @@
-package com.example.eventlotteryapp;
+package com.example.eventlotteryapp.EntrantView;
 
 import android.os.Bundle;
+import android.view.View;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.viewpager2.widget.ViewPager2;
-
-import com.example.eventlotteryapp.Authorization.AuthViewPagerAdapter;
+import com.example.eventlotteryapp.R;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.Objects;
 
-public class AuthActivity extends AppCompatActivity {
+public class EntrantHomePage extends AppCompatActivity {
     TabLayout tabLayout;
     ViewPager2 viewPager2;
-    AuthViewPagerAdapter viewPagerAdapter;
+    EntrantViewPagerAdapter viewPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_auth);
+        setContentView(R.layout.activity_entrant_home_page);
 
-        tabLayout = findViewById(R.id.authorization_tabs);
-        viewPager2 = findViewById(R.id.auth_view_pager);
-        viewPagerAdapter = new AuthViewPagerAdapter(this);
+        tabLayout = findViewById(R.id.entrant_home_tabs);
+        viewPager2 = findViewById(R.id.entrant_view_pager);
+
+        viewPagerAdapter = new EntrantViewPagerAdapter(this);
         viewPager2.setAdapter(viewPagerAdapter);
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -34,7 +38,6 @@ public class AuthActivity extends AppCompatActivity {
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
             }
-
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
             }
@@ -45,8 +48,10 @@ public class AuthActivity extends AppCompatActivity {
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
                 Objects.requireNonNull(tabLayout.getTabAt(position)).select();
-
             }
         });
+
+
     }
+
 }

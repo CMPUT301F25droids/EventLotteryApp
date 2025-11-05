@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "442489488842",
+    "project_id": "eventlotteryapp-4cf6a",
+    "storage_bucket": "eventlotteryapp-4cf6a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:442489488842:android:cb0fc9815e46dea9d5fb33",
+        "android_client_info": {
+          "package_name": "com.example.eventlotteryapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYvhO1ZiESP_nw3wywwoL_TW4Qfyk2-wA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

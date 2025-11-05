@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.eventlotteryapp.EntrantHomePage;
+import com.example.eventlotteryapp.EntrantView.EntrantHomePage;
 import com.example.eventlotteryapp.R;
 
 public class LoginFragment extends Fragment {
