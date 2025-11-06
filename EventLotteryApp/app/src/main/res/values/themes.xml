@@ -13,6 +13,20 @@
         <item name="android:windowLightNavigationBar">true</item>
 
     </style>
+    <style name="AppButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:backgroundTint">@color/button_background</item>
+        <item name="android:textColor">@color/button_text</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
 
     <style name="Theme.EventLotteryApp" parent="Base.Theme.EventLotteryApp" />
+
+    <style name="Theme.EventLotteryApp.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.EventLotteryApp.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.EventLotteryApp.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>
