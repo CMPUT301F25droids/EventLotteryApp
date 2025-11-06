@@ -42,16 +42,8 @@ public class LoginFragment extends Fragment {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = emailEditText.getText().toString().trim();
-                String password = passwordEditText.getText().toString();
-                
-                if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
-                    // For testing: use anonymous authentication if fields are empty
-                    signInAnonymously();
-                } else {
-                    // Try email/password authentication
-                    signInWithEmailPassword(email, password);
-                }
+                Intent intent = new Intent(getActivity(), EntrantHomePageActivity.class);
+                startActivity(intent);
             }
         });
 
