@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.eventlotteryapp.EntrantView.EntrantHomePage;
+import com.example.eventlotteryapp.EntrantView.EntrantHomePageActivity;
 import com.example.eventlotteryapp.R;
 
 public class LoginFragment extends Fragment {
@@ -26,7 +26,7 @@ public class LoginFragment extends Fragment {
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), EntrantHomePage.class);
+                Intent intent = new Intent(getActivity(), EntrantHomePageActivity.class);
                 startActivity(intent);
             }
         });

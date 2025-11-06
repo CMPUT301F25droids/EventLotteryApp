@@ -1,29 +1,32 @@
 package com.example.eventlotteryapp.EntrantView;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.eventlotteryapp.EntrantView.placeholder.EventItem;
 import com.example.eventlotteryapp.R;
 
 import java.util.List;
 
 public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsListRecyclerViewAdapter.ViewHolder> {
+    public interface onEventClickListener {
+        void onItemClick(int position);
+    }
 
     private final List<EventItem> eventList;
-
-    public EventsListRecyclerViewAdapter(List<EventItem> eventList) {
+    private final onEventClickListener listener;
+    public EventsListRecyclerViewAdapter(List<EventItem> eventList,
+                                         onEventClickListener listener) {
         this.eventList = eventList;
+        this.listener = listener;
     }
 
     @NonNull
@@ -58,8 +61,10 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
             } catch (Exception e) {
                 Log.e("EventAdapter", "Failed to decode image: " + e.getMessage());
             }
-        } else {
         }
+        else {
+        }
+
     }
 
     @Override
@@ -79,6 +84,19 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
             organizerView = view.findViewById(R.id.event_organizer);
             costView = view.findViewById(R.id.event_cost);
             imageView = view.findViewById(R.id.event_poster);
+
+            itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    int position = getAbsoluteAdapterPosition();
+                    Log.d("RecyclerClick", "Item clicked: " + position);
+
+                    if (position != RecyclerView.NO_POSITION) {
+                        listener.onItemClick(position);
+                    }
+                }
+            });
         }
+
     }
+
 }

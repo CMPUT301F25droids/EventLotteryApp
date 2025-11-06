@@ -1,19 +1,18 @@
 package com.example.eventlotteryapp.EntrantView;
 
-import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
-import com.example.eventlotteryapp.EntrantView.placeholder.EventItem;
 import com.example.eventlotteryapp.R;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -63,11 +62,21 @@ public class EventsList extends Fragment {
 
         RecyclerView recyclerView = view.findViewById(R.id.events_list);
         recyclerView.setHasFixedSize(true);
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 2);
+        int spanCount = getResources().getConfiguration().smallestScreenWidthDp >= 600 ? 3 : 2;
+
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), spanCount);
         recyclerView.setLayoutManager(gridLayoutManager);
 
         List<EventItem> eventList = new ArrayList<>();
-        EventsListRecyclerViewAdapter adapter = new EventsListRecyclerViewAdapter(eventList);
+        EventsListRecyclerViewAdapter adapter = new EventsListRecyclerViewAdapter(eventList,position -> {
+            EventItem clickedEvent = eventList.get(position);
+            // view event details
+            Intent intent = new Intent(getContext(), EventDetailsActivity.class);
+            intent.putExtra("eventId", clickedEvent.getId());
+            startActivity(intent);
+
+        });
+
         recyclerView.setAdapter(adapter);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
