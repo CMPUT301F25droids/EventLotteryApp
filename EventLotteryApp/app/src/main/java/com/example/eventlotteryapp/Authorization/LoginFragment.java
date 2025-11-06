@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.eventlotteryapp.EntrantHomePage;
+import com.example.eventlotteryapp.EntrantView.EntrantHomePageActivity;
 import com.example.eventlotteryapp.OrganizerHomePage;
 import com.example.eventlotteryapp.R;
 import com.google.firebase.auth.FirebaseAuth;

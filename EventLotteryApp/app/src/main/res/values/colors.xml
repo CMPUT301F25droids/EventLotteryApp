@@ -19,4 +19,11 @@
     <color name="opaque_light_grey">#F5F5F5</color>
     <color name="medium_grey">#808080</color>
 
+    <color name="None">#00FFFFFF</color>
+
+    <color name="opaque_black">#80000000</color>
+
+    <color name="button_background">#FF4E3CDB</color>
+    <color name="button_text">#FFFFFFFF</color>
+
 </resources>

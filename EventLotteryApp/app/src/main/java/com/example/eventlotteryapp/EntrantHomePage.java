@@ -9,6 +9,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
+import com.example.eventlotteryapp.EntrantView.EntrantHomePageActivity;
+import com.example.eventlotteryapp.EntrantView.EventsListFragment;
+import com.example.eventlotteryapp.EntrantView.MyEventsFragment;
 import com.example.eventlotteryapp.Notifications.NotificationsFragment;
 import com.example.eventlotteryapp.ui.profile.ProfileFragment;
 import com.google.android.material.tabs.TabLayout;

@@ -5,6 +5,10 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
+import com.example.eventlotteryapp.Notifications.NotificationsFragment;
+import com.example.eventlotteryapp.ui.profile.ProfileFragment;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 public class EntrantViewPagerAdapter extends FragmentStateAdapter {
     public EntrantViewPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
         super(fragmentActivity);
@@ -16,8 +20,13 @@ public class EntrantViewPagerAdapter extends FragmentStateAdapter {
         switch (position) {
             case 1:
                 return new MyEventsFragment();
+            case 2:
+                return new NotificationsFragment(FirebaseFirestore.getInstance());
+            case 3:
+                return new ProfileFragment();
             default:
                 return new EventsListFragment();
+
         }
     }
 

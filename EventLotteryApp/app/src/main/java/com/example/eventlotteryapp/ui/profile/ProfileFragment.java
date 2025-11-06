@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.example.eventlotteryapp.EntrantHomePage;
+import com.example.eventlotteryapp.EntrantView.EntrantHomePageActivity;
 import com.example.eventlotteryapp.OrganizerHomePage;
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.databinding.FragmentProfileBinding;
@@ -71,7 +72,7 @@ public class ProfileFragment extends Fragment {
                 } else {
                     isOrganizer = false;
                     // Switch to entrant home page
-                    Intent intent = new Intent(getActivity(), EntrantHomePage.class);
+                    Intent intent = new Intent(getActivity(), EntrantHomePageActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                     if (getActivity() != null) {
