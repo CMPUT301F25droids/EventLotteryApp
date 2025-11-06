@@ -24,10 +24,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
  * <p>A fragment that shows a list of items as a modal bottom sheet.</p>
  * <p>You can show this modal bottom sheet from your activity like this:</p>
  * <pre>
- *     JoinConfirmationFragment.newInstance(30).show(getSupportFragmentManager(), "dialog");
+ *     LeaveConfirmationFragment.newInstance(30).show(getSupportFragmentManager(), "dialog");
  * </pre>
  */
-public class JoinConfirmationFragment extends BottomSheetDialogFragment {
+public class LeaveConfirmationFragment extends BottomSheetDialogFragment {
 
     // TODO: Customize parameter argument names
     private static final String ARG_EVENT_ID = "event_id";
@@ -35,8 +35,8 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
     private FragmentJoinConfirmationListDialogBinding binding;
 
     // TODO: Customize parameters
-    public static JoinConfirmationFragment newInstance(String eventId) {
-        final JoinConfirmationFragment fragment = new JoinConfirmationFragment();
+    public static LeaveConfirmationFragment newInstance(String eventId) {
+        final LeaveConfirmationFragment fragment = new LeaveConfirmationFragment();
         final Bundle args = new Bundle();
         args.putString(ARG_EVENT_ID, eventId);
         fragment.setArguments(args);
@@ -55,26 +55,26 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Button joinButton = view.findViewById(R.id.confirm_join_button);
+        Button leaveButton = view.findViewById(R.id.confirm_join_button);
         Button cancelButton = view.findViewById(R.id.cancel_join_button);
 
 
-        joinButton.setOnClickListener(v -> {
-                    FirebaseFirestore db = FirebaseFirestore.getInstance();
-                    UserSession user_session = new UserSession();
-                    DocumentReference user_ref = UserSession.getCurrentUserRef();
+        leaveButton.setOnClickListener(v -> {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            UserSession user_session = new UserSession();
+            DocumentReference user_ref = UserSession.getCurrentUserRef();
 
-                    DocumentReference event_ref = db.collection("Events").document(eventId);
-                    event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayUnion(user_ref))
-                            .addOnSuccessListener(aVoid -> {
-                                Log.d("Firestore", "User added to waitlist");
-                            })
-                            .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
-                    user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))
-                            .addOnSuccessListener(aVoid -> {
-                                Log.d("Firestore", "Events added to users joined events");
-                            })
-                            .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+            DocumentReference event_ref = db.collection("Events").document(eventId);
+            event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayRemove(user_ref))
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d("Firestore", "User removed from event waitlist");
+                    })
+                    .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+            user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayRemove(event_ref))
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d("Firestore", "Events removed from user's joined events");
+                    })
+                    .addOnFailureListener(e -> Log.e("Firestore", "Error removing user to waitlist", e));
 
             // Handle join action
             Intent intent = new Intent(getContext(), EntrantHomePageActivity.class);
