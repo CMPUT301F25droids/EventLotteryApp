@@ -14,8 +14,12 @@
         <activity
             android:name=".EntrantView.EventDetailsActivity"
             android:exported="false" />
+
         <activity
             android:name=".EntrantView.EntrantHomePageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".OrganizerHomePage"
             android:exported="false" />
         <activity
             android:name=".Authorization.AuthActivity"
@@ -26,6 +30,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".organizer.CreateEventActivity"
+            android:exported="false" />
+        <activity
+            android:name=".organizer.ShareQrCodeActivity"
+            android:exported="false" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

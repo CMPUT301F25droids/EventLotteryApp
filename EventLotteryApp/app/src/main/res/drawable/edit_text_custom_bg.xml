@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Consolidated EditText background - use this for all input fields -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- State when the EditText is focused/selected -->
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#0A000000" /> <!-- Black color with 4% opacity -->
+            <corners android:radius="12dp" />
+            <stroke android:width="1.5dp" android:color="#4E3CDB" /> <!-- Purple stroke on focus -->
+        </shape>
+    </item>
+    <!-- Default state -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#0A000000" /> <!-- Black color with 4% opacity -->
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</selector>
