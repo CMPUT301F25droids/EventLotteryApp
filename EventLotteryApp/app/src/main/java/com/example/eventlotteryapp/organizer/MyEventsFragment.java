@@ -95,6 +95,9 @@ public class MyEventsFragment extends Fragment {
 
         String organizerId = auth.getCurrentUser().getUid();
         Date now = new Date();
+        
+        // Create DocumentReference for the current organizer
+        com.google.firebase.firestore.DocumentReference organizerRef = firestore.collection("Users").document(organizerId);
 
         Log.d("MyEventsFragment", "Loading events for organizerId: " + organizerId);
         Log.d("MyEventsFragment", "Current user UID: " + organizerId);
@@ -105,18 +108,26 @@ public class MyEventsFragment extends Fragment {
                 Log.d("MyEventsFragment", "=== DEBUG: All events in collection ===");
                 Log.d("MyEventsFragment", "Total events found: " + allDocs.size());
                 for (QueryDocumentSnapshot doc : allDocs) {
-                    String docOrganizerId = doc.getString("organizerId");
+                    // Try to get organizerId from Organizer DocumentReference or fallback to organizerId field
+                    String docOrganizerId = null;
+                    com.google.firebase.firestore.DocumentReference organizerDocRef = doc.getDocumentReference("Organizer");
+                    if (organizerDocRef != null) {
+                        docOrganizerId = organizerDocRef.getId();
+                    } else {
+                        docOrganizerId = doc.getString("organizerId");  // Fallback for old events
+                    }
                     String docTitle = doc.getString("title");
                     Log.d("MyEventsFragment", "Event: " + doc.getId() + 
                         " | Title: " + docTitle + 
                         " | organizerId: " + docOrganizerId + 
-                        " | Matches current user: " + organizerId.equals(docOrganizerId));
+                        " | Matches current user: " + (docOrganizerId != null && organizerId.equals(docOrganizerId)));
                 }
                 Log.d("MyEventsFragment", "=== END DEBUG ===");
             });
         
+        // Query by Organizer DocumentReference
         firestore.collection("Events")
-            .whereEqualTo("organizerId", organizerId)
+            .whereEqualTo("Organizer", organizerRef)
             .get()
             .addOnSuccessListener(queryDocumentSnapshots -> {
                 allEvents.clear();
@@ -128,10 +139,19 @@ public class MyEventsFragment extends Fragment {
                 
                 for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                     try {
+                        // Extract organizerId from Organizer DocumentReference or fallback to organizerId field
+                        String extractedOrganizerId = null;
+                        com.google.firebase.firestore.DocumentReference organizerDocRef = doc.getDocumentReference("Organizer");
+                        if (organizerDocRef != null) {
+                            extractedOrganizerId = organizerDocRef.getId();
+                        } else {
+                            extractedOrganizerId = doc.getString("organizerId");  // Fallback for old events
+                        }
+                        
                         // Try to parse as Event record first
                         Event event = doc.toObject(Event.class);
                         if (event != null && event.title() != null) {
-                            Log.d("MyEventsFragment", "Loaded event: " + event.title() + ", organizerId: " + event.organizerId());
+                            Log.d("MyEventsFragment", "Loaded event: " + event.title() + ", organizerId: " + (extractedOrganizerId != null ? extractedOrganizerId : event.organizerId()));
                             allEvents.add(new EventWithId(doc.getId(), event));
                         } else {
                             // Fallback: manually construct Event from Map
@@ -146,7 +166,7 @@ public class MyEventsFragment extends Fragment {
                                 doc.getDate("registrationOpenDate"),
                                 doc.getDate("registrationCloseDate"),
                                 doc.getLong("maxParticipants") != null ? doc.getLong("maxParticipants").intValue() : 0,
-                                doc.getString("organizerId"),
+                                extractedOrganizerId != null ? extractedOrganizerId : "",
                                 doc.getDate("createdAt")
                             );
                             allEvents.add(new EventWithId(doc.getId(), manualEvent));
@@ -155,6 +175,15 @@ public class MyEventsFragment extends Fragment {
                         Log.e("MyEventsFragment", "Error parsing event: " + doc.getId(), e);
                         // Try manual construction as fallback
                         try {
+                            // Extract organizerId from Organizer DocumentReference or fallback to organizerId field
+                            String extractedOrganizerId = null;
+                            com.google.firebase.firestore.DocumentReference organizerDocRef = doc.getDocumentReference("Organizer");
+                            if (organizerDocRef != null) {
+                                extractedOrganizerId = organizerDocRef.getId();
+                            } else {
+                                extractedOrganizerId = doc.getString("organizerId");  // Fallback for old events
+                            }
+                            
                             Event manualEvent = new Event(
                                 doc.getString("title"),
                                 doc.getString("description"),
@@ -165,7 +194,7 @@ public class MyEventsFragment extends Fragment {
                                 doc.getDate("registrationOpenDate"),
                                 doc.getDate("registrationCloseDate"),
                                 doc.getLong("maxParticipants") != null ? doc.getLong("maxParticipants").intValue() : 0,
-                                doc.getString("organizerId"),
+                                extractedOrganizerId != null ? extractedOrganizerId : "",
                                 doc.getDate("createdAt")
                             );
                             allEvents.add(new EventWithId(doc.getId(), manualEvent));

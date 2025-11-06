@@ -258,7 +258,7 @@ public class CreateEventActivity extends AppCompatActivity {
         eventData.put("description", description);
         eventData.put("location", location);
         eventData.put("price", price != null ? price : 0.0);  // Keep numeric price
-        eventData.put("organizerId", organizerId);  // Keep string organizerId
+        // organizerId removed - using Organizer DocumentReference instead
         
         // Event dates
         eventData.put("eventStartDate", eventStartDate);
