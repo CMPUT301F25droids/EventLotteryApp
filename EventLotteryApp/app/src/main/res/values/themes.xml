@@ -8,6 +8,10 @@
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorOnSurfaceVariant">@color/unselected_tab_color</item>
 
+        <!-- Navigation bar color to prevent pink tint -->
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowLightNavigationBar">true</item>
+
     </style>
     <style name="AppButton" parent="Widget.MaterialComponents.Button">
         <item name="android:backgroundTint">@color/button_background</item>

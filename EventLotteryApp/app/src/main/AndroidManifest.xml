@@ -4,7 +4,7 @@
 
     <application
         android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
+        android.dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -15,10 +15,10 @@
             android:name=".EntrantView.EventDetailsActivity"
             android:exported="false" />
         <activity
-            android:name=".EntrantView.EntrantHomePageActivity"
+            android:name=".OrganizerHomePage"
             android:exported="false" />
         <activity
-            android:name=".Authorization.AuthActivity"
+            android:name=".AuthActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,6 +26,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".organizer.CreateEventActivity"
+            android:exported="false" />
+        <activity
+            android:name=".organizer.ShareQrCodeActivity"
+            android:exported="false" />
+        
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>
