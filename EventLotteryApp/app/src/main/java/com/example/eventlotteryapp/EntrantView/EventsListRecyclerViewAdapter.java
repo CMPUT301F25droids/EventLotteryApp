@@ -87,7 +87,7 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
 
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
-                    int position = getAbsoluteAdapterPosition();
+                    int position = getAdapterPosition();
                     Log.d("RecyclerClick", "Item clicked: " + position);
 
                     if (position != RecyclerView.NO_POSITION) {
