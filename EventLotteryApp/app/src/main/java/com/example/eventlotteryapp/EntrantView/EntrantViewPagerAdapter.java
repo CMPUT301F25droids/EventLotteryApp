@@ -5,9 +5,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import com.example.eventlotteryapp.Authorization.LoginFragment;
-import com.example.eventlotteryapp.Authorization.SignUpFragment;
-
 public class EntrantViewPagerAdapter extends FragmentStateAdapter {
     public EntrantViewPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
         super(fragmentActivity);
@@ -17,10 +14,10 @@ public class EntrantViewPagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         switch (position) {
-            case 0:
-                return new EventsList();
+            case 1:
+                return new MyEventsFragment();
             default:
-                return new EventsList();
+                return new EventsListFragment();
         }
     }
 

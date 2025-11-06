@@ -44,12 +44,17 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
         EventItem event = eventList.get(position);
         holder.nameView.setText(event.getName());
         DocumentReference organizerRef = event.getOrganizer();
-        organizerRef.get().addOnSuccessListener(userSnapshot -> {
-            if (userSnapshot.exists()) {
-                String organizerName = userSnapshot.getString("Name");
-                holder.organizerView.setText(organizerName);
-            }
-        });
+        if (organizerRef != null) { // ✅ check null
+            organizerRef.get().addOnSuccessListener(userSnapshot -> {
+                if (userSnapshot.exists()) {
+                    String organizerName = userSnapshot.getString("Name");
+                    holder.organizerView.setText(organizerName);
+                }
+            }).addOnFailureListener(e ->
+                    Log.e("EventAdapter", "Error loading organizer", e));
+        } else {
+            holder.organizerView.setText("Unknown Organizer");
+        }
         holder.costView.setText(event.getCost());
 
         String base64Image = event.getImage();
