@@ -24,6 +24,7 @@
             android:layout_height="24dp"
             android:src="@drawable/ic_arrow_back"
             android:contentDescription="Back"
+            android:clickable="true"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
@@ -110,7 +111,7 @@
                 android:paddingTop="12dp"/>
 
             <Button
-                android:id="@+id/join_button"
+                android:id="@+id/join_waitlist_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Join Waiting List"
