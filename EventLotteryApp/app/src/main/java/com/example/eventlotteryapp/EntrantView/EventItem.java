@@ -1,9 +1,11 @@
 package com.example.eventlotteryapp.EntrantView;
 
+import com.google.firebase.firestore.DocumentReference;
+
 public class EventItem {
     private String id;
     private String Name;
-    private String Organizer;
+    private DocumentReference Organizer;
     private String Cost;
     private String Image;
 
@@ -14,7 +16,7 @@ public class EventItem {
         return Name;
     }
 
-    public String getOrganizer() {
+    public DocumentReference getOrganizer() {
         return Organizer;
     }
 

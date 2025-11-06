@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eventlotteryapp.R;
+import com.google.firebase.firestore.DocumentReference;
 
 import java.util.List;
 
@@ -42,7 +43,13 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         EventItem event = eventList.get(position);
         holder.nameView.setText(event.getName());
-        holder.organizerView.setText(event.getOrganizer());
+        DocumentReference organizerRef = event.getOrganizer();
+        organizerRef.get().addOnSuccessListener(userSnapshot -> {
+            if (userSnapshot.exists()) {
+                String organizerName = userSnapshot.getString("Name");
+                holder.organizerView.setText(organizerName);
+            }
+        });
         holder.costView.setText(event.getCost());
 
         String base64Image = event.getImage();
