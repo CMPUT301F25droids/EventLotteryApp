@@ -1,9 +1,11 @@
 package com.example.eventlotteryapp.EntrantView;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -15,6 +17,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import android.view.View;
+import android.content.Intent;
+
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.UserSession;
 import com.google.firebase.firestore.DocumentReference;
@@ -25,6 +30,8 @@ import java.util.List;
 public class EventDetailsActivity extends AppCompatActivity {
     private String eventId;
     private FirebaseFirestore db;
+
+    private TextView tvLotteryInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,20 +48,27 @@ public class EventDetailsActivity extends AppCompatActivity {
         Button join_button = findViewById(R.id.join_waitlist_button);
         join_button.setOnClickListener(v -> {
             // Handle join button click
-            JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);;
+            JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
+            ;
             confirmation.show(getSupportFragmentManager(), confirmation.getTag());
             userInWaitlist();
         });
+
+
         eventId = getIntent().getStringExtra("eventId");
         Log.d("EventDetails", "Event ID: " + eventId);
         db = FirebaseFirestore.getInstance();
+
+        tvLotteryInfo = findViewById(R.id.tv_lottery_info);
+
 
         userInWaitlist();
 
         populateUI();
 
     }
-    protected void userInWaitlist(){
+
+    protected void userInWaitlist() {
         UserSession userSession = new UserSession();
         DocumentReference user_ref = UserSession.getCurrentUserRef();
         Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + user_ref);
@@ -84,6 +98,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> Log.e("Firestore", "Error reading waitlist", e));
 
     }
+
     protected void populateUI() {
         if (eventId != null) {
             db.collection("Events").document(eventId).get()
@@ -93,6 +108,10 @@ public class EventDetailsActivity extends AppCompatActivity {
                             String cost = documentSnapshot.getString("Cost");
                             DocumentReference organizer = documentSnapshot.getDocumentReference("Organizer");
                             String image = documentSnapshot.getString("Image");
+                            String lotteryInfo = documentSnapshot.getString("LotteryInfo"); // for lottery info
+
+                            tvLotteryInfo.setText(lotteryInfo);
+
                             // populate UI
                             TextView nameView = findViewById(R.id.event_name);
                             nameView.setText(name);
@@ -104,11 +123,14 @@ public class EventDetailsActivity extends AppCompatActivity {
                             ImageView imageView = findViewById(R.id.event_poster);
                             populateImage(image, imageView);
 
+                            displayLotteryCriteria(lotteryInfo);
+
                         }
                     });
         }
 
     }
+
     protected void populateOrganizer(DocumentReference organizerRef, TextView organizerView) {
         organizerRef.get().addOnSuccessListener(userSnapshot -> {
             if (userSnapshot.exists()) {
@@ -118,6 +140,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         });
 
     }
+
     protected void populateImage(String base64Image, ImageView holder) {
         if (base64Image != null && !base64Image.isEmpty()) {
             try {
@@ -133,9 +156,21 @@ public class EventDetailsActivity extends AppCompatActivity {
             } catch (Exception e) {
                 Log.e("EventAdapter", "Failed to decode image: " + e.getMessage());
             }
-        }
-        else {
+        } else {
         }
 
+    }
+
+    /**
+     * US 01.05.05: Display lottery selection criteria to entrants
+     */
+    private void displayLotteryCriteria(String lotteryInfo) {
+        if (lotteryInfo != null && !lotteryInfo.isEmpty()) {
+            tvLotteryInfo.setText("Lottery Info: " + lotteryInfo);
+            tvLotteryInfo.setVisibility(View.VISIBLE);
+        } else {
+            tvLotteryInfo.setText("Lottery Info: Random selection. All entrants have equal chance.");
+            tvLotteryInfo.setVisibility(View.VISIBLE);
+        }
     }
 }

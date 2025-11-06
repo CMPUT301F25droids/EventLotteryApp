@@ -101,6 +101,16 @@
                 android:paddingTop="8dp"/>
 
             <TextView
+                android:id="@+id/tv_lottery_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Lottery Info:"
+                android:textSize="15sp"
+                android:layout_marginHorizontal="16dp"
+                android:paddingTop="8dp"
+                android:visibility="gone"/>
+
+            <TextView
                 android:id="@+id/event_description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -119,6 +129,7 @@
                 android:layout_marginHorizontal="16dp"
                 android:backgroundTint="?attr/colorPrimary"
                 android:textColor="@android:color/white"/>
+
 
         </LinearLayout>
     </ScrollView>
