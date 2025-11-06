@@ -7,4 +7,8 @@
     <color name="unselected_tab_color">#80000000</color>
     <color name="None">#00FFFFFF</color>
     <color name="medium_grey">#808080</color>
+    <color name="opaque_black">#80000000</color>
+    <color name="button_background">#FF4E3CDB</color>
+    <color name="button_text">#FFFFFFFF</color>
+
 </resources>

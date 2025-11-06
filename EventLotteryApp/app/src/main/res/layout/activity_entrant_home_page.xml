@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".EntrantHomePage">
+    tools:context=".EntrantView.EntrantHomePageActivity">
 
     <FrameLayout
         android:id="@+id/fragment_container"
@@ -19,6 +19,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:fitsSystemWindows="true"
         app:tabGravity="fill"
         app:tabIndicatorFullWidth="true"
         app:tabMaxWidth="0dp"
@@ -49,4 +50,11 @@
             android:text="@string/profile" />
 
     </com.google.android.material.tabs.TabLayout>
+    <androidx.viewpager2.widget.ViewPager2
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/entrant_view_pager"
+        app:layout_constraintBottom_toTopOf="@+id/entrant_home_tabs"
+        app:layout_constraintTop_toTopOf="parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

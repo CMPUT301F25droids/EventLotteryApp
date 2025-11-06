@@ -20,6 +20,12 @@
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
+    <string name="join_confirmation_title">Join Waiting List</string>
+    <string name="join_confirmation_message">
+        "You’re about to join the waiting list for Jazz Night at the Park."
+        "You’ll be notified if you’re selected in the lottery.\n\n""You can leave the waiting list anytime before registration closes."</string>
+    <string name="confirm_button">Confirm</string>
+    <string name="cancel_button">Cancel</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"
 
@@ -109,4 +115,6 @@
         "For example, position the FAB to one side of stream of a cards so the FAB won’t interfere "
         "when a user tries to pick up one of cards.\n\n"
     </string>
+    <string name="title_activity_join_confirmation">JoinConfirmationActivity</string>
+    <string name="action_settings">Settings</string>
 </resources>
