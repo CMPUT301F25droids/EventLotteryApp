@@ -14,7 +14,6 @@ import androidx.fragment.app.Fragment;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.eventlotteryapp.EntrantHomePage;
 import com.example.eventlotteryapp.EntrantView.EntrantHomePageActivity;
 import com.example.eventlotteryapp.OrganizerHomePage;
 import com.example.eventlotteryapp.R;
@@ -90,9 +89,8 @@ public class LoginFragment extends Fragment {
     }
     
     private void navigateToHome() {
-        // For now, navigate to EntrantHomePage
-        // You can add logic here to determine which home page based on user role
-        Intent intent = new Intent(getActivity(), EntrantHomePage.class);
+        // Navigate to EntrantHomePageActivity (the correct entrant home page)
+        Intent intent = new Intent(getActivity(), EntrantHomePageActivity.class);
         startActivity(intent);
         if (getActivity() != null) {
             getActivity().finish();
