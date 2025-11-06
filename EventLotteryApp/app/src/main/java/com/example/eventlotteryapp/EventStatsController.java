@@ -14,7 +14,7 @@ public class EventStatsController {
     public CompletableFuture<Integer> getWaitingListCount(String eventId) {
         CompletableFuture<Integer> future = new CompletableFuture<>();
 
-        db.collection("events").document(eventId).get().addOnSuccessListener(doc -> {
+        db.collection("Events").document(eventId).get().addOnSuccessListener(doc -> {
             List<String> waitingList = (List<String>) doc.get("waitingListEntrantIds");
             int count = (waitingList == null) ? 0 : waitingList.size();
             future.complete(count);

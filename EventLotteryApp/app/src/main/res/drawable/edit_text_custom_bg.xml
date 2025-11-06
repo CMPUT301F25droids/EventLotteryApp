@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Consolidated EditText background - use this for all input fields -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- State when the EditText is focused/selected -->
     <item android:state_focused="true">

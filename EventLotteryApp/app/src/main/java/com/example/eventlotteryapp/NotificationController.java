@@ -12,7 +12,7 @@ public class NotificationController {
      * Sends a notification message to all entrants in the waiting list.
      */
     public void sendToWaitingList(String eventId, String title, String message) {
-        db.collection("events").document(eventId).get().addOnSuccessListener(eventDoc -> {
+        db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
             List<String> waitingList = (List<String>) eventDoc.get("waitingListEntrantIds");
             sendBulkNotifications(waitingList, title, message, eventId);
         });
@@ -22,7 +22,7 @@ public class NotificationController {
      * Sends a notification message to all selected entrants.
      */
     public void sendToSelectedEntrants(String eventId, String title, String message) {
-        db.collection("events").document(eventId).get().addOnSuccessListener(eventDoc -> {
+        db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
             List<String> selected = (List<String>) eventDoc.get("selectedEntrantIds");
             sendBulkNotifications(selected, title, message, eventId);
         });
@@ -32,7 +32,7 @@ public class NotificationController {
      * Sends a notification message to all cancelled entrants.
      */
     public void sendToCancelledEntrants(String eventId, String title, String message) {
-        db.collection("events").document(eventId).get().addOnSuccessListener(eventDoc -> {
+        db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
             List<String> cancelled = (List<String>) eventDoc.get("cancelledEntrantIds");
             sendBulkNotifications(cancelled, title, message, eventId);
         });
