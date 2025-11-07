@@ -76,6 +76,11 @@ public class NotificationsFragment extends Fragment {
     }
 
     private void updateUI() {
+        // Check if fragment is still attached before accessing context
+        if (!isAdded() || getContext() == null) {
+            return;
+        }
+        
         progressBar.setVisibility(View.GONE);
         notifications.setVisibility(View.VISIBLE);
 

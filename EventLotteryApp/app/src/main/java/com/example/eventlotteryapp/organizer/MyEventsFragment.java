@@ -148,60 +148,25 @@ public class MyEventsFragment extends Fragment {
                             extractedOrganizerId = doc.getString("organizerId");  // Fallback for old events
                         }
                         
-                        // Try to parse as Event record first
-                        Event event = doc.toObject(Event.class);
-                        if (event != null && event.title() != null) {
-                            Log.d("MyEventsFragment", "Loaded event: " + event.title() + ", organizerId: " + (extractedOrganizerId != null ? extractedOrganizerId : event.organizerId()));
-                            allEvents.add(new EventWithId(doc.getId(), event));
-                        } else {
-                            // Fallback: manually construct Event from Map
-                            Log.w("MyEventsFragment", "Event record parsing returned null, trying manual construction");
-                            Event manualEvent = new Event(
-                                doc.getString("title"),
-                                doc.getString("description"),
-                                doc.getString("location"),
-                                doc.getDouble("price") != null ? doc.getDouble("price") : 0.0,
-                                doc.getDate("eventStartDate"),
-                                doc.getDate("eventEndDate"),
-                                doc.getDate("registrationOpenDate"),
-                                doc.getDate("registrationCloseDate"),
-                                doc.getLong("maxParticipants") != null ? doc.getLong("maxParticipants").intValue() : 0,
-                                extractedOrganizerId != null ? extractedOrganizerId : "",
-                                doc.getDate("createdAt")
-                            );
-                            allEvents.add(new EventWithId(doc.getId(), manualEvent));
-                        }
+                        // Firestore doesn't support Java records, so we manually construct Event from document fields
+                        Event event = new Event(
+                            doc.getString("title") != null ? doc.getString("title") : doc.getString("Name"),  // Support both old and new field names
+                            doc.getString("description"),
+                            doc.getString("location"),
+                            doc.getDouble("price") != null ? doc.getDouble("price") : 0.0,
+                            doc.getDate("eventStartDate"),
+                            doc.getDate("eventEndDate"),
+                            doc.getDate("registrationOpenDate"),
+                            doc.getDate("registrationCloseDate"),
+                            doc.getLong("maxParticipants") != null ? doc.getLong("maxParticipants").intValue() : 0,
+                            extractedOrganizerId != null ? extractedOrganizerId : "",
+                            doc.getDate("createdAt")
+                        );
+                        allEvents.add(new EventWithId(doc.getId(), event));
+                        Log.d("MyEventsFragment", "Successfully loaded event: " + event.title());
                     } catch (Exception e) {
                         Log.e("MyEventsFragment", "Error parsing event: " + doc.getId(), e);
-                        // Try manual construction as fallback
-                        try {
-                            // Extract organizerId from Organizer DocumentReference or fallback to organizerId field
-                            String extractedOrganizerId = null;
-                            com.google.firebase.firestore.DocumentReference organizerDocRef = doc.getDocumentReference("Organizer");
-                            if (organizerDocRef != null) {
-                                extractedOrganizerId = organizerDocRef.getId();
-                            } else {
-                                extractedOrganizerId = doc.getString("organizerId");  // Fallback for old events
-                            }
-                            
-                            Event manualEvent = new Event(
-                                doc.getString("title"),
-                                doc.getString("description"),
-                                doc.getString("location"),
-                                doc.getDouble("price") != null ? doc.getDouble("price") : 0.0,
-                                doc.getDate("eventStartDate"),
-                                doc.getDate("eventEndDate"),
-                                doc.getDate("registrationOpenDate"),
-                                doc.getDate("registrationCloseDate"),
-                                doc.getLong("maxParticipants") != null ? doc.getLong("maxParticipants").intValue() : 0,
-                                extractedOrganizerId != null ? extractedOrganizerId : "",
-                                doc.getDate("createdAt")
-                            );
-                            allEvents.add(new EventWithId(doc.getId(), manualEvent));
-                            Log.d("MyEventsFragment", "Successfully loaded event using manual construction: " + doc.getString("title"));
-                        } catch (Exception e2) {
-                            Log.e("MyEventsFragment", "Failed to manually construct event: " + doc.getId(), e2);
-                        }
+                        // Skip this event if we can't parse it
                     }
                 }
                 updateFilterCounts();

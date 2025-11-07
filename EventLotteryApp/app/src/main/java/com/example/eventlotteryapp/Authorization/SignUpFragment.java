@@ -15,7 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.eventlotteryapp.EntrantHomePage;
+import com.example.eventlotteryapp.EntrantView.EntrantHomePageActivity;
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.models.User;
 import com.google.firebase.auth.FirebaseAuth;
@@ -96,7 +96,7 @@ public class SignUpFragment extends Fragment {
                 .addOnSuccessListener(unused -> {
                     progress.setVisibility(View.GONE);
                     Toast.makeText(getContext(), "Profile created", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(getActivity(), EntrantHomePage.class));
+                    startActivity(new Intent(getActivity(), EntrantHomePageActivity.class));
                     requireActivity().finish();
                 })
                 .addOnFailureListener(e -> {
