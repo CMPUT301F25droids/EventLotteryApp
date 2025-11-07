@@ -11,6 +11,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Allows organizer to create new event.
+ * Supports geolocation requirement toggle and optional entrant limit.
+ * Stores event in Firestore under 'events' collection.
+ */
+
 public class CreateEventActivity extends AppCompatActivity {
 
     private EditText eventName;

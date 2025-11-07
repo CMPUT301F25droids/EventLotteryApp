@@ -17,7 +17,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.eventlotteryapp.EntrantHomePage;
 import com.example.eventlotteryapp.R;
-import com.example.eventlotteryapp.models.User;
+import com.example.eventlotteryapp.Models.User;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -25,6 +25,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import android.content.Intent;
 
+/**
+ * Handles new user registration.
+ * Creates Firebase Auth account and stores user information in Firestore.
+ */
 public class SignUpFragment extends Fragment {
 
     private FirebaseAuth auth;

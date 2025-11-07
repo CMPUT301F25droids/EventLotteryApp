@@ -8,6 +8,10 @@ import com.example.eventlotteryapp.Authorization.AuthViewPagerAdapter;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+/**
+ * Hosts login and signup fragments using ViewPager.
+ * This is the first screen user sees when app is launched.
+ */
 public class AuthActivity extends AppCompatActivity {
 
     private TabLayout tabLayout;

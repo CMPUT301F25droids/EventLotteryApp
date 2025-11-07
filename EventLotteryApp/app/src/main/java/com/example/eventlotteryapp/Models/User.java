@@ -1,7 +1,11 @@
-package com.example.eventlotteryapp.models;
-
+package com.example.eventlotteryapp.Models;
 import java.io.Serializable;
 
+/**
+ * Represents a user in Event Lottery app.
+ * Stores profile information like UID, name, email, and phone number.
+ * Used by both entrants and organizers.
+ */
 public class User implements Serializable {
     private String uid;
     private String name;

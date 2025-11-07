@@ -7,9 +7,13 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.eventlotteryapp.R;
-import com.example.eventlotteryapp.models.User;
+import com.example.eventlotteryapp.Models.User;
 import java.util.List;
 
+/**
+ * Adapter for the entrant RecyclerView in EntrantListActivity.
+ * Binds user data to list items.
+ */
 public class EntrantListAdapter extends RecyclerView.Adapter<EntrantListAdapter.Holder> {
 
     private final List<User> items;

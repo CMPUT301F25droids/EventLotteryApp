@@ -14,6 +14,10 @@ import androidx.annotation.Nullable;
 import com.example.eventlotteryapp.EntrantHomePage;
 import com.example.eventlotteryapp.R;
 
+/**
+ * Handles user login functionality.
+ * Navigates to EntrantHomePage after authenticating successfully.
+ */
 public class LoginFragment extends Fragment {
 
     @Nullable
