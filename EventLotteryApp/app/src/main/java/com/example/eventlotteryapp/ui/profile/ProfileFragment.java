@@ -12,7 +12,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import com.example.eventlotteryapp.EntrantHomePage;
 import com.example.eventlotteryapp.EntrantView.EntrantHomePageActivity;
 import com.example.eventlotteryapp.OrganizerHomePage;
 import com.example.eventlotteryapp.R;

@@ -140,8 +140,6 @@
                 android:paddingTop="8dp"
                 android:visibility="gone"/>
 
-            <TextView
-                android:id="@+id/event_description"
             <Button
                 android:id="@+id/notify_selected_button"
                 android:layout_width="match_parent"

@@ -74,14 +74,8 @@ public class EventDetailsActivity extends AppCompatActivity {
         // Join button click
         joinButton.setOnClickListener(v -> {
             JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
-            confirmation.show(getSupportFragmentManager(), confirmation.getTag());
-        });
+            confirmation.show(getSupportFragmentManager(), confirmation.getTag());});
 
-        Button join_button = findViewById(R.id.join_waitlist_button);
-        join_button.setOnClickListener(v -> {
-            // Handle join button click
-            JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
-            ;
         // Leave button click
         leaveButton.setOnClickListener(v -> {
             LeaveConfirmationFragment confirmation = new LeaveConfirmationFragment().newInstance(eventId);
@@ -126,10 +120,10 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     protected void userInWaitlist() {
-        UserSession userSession = new UserSession();
-        DocumentReference user_ref = UserSession.getCurrentUserRef();
-        Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + user_ref);
-
+            UserSession userSession = new UserSession();
+            DocumentReference user_ref = UserSession.getCurrentUserRef();
+            Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + user_ref);
+        }
     /** Sends notifications to all users in a specific group field (Waitlist / Selected / Cancelled) */
     private void sendNotificationsToGroup(String fieldName, String title, String message) {
         db.collection("Events").document(eventId).get()
@@ -217,16 +211,17 @@ public class EventDetailsActivity extends AppCompatActivity {
 
                             displayLotteryCriteria(lotteryInfo);
 
-                        }
-                        if (image != null) populateImage(image, findViewById(R.id.event_poster));
+                            if (image != null)
+                                populateImage(image, findViewById(R.id.event_poster));
 
-                        // Update waitlist count dynamically
-                        List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
-                        if (waitlist != null && waitlistCountView != null) {
-                            waitlistCountView.setText(waitlist.size() + " entrants on waitlist");
+                            // Update waitlist count dynamically
+                            List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
+                            if (waitlist != null && waitlistCountView != null) {
+                                waitlistCountView.setText(waitlist.size() + " entrants on waitlist");
+                            }
                         }
-                    }
-                });
+                    });
+        }
     }
 
     protected void populateOrganizer(DocumentReference organizerRef, TextView organizerView) {
@@ -256,13 +251,6 @@ public class EventDetailsActivity extends AppCompatActivity {
         } else {
         }
 
-            byte[] decodedBytes = Base64.decode(base64Image, Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-            holder.setImageBitmap(bitmap);
-
-        } catch (Exception e) {
-            Log.e("EventDetailsActivity", "Failed to decode image: " + e.getMessage());
-        }
     }
 
     /**
