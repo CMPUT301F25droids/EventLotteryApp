@@ -5,7 +5,12 @@
     <color name="teal_200">#03DAC5</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFFFF</color>
-    
+
+
+    <color name="teal_700">#018786</color>
+    <color name="purple_200">#BB86FC</color>
+    <color name="design_default_color_error">#B00020</color>
+
     <!-- Tab Colors -->
     <color name="selected_tab_color">#4E3CDB</color>
     <color name="unselected_tab_color">#888888</color>
@@ -14,16 +19,14 @@
     <color name="date_picker_purple">#4E3CDB</color>
     <color name="date_picker_green_semi_transparent">#80D1FF66</color>
     <color name="edit_text_bg">#0A000000</color>
-    
+
     <!-- Missing Colors -->
     <color name="opaque_light_grey">#F5F5F5</color>
     <color name="medium_grey">#808080</color>
 
     <color name="None">#00FFFFFF</color>
-
     <color name="opaque_black">#80000000</color>
 
     <color name="button_background">#FF4E3CDB</color>
     <color name="button_text">#FFFFFFFF</color>
-
 </resources>
