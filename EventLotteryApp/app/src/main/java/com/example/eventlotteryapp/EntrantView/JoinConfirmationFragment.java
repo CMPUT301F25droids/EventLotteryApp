@@ -1,5 +1,6 @@
 package com.example.eventlotteryapp.EntrantView;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -8,25 +9,16 @@ import androidx.annotation.NonNull;
 import com.example.eventlotteryapp.UserSession;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.databinding.FragmentJoinConfirmationListDialogBinding;
-import com.google.firebase.Firebase;
-import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-
-import java.util.List;
 
 /**
  * <p>A fragment that shows a list of items as a modal bottom sheet.</p>
@@ -78,8 +70,17 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
                                 Log.d("Firestore", "User added to waitlist");
                             })
                             .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+                    user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d("Firestore", "Events added to users joined events");
+                            })
+                            .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
 
             // Handle join action
+            Intent intent = new Intent(getContext(), EntrantHomePageActivity.class);
+            intent.putExtra("open_tab", 1); // e.g. 0 = Home, 1 = MyEvents, 2 = Notifications
+            startActivity(intent);
+
             dismiss(); // close modal
         });
 

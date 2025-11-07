@@ -9,7 +9,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
+import com.example.eventlotteryapp.EntrantView.EntrantHomePageActivity;
+import com.example.eventlotteryapp.EntrantView.EventsListFragment;
+import com.example.eventlotteryapp.EntrantView.MyEventsFragment;
 import com.example.eventlotteryapp.Notifications.NotificationsFragment;
+import com.example.eventlotteryapp.ui.profile.ProfileFragment;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -39,6 +43,8 @@ public class EntrantHomePage extends AppCompatActivity{
                 int position = tab.getPosition();
                 if (position == 2) {
                     selectFragment(new NotificationsFragment(db));
+                } else if (position == 3) {
+                    selectFragment(new ProfileFragment());
                 }
             }
             @Override

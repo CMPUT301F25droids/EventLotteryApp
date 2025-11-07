@@ -1,28 +1,45 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.EventLotteryApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Primary color for selected tab indicator -->
-        <item name="colorPrimary">@color/selected_tab_color</item>
 
-        <!-- Used for text/icon tint on selected state -->
+    <!-- Base theme -->
+    <style name="Base.Theme.EventLotteryApp" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary color for selected tab / app -->
+        <item name="colorPrimary">@color/selected_tab_color</item>
         <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/purple_200</item> <!-- optional -->
+
+        <!-- Text/icon on surface -->
         <item name="colorOnSurfaceVariant">@color/unselected_tab_color</item>
 
-    </style>
-    <style name="AppButton" parent="Widget.MaterialComponents.Button">
-        <item name="android:backgroundTint">@color/button_background</item>
-        <item name="android:textColor">@color/button_text</item>
-        <item name="cornerRadius">8dp</item>
+        <!-- Navigation bar -->
+        <item name="android:navigationBarColor">@color/white</item>
+
+
+
     </style>
 
+    <!-- Main App Theme -->
     <style name="Theme.EventLotteryApp" parent="Base.Theme.EventLotteryApp" />
 
-    <style name="Theme.EventLotteryApp.NoActionBar">
+    <style name="Theme.EventLotteryApp.NoActionBar" parent="Theme.EventLotteryApp">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="Theme.EventLotteryApp.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <!-- Button Style -->
+    <style name="AppButton" parent="Widget.Material3.Button">
+        <item name="android:backgroundTint">@color/button_background</item>
+        <item name="android:textColor">@color/button_text</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.RoundedCorner8dp</item>
+    </style>
 
+    <!-- Button Shape -->
+    <style name="ShapeAppearance.App.RoundedCorner8dp" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <!-- Toolbar / AppBar -->
+    <style name="Theme.EventLotteryApp.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
     <style name="Theme.EventLotteryApp.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
 </resources>

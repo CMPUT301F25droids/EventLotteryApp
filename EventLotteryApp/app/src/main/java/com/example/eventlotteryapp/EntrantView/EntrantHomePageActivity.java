@@ -46,6 +46,9 @@ public class EntrantHomePageActivity extends AppCompatActivity {
             }
         });
 
+        int tabToOpen = getIntent().getIntExtra("open_tab", 0); // send to home tab
+        viewPager2.setCurrentItem(tabToOpen, false);
+        Objects.requireNonNull(tabLayout.getTabAt(tabToOpen)).select();
 
     }
 

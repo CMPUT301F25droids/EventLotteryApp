@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.example.eventlotteryapp.R;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -23,7 +22,7 @@ import java.util.List;
 /**
  * A fragment representing a list of Items.
  */
-public class EventsList extends Fragment {
+public class EventsListFragment extends Fragment {
 
     private static final String ARG_COLUMN_COUNT = "column-count";
     private int mColumnCount = 1;
@@ -33,13 +32,13 @@ public class EventsList extends Fragment {
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public EventsList() {
+    public EventsListFragment() {
     }
 
     // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
-    public static EventsList newInstance(int columnCount) {
-        EventsList fragment = new EventsList();
+    public static EventsListFragment newInstance(int columnCount) {
+        EventsListFragment fragment = new EventsListFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_COLUMN_COUNT, columnCount);
         fragment.setArguments(args);
@@ -81,17 +80,22 @@ public class EventsList extends Fragment {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("Events")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    eventList.clear();
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        EventItem event = doc.toObject(EventItem.class);
-                        event.setId(doc.getId()); // store Firestore document ID if needed
-                        eventList.add(event);
+                .addSnapshotListener((queryDocumentSnapshots, e) -> {
+                    if (e != null) {
+                        Log.e("Firestore", "Error loading events", e);
+                        return;
                     }
-                    adapter.notifyDataSetChanged();
-                })
-                .addOnFailureListener(e -> Log.e("Firestore", "Error loading events", e));
+
+                    if (queryDocumentSnapshots != null) {
+                        eventList.clear();
+                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                            EventItem event = doc.toObject(EventItem.class);
+                            event.setId(doc.getId()); // store Firestore document ID if needed
+                            eventList.add(event);
+                        }
+                        adapter.notifyDataSetChanged();
+                    }
+                });
 
         return view;
     }

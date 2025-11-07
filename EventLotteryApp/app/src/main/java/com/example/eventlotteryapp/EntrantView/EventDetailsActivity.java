@@ -2,34 +2,41 @@ package com.example.eventlotteryapp.EntrantView;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Paint;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import android.view.View;
 import android.content.Intent;
 
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.UserSession;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class EventDetailsActivity extends AppCompatActivity {
+
     private String eventId;
     private FirebaseFirestore db;
+    private Button joinButton, leaveButton;
+    private Button notifyWaitlistButton, notifySelectedButton, notifyCancelledButton;
+    private TextView waitlistCountView;
+    private DocumentReference currentUserRef;
 
     private TextView tvLotteryInfo;
 
@@ -39,10 +46,36 @@ public class EventDetailsActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_event_details);
 
-        ImageView back_button = findViewById(R.id.back_button);
-        back_button.setOnClickListener(v -> {
-            // Handle back button click
+        db = FirebaseFirestore.getInstance();
+        eventId = getIntent().getStringExtra("eventId");
+        currentUserRef = UserSession.getCurrentUserRef();
+
+        if (eventId == null || eventId.isEmpty()) {
+            Log.e("EventDetailsActivity", "Error: Event ID is null");
             finish();
+            return;
+        }
+
+        Log.d("EventDetails", "Event ID: " + eventId);
+
+        // UI Elements
+        ImageView backButton = findViewById(R.id.back_button);
+        joinButton = findViewById(R.id.join_waitlist_button);
+        leaveButton = findViewById(R.id.leave_waitlist_button);
+        waitlistCountView = findViewById(R.id.waitlist_count);
+
+        // Organizer notification buttons
+        notifyWaitlistButton = findViewById(R.id.notify_waitlist_button);
+        notifySelectedButton = findViewById(R.id.notify_selected_button);
+        notifyCancelledButton = findViewById(R.id.notify_cancelled_button);
+
+        // Back button
+        backButton.setOnClickListener(v -> finish());
+
+        // Join button click
+        joinButton.setOnClickListener(v -> {
+            JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
+            confirmation.show(getSupportFragmentManager(), confirmation.getTag());
         });
 
         Button join_button = findViewById(R.id.join_waitlist_button);
@@ -50,8 +83,10 @@ public class EventDetailsActivity extends AppCompatActivity {
             // Handle join button click
             JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
             ;
+        // Leave button click
+        leaveButton.setOnClickListener(v -> {
+            LeaveConfirmationFragment confirmation = new LeaveConfirmationFragment().newInstance(eventId);
             confirmation.show(getSupportFragmentManager(), confirmation.getTag());
-            userInWaitlist();
         });
 
         // TEMPORARY: Test invitation response screen
@@ -73,7 +108,22 @@ public class EventDetailsActivity extends AppCompatActivity {
         userInWaitlist();
 
         populateUI();
+        updateWaitlistState();
+    }
 
+    /** Checks if current user is organizer and updates UI accordingly */
+    private void showOrganizerControlsIfOwner(DocumentReference organizerRef) {
+        organizerRef.get().addOnSuccessListener(doc -> {
+            if (doc.exists() && doc.getReference().equals(currentUserRef)) {
+                notifyWaitlistButton.setVisibility(View.VISIBLE);
+                notifySelectedButton.setVisibility(View.VISIBLE);
+                notifyCancelledButton.setVisibility(View.VISIBLE);
+            } else {
+                notifyWaitlistButton.setVisibility(View.GONE);
+                notifySelectedButton.setVisibility(View.GONE);
+                notifyCancelledButton.setVisibility(View.GONE);
+            }
+        });
     }
 
     protected void userInWaitlist() {
@@ -81,30 +131,65 @@ public class EventDetailsActivity extends AppCompatActivity {
         DocumentReference user_ref = UserSession.getCurrentUserRef();
         Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + user_ref);
 
-        db.collection("Events").document(eventId)
-                .get()
+    /** Sends notifications to all users in a specific group field (Waitlist / Selected / Cancelled) */
+    private void sendNotificationsToGroup(String fieldName, String title, String message) {
+        db.collection("Events").document(eventId).get()
+                .addOnSuccessListener(eventDoc -> {
+                    if (!eventDoc.exists()) return;
+
+                    List<DocumentReference> recipients = (List<DocumentReference>) eventDoc.get(fieldName);
+                    if (recipients == null || recipients.isEmpty()) {
+                        Toast.makeText(this, "No entrants in " + fieldName.toLowerCase() + " list.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    for (DocumentReference userRef : recipients) {
+                        Map<String, Object> notification = new HashMap<>();
+                        notification.put("title", title);
+                        notification.put("message", message);
+                        notification.put("eventId", eventId);
+                        notification.put("timestamp", Timestamp.now());
+
+                        userRef.collection("Notifications").add(notification)
+                                .addOnSuccessListener(aVoid -> Log.d("Notifications", "Sent to: " + userRef.getId()))
+                                .addOnFailureListener(e -> Log.e("Notifications", "Failed to send: " + e.getMessage()));
+                    }
+
+                    Toast.makeText(this, "Notifications sent to " + recipients.size() + " users.", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> Log.e("Notifications", "Error sending notifications: " + e.getMessage()));
+    }
+
+    /** Updates join/leave button visibility based on whether user is already on waitlist */
+    private void updateWaitlistState() {
+        db.collection("Events").document(eventId).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        // Safely retrieve the array field
                         List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
-                        Button join_button = findViewById(R.id.join_waitlist_button);
-                        Log.d("Firestore", "Waitlist from DB: " + waitlist);
+                        DocumentReference organizer = documentSnapshot.getDocumentReference("Organizer");
 
-                        if (waitlist != null && waitlist.contains(user_ref)) {
-                            join_button.setText("Already in waitlist");
-                            join_button.setEnabled(false);
-                            join_button.setAlpha(0.5f);
+                        boolean userInWaitlist = waitlist != null && waitlist.contains(currentUserRef);
+                        Log.d("Firestore", "User in waitlist: " + userInWaitlist);
 
+                        if (userInWaitlist) {
+                            joinButton.setVisibility(View.GONE);
+                            leaveButton.setVisibility(View.VISIBLE);
                         } else {
-                            join_button.setText("Join Waiting List");
-                            join_button.setEnabled(true);
-                            join_button.setAlpha(1f);
-
+                            joinButton.setVisibility(View.VISIBLE);
+                            leaveButton.setVisibility(View.GONE);
                         }
+
+                        // ✅ Update waitlist count text
+                        if (waitlistCountView != null) {
+                            int count = waitlist != null ? waitlist.size() : 0;
+                            waitlistCountView.setText(count + " entrants on waitlist");
+                        }
+
+                        // ✅ Check if organizer
+                        if (organizer != null) showOrganizerControlsIfOwner(organizer);
                     }
                 })
                 .addOnFailureListener(e -> Log.e("Firestore", "Error reading waitlist", e));
-
     }
 
     protected void populateUI() {
@@ -134,19 +219,24 @@ public class EventDetailsActivity extends AppCompatActivity {
                             displayLotteryCriteria(lotteryInfo);
 
                         }
-                    });
-        }
+                        if (image != null) populateImage(image, findViewById(R.id.event_poster));
 
+                        // Update waitlist count dynamically
+                        List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
+                        if (waitlist != null && waitlistCountView != null) {
+                            waitlistCountView.setText(waitlist.size() + " entrants on waitlist");
+                        }
+                    }
+                });
     }
 
     protected void populateOrganizer(DocumentReference organizerRef, TextView organizerView) {
         organizerRef.get().addOnSuccessListener(userSnapshot -> {
             if (userSnapshot.exists()) {
                 String organizerName = userSnapshot.getString("Name");
-                organizerView.setText(organizerName);
+                organizerView.setText(organizerName != null ? organizerName : "Unknown Organizer");
             }
         });
-
     }
 
     protected void populateImage(String base64Image, ImageView holder) {
@@ -167,6 +257,13 @@ public class EventDetailsActivity extends AppCompatActivity {
         } else {
         }
 
+            byte[] decodedBytes = Base64.decode(base64Image, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+            holder.setImageBitmap(bitmap);
+
+        } catch (Exception e) {
+            Log.e("EventDetailsActivity", "Failed to decode image: " + e.getMessage());
+        }
     }
 
     /**

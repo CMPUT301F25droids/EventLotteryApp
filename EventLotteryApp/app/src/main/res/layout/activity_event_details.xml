@@ -1,104 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:fillViewport="true"
+    tools:context=".EntrantView.EventDetailsActivity">
 
-    <!-- Top Bar (fixed) -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/top_bar"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@color/None"
-        android:paddingHorizontal="12dp"
-        android:elevation="4dp"
-        android:layout_marginTop="20dp"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <!-- Back Button -->
         <ImageView
             android:id="@+id/back_button"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:src="@drawable/ic_arrow_back"
             android:contentDescription="Back"
-            android:clickable="true"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            android:layout_marginBottom="8dp" />
 
-        <!-- Title -->
+        <!-- Event Poster -->
+        <ImageView
+            android:id="@+id/event_poster"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:scaleType="centerCrop"
+            android:background="#E0E0E0"
+            android:layout_marginBottom="12dp"
+            tools:ignore="ContentDescription" />
+
+        <!-- Event Name -->
         <TextView
-            android:id="@+id/title_text"
-            android:layout_width="0dp"
+            android:id="@+id/event_name"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Event Details"
-            android:gravity="center"
-            android:textColor="@color/black"
-            android:textSize="20sp"
+            android:text="Event Name"
+            android:textSize="22sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toEndOf="@id/back_button"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0"/>
+            android:textColor="@android:color/black"
+            android:layout_marginBottom="8dp" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- Organizer -->
+        <TextView
+            android:id="@+id/event_organizer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Organizer: Loading..."
+            android:textSize="16sp"
+            android:layout_marginBottom="6dp"
+            android:textColor="#555555" />
 
-    <!-- Scrollable content below -->
-    <ScrollView
-        android:id="@+id/scroll_view"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@id/top_bar"
-        app:layout_constraintBottom_toBottomOf="parent">
+        <!-- Cost -->
+        <TextView
+            android:id="@+id/event_cost"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cost: Free"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="8dp" />
 
+        <!-- Waitlist Count -->
+        <TextView
+            android:id="@+id/waitlist_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 entrants on waitlist"
+            android:textSize="15sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Join / Leave Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:gravity="center">
 
-            <ImageView
-                android:id="@+id/event_poster"
-                android:layout_width="match_parent"
+            <Button
+                android:id="@+id/join_waitlist_button"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:background="@color/black"
-                android:scaleType="centerCrop"
-                app:layout_constraintDimensionRatio="1:1"
-                tools:srcCompat="@tools:sample/avatars" />
+                android:layout_weight="1"
+                android:text="Join Waitlist"
+                android:backgroundTint="@color/teal_700"
+                android:textColor="@android:color/white"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/leave_waitlist_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Leave Waitlist"
+                android:backgroundTint="@color/design_default_color_error"
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Organizer Notification Section -->
+        <LinearLayout
+            android:id="@+id/organizer_notification_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="24dp"
+            android:visibility="gone"
+            android:paddingTop="12dp"
+            android:background="#FFF7E0"
+            android:padding="10dp"
+            android:elevation="2dp">
 
             <TextView
-                android:id="@+id/event_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Event Name"
-                android:textSize="22sp"
+                android:text="Organizer Controls"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                android:layout_marginHorizontal="16dp"
-                android:paddingTop="16dp"/>
+                android:textColor="#444"
+                android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:id="@+id/event_organizer"
+            <Button
+                android:id="@+id/notify_waitlist_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Organizer: Melody Makers"
-                android:textSize="16sp"
-                android:layout_marginHorizontal="16dp"
-
-                android:paddingTop="8dp"/>
-
-            <TextView
-                android:id="@+id/event_cost"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Cost: Free"
-                android:textSize="16sp"
-                android:layout_marginHorizontal="16dp"
-
-                android:paddingTop="8dp"/>
+                android:text="Notify Waitlist"
+                android:backgroundTint="@color/purple_200"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="8dp" />
 
             <TextView
                 android:id="@+id/tv_lottery_info"
@@ -112,16 +143,17 @@
 
             <TextView
                 android:id="@+id/event_description"
+            <Button
+                android:id="@+id/notify_selected_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-
-                android:text="This is where event details and description will appear."
-                android:textSize="15sp"
-                android:layout_marginHorizontal="16dp"
-                android:paddingTop="12dp"/>
+                android:text="Notify Selected Entrants"
+                android:backgroundTint="@color/purple_500"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="8dp" />
 
             <Button
-                android:id="@+id/join_waitlist_button"
+                android:id="@+id/notify_cancelled_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Join Waiting List"
@@ -143,6 +175,5 @@
 
 
         </LinearLayout>
-    </ScrollView>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+</ScrollView>
