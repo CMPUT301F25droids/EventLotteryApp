@@ -54,6 +54,14 @@ public class EventDetailsActivity extends AppCompatActivity {
             userInWaitlist();
         });
 
+        // TEMPORARY: Test invitation response screen
+        Button testButton = findViewById(R.id.btn_test_invitation);
+        testButton.setOnClickListener(v -> {
+            Intent intent = new Intent(EventDetailsActivity.this, InvitationResponseActivity.class);
+            intent.putExtra("eventId", eventId);
+            startActivity(intent);
+        });
+
 
         eventId = getIntent().getStringExtra("eventId");
         Log.d("EventDetails", "Event ID: " + eventId);

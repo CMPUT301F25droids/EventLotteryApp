@@ -130,6 +130,17 @@
                 android:backgroundTint="?attr/colorPrimary"
                 android:textColor="@android:color/white"/>
 
+            <!-- TEMPORARY TEST BUTTON - DELETE AFTER TESTING -->
+            <Button
+                android:id="@+id/btn_test_invitation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🧪 TEST INVITATION (DELETE ME)"
+                android:layout_marginTop="12dp"
+                android:layout_marginHorizontal="16dp"
+                android:backgroundTint="#FF0000"
+                android:textColor="@android:color/white"/>
+
 
         </LinearLayout>
     </ScrollView>
