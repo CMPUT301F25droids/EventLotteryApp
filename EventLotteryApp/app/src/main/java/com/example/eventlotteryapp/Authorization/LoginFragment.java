@@ -20,10 +20,6 @@ import com.example.eventlotteryapp.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-/**
- * Handles user login functionality.
- * Navigates to EntrantHomePage after authenticating successfully.
- */
 public class LoginFragment extends Fragment {
 
     private EditText emailEditText;
