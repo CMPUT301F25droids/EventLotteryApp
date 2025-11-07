@@ -15,11 +15,10 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.eventlotteryapp.R;
-import com.example.eventlotteryapp.UserSession;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-
+import com.example.eventlotteryapp.UserSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
