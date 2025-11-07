@@ -10,6 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.EventLotteryApp">
 
+        <activity android:name=".Organizer.EntrantListActivity" android:exported="false"/>
         <activity android:name=".EntrantHomePage" android:exported="false" />
         <activity android:name=".AuthActivity" android:exported="true">
             <intent-filter>
