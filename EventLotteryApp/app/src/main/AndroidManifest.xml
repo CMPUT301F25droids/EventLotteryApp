@@ -33,6 +33,11 @@
         <activity
             android:name=".organizer.CreateEventActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".EntrantView.InvitationResponseActivity"
+            android:exported="false"
+            android:theme="@style/Theme.EventLotteryApp" />
         <activity
             android:name=".organizer.ShareQrCodeActivity"
             android:exported="false" />

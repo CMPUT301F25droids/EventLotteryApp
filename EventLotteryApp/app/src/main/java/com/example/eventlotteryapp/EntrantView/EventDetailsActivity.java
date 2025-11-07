@@ -1,8 +1,11 @@
 package com.example.eventlotteryapp.EntrantView;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ViewGroup;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -10,16 +13,22 @@ import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.view.View;
+import android.content.Intent;
+
 import com.example.eventlotteryapp.R;
-import com.example.eventlotteryapp.UserSession;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-
+import com.example.eventlotteryapp.UserSession;
+import java.util.HashMap;
 import java.util.List;
 
 public class EventDetailsActivity extends AppCompatActivity {
     private String eventId;
     private FirebaseFirestore db;
+
+    private TextView tvLotteryInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,13 +42,10 @@ public class EventDetailsActivity extends AppCompatActivity {
             finish();
         });
 
-        Button join_button = findViewById(R.id.join_waitlist_button);
-        join_button.setOnClickListener(v -> {
-            // Handle join button click
-            JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);;
-            confirmation.show(getSupportFragmentManager(), confirmation.getTag());
-            userInWaitlist();
-        });
+        // Join button click
+        joinButton.setOnClickListener(v -> {
+            JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
+            confirmation.show(getSupportFragmentManager(), confirmation.getTag());});
 
         Button leave_button = findViewById(R.id.leave_waitlist_button);
         leave_button.setOnClickListener(v -> {
@@ -52,9 +58,53 @@ public class EventDetailsActivity extends AppCompatActivity {
         Log.d("EventDetails", "Event ID: " + eventId);
         db = FirebaseFirestore.getInstance();
 
+        // TEMPORARY: Test invitation response screen
+        Button testButton = findViewById(R.id.btn_test_invitation);
+        testButton.setOnClickListener(v -> {
+            Intent intent = new Intent(EventDetailsActivity.this, InvitationResponseActivity.class);
+            intent.putExtra("eventId", eventId);
+            startActivity(intent);
+        });
+
+
+        eventId = getIntent().getStringExtra("eventId");
+        Log.d("EventDetails", "Event ID: " + eventId);
+        db = FirebaseFirestore.getInstance();
+
+        tvLotteryInfo = findViewById(R.id.tv_lottery_info);
+
+
         userInWaitlist();
 
         populateUI();
+        updateWaitlistState();
+    }
+
+    /** Checks if current user is organizer and updates UI accordingly */
+    private void showOrganizerControlsIfOwner(DocumentReference organizerRef) {
+        organizerRef.get().addOnSuccessListener(doc -> {
+            if (doc.exists() && doc.getReference().equals(currentUserRef)) {
+                notifyWaitlistButton.setVisibility(View.VISIBLE);
+                notifySelectedButton.setVisibility(View.VISIBLE);
+                notifyCancelledButton.setVisibility(View.VISIBLE);
+            } else {
+                notifyWaitlistButton.setVisibility(View.GONE);
+                notifySelectedButton.setVisibility(View.GONE);
+                notifyCancelledButton.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    protected void userInWaitlist() {
+            UserSession userSession = new UserSession();
+            DocumentReference user_ref = UserSession.getCurrentUserRef();
+            Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + user_ref);
+        }
+    /** Sends notifications to all users in a specific group field (Waitlist / Selected / Cancelled) */
+    private void sendNotificationsToGroup(String fieldName, String title, String message) {
+        db.collection("Events").document(eventId).get()
+                .addOnSuccessListener(eventDoc -> {
+                    if (!eventDoc.exists()) return;
 
     }
     protected void userInWaitlist(){
@@ -92,7 +142,6 @@ public class EventDetailsActivity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> Log.e("Firestore", "Error reading waitlist", e));
 
-    }
     protected void populateUI() {
         if (eventId != null) {
             db.collection("Events").document(eventId).get()
@@ -102,6 +151,10 @@ public class EventDetailsActivity extends AppCompatActivity {
                             String cost = documentSnapshot.getString("Cost");
                             DocumentReference organizer = documentSnapshot.getDocumentReference("Organizer");
                             String image = documentSnapshot.getString("Image");
+                            String lotteryInfo = documentSnapshot.getString("LotteryInfo"); // for lottery info
+
+                            tvLotteryInfo.setText(lotteryInfo);
+
                             // populate UI
                             TextView nameView = findViewById(R.id.event_name);
                             nameView.setText(name);
@@ -113,11 +166,21 @@ public class EventDetailsActivity extends AppCompatActivity {
                             ImageView imageView = findViewById(R.id.event_poster);
                             populateImage(image, imageView);
 
+                            displayLotteryCriteria(lotteryInfo);
+
+                            if (image != null)
+                                populateImage(image, findViewById(R.id.event_poster));
+
+                            // Update waitlist count dynamically
+                            List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
+                            if (waitlist != null && waitlistCountView != null) {
+                                waitlistCountView.setText(waitlist.size() + " entrants on waitlist");
+                            }
                         }
                     });
         }
-
     }
+
     protected void populateOrganizer(DocumentReference organizerRef, TextView organizerView) {
         organizerRef.get().addOnSuccessListener(userSnapshot -> {
             if (userSnapshot.exists()) {
@@ -126,7 +189,6 @@ public class EventDetailsActivity extends AppCompatActivity {
             }
         });
 
-    }
     protected void populateImage(String base64Image, ImageView holder) {
         if (base64Image != null && !base64Image.isEmpty()) {
             try {
@@ -139,12 +201,24 @@ public class EventDetailsActivity extends AppCompatActivity {
                 Bitmap bitmap = android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
 
                 holder.setImageBitmap(bitmap);
-
-        } catch (Exception e) {
+            } catch (Exception e) {
                 Log.e("EventAdapter", "Failed to decode image: " + e.getMessage());
             }
+        } else {
         }
-        else {
+
+    }
+
+    /**
+     * US 01.05.05: Display lottery selection criteria to entrants
+     */
+    private void displayLotteryCriteria(String lotteryInfo) {
+        if (lotteryInfo != null && !lotteryInfo.isEmpty()) {
+            tvLotteryInfo.setText("Lottery Info: " + lotteryInfo);
+            tvLotteryInfo.setVisibility(View.VISIBLE);
+        } else {
+            tvLotteryInfo.setText("Lottery Info: Random selection. All entrants have equal chance.");
+            tvLotteryInfo.setVisibility(View.VISIBLE);
         }
 
     }
