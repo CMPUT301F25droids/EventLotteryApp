@@ -2,16 +2,13 @@ package com.example.eventlotteryapp.EntrantView;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,16 +23,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.example.eventlotteryapp.UserSession;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class EventDetailsActivity extends AppCompatActivity {
-
     private String eventId;
     private FirebaseFirestore db;
-    private Button joinButton, leaveButton;
-    private Button notifyWaitlistButton, notifySelectedButton, notifyCancelledButton;
-    private TextView waitlistCountView;
-    private DocumentReference currentUserRef;
 
     private TextView tvLotteryInfo;
 
@@ -45,42 +36,27 @@ public class EventDetailsActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_event_details);
 
-        db = FirebaseFirestore.getInstance();
-        eventId = getIntent().getStringExtra("eventId");
-        currentUserRef = UserSession.getCurrentUserRef();
-
-        if (eventId == null || eventId.isEmpty()) {
-            Log.e("EventDetailsActivity", "Error: Event ID is null");
+        ImageView back_button = findViewById(R.id.back_button);
+        back_button.setOnClickListener(v -> {
+            // Handle back button click
             finish();
-            return;
-        }
-
-        Log.d("EventDetails", "Event ID: " + eventId);
-
-        // UI Elements
-        ImageView backButton = findViewById(R.id.back_button);
-        joinButton = findViewById(R.id.join_waitlist_button);
-        leaveButton = findViewById(R.id.leave_waitlist_button);
-        waitlistCountView = findViewById(R.id.waitlist_count);
-
-        // Organizer notification buttons
-        notifyWaitlistButton = findViewById(R.id.notify_waitlist_button);
-        notifySelectedButton = findViewById(R.id.notify_selected_button);
-        notifyCancelledButton = findViewById(R.id.notify_cancelled_button);
-
-        // Back button
-        backButton.setOnClickListener(v -> finish());
+        });
 
         // Join button click
         joinButton.setOnClickListener(v -> {
             JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
             confirmation.show(getSupportFragmentManager(), confirmation.getTag());});
 
-        // Leave button click
-        leaveButton.setOnClickListener(v -> {
-            LeaveConfirmationFragment confirmation = new LeaveConfirmationFragment().newInstance(eventId);
+        Button leave_button = findViewById(R.id.leave_waitlist_button);
+        leave_button.setOnClickListener(v -> {
+            // Handle leave button click
+            LeaveConfirmationFragment confirmation = new LeaveConfirmationFragment().newInstance(eventId);;
             confirmation.show(getSupportFragmentManager(), confirmation.getTag());
+            userInWaitlist();
         });
+        eventId = getIntent().getStringExtra("eventId");
+        Log.d("EventDetails", "Event ID: " + eventId);
+        db = FirebaseFirestore.getInstance();
 
         // TEMPORARY: Test invitation response screen
         Button testButton = findViewById(R.id.btn_test_invitation);
@@ -130,60 +106,41 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .addOnSuccessListener(eventDoc -> {
                     if (!eventDoc.exists()) return;
 
-                    List<DocumentReference> recipients = (List<DocumentReference>) eventDoc.get(fieldName);
-                    if (recipients == null || recipients.isEmpty()) {
-                        Toast.makeText(this, "No entrants in " + fieldName.toLowerCase() + " list.", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    for (DocumentReference userRef : recipients) {
-                        Map<String, Object> notification = new HashMap<>();
-                        notification.put("title", title);
-                        notification.put("message", message);
-                        notification.put("eventId", eventId);
-                        notification.put("timestamp", Timestamp.now());
-
-                        userRef.collection("Notifications").add(notification)
-                                .addOnSuccessListener(aVoid -> Log.d("Notifications", "Sent to: " + userRef.getId()))
-                                .addOnFailureListener(e -> Log.e("Notifications", "Failed to send: " + e.getMessage()));
-                    }
-
-                    Toast.makeText(this, "Notifications sent to " + recipients.size() + " users.", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> Log.e("Notifications", "Error sending notifications: " + e.getMessage()));
     }
+    protected void userInWaitlist(){
+        UserSession userSession = new UserSession();
+        DocumentReference user_ref = UserSession.getCurrentUserRef();
+        Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + user_ref);
 
-    /** Updates join/leave button visibility based on whether user is already on waitlist */
-    private void updateWaitlistState() {
-        db.collection("Events").document(eventId).get()
+        db.collection("Events").document(eventId)
+                .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
+                        // Safely retrieve the array field
                         List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
-                        DocumentReference organizer = documentSnapshot.getDocumentReference("Organizer");
+                        Button join_button = findViewById(R.id.join_waitlist_button);
+                        Button leave_button = findViewById(R.id.leave_waitlist_button);
+                        Log.d("Firestore", "Waitlist from DB: " + waitlist);
 
-                        boolean userInWaitlist = waitlist != null && waitlist.contains(currentUserRef);
-                        Log.d("Firestore", "User in waitlist: " + userInWaitlist);
-
-                        if (userInWaitlist) {
-                            joinButton.setVisibility(View.GONE);
-                            leaveButton.setVisibility(View.VISIBLE);
+                        if (waitlist != null && waitlist.contains(user_ref)) {
+                            join_button.setEnabled(false);
+                            leave_button.setEnabled(true);
+                            join_button.setVisibility(Button.GONE);
+                            leave_button.setVisibility(Button.VISIBLE);
+                            join_button.setAlpha(0.5f);
+                            leave_button.setAlpha(1f);
                         } else {
-                            joinButton.setVisibility(View.VISIBLE);
-                            leaveButton.setVisibility(View.GONE);
-                        }
+                            join_button.setEnabled(true);
+                            leave_button.setEnabled(false);
+                            join_button.setVisibility(Button.VISIBLE);
+                            leave_button.setVisibility(Button.GONE);
+                            join_button.setAlpha(1f);
+                            leave_button.setAlpha(0.5f);
 
-                        // ✅ Update waitlist count text
-                        if (waitlistCountView != null) {
-                            int count = waitlist != null ? waitlist.size() : 0;
-                            waitlistCountView.setText(count + " entrants on waitlist");
                         }
-
-                        // ✅ Check if organizer
-                        if (organizer != null) showOrganizerControlsIfOwner(organizer);
                     }
                 })
                 .addOnFailureListener(e -> Log.e("Firestore", "Error reading waitlist", e));
-    }
 
     protected void populateUI() {
         if (eventId != null) {
@@ -228,10 +185,9 @@ public class EventDetailsActivity extends AppCompatActivity {
         organizerRef.get().addOnSuccessListener(userSnapshot -> {
             if (userSnapshot.exists()) {
                 String organizerName = userSnapshot.getString("Name");
-                organizerView.setText(organizerName != null ? organizerName : "Unknown Organizer");
+                organizerView.setText(organizerName);
             }
         });
-    }
 
     protected void populateImage(String base64Image, ImageView holder) {
         if (base64Image != null && !base64Image.isEmpty()) {
@@ -264,5 +220,6 @@ public class EventDetailsActivity extends AppCompatActivity {
             tvLotteryInfo.setText("Lottery Info: Random selection. All entrants have equal chance.");
             tvLotteryInfo.setVisibility(View.VISIBLE);
         }
+
     }
 }
