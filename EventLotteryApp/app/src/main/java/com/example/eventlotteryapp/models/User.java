@@ -1,4 +1,4 @@
-package com.example.eventlotteryapp.Models;
+package com.example.eventlotteryapp.models;
 import java.io.Serializable;
 
 /**

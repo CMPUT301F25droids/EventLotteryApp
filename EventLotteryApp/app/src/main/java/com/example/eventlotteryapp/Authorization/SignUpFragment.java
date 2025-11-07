@@ -17,8 +17,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.eventlotteryapp.EntrantHomePage;
 import com.example.eventlotteryapp.R;
-import com.example.eventlotteryapp.Models.User;
-import com.google.android.gms.tasks.Task;
+import com.example.eventlotteryapp.models.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
