@@ -130,6 +130,18 @@
                 android:textColor="@android:color/white"
                 android:layout_marginBottom="8dp" />
 
+            <TextView
+                android:id="@+id/tv_lottery_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Lottery Info:"
+                android:textSize="15sp"
+                android:layout_marginHorizontal="16dp"
+                android:paddingTop="8dp"
+                android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/event_description"
             <Button
                 android:id="@+id/notify_selected_button"
                 android:layout_width="match_parent"
@@ -143,9 +155,24 @@
                 android:id="@+id/notify_cancelled_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Notify Cancelled Entrants"
-                android:backgroundTint="@color/purple_700"
-                android:textColor="@android:color/white" />
+                android:text="Join Waiting List"
+                android:layout_marginTop="24dp"
+                android:layout_marginHorizontal="16dp"
+                android:backgroundTint="?attr/colorPrimary"
+                android:textColor="@android:color/white"/>
+
+            <!-- TEMPORARY TEST BUTTON - DELETE AFTER TESTING -->
+            <Button
+                android:id="@+id/btn_test_invitation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🧪 TEST INVITATION (DELETE ME)"
+                android:layout_marginTop="12dp"
+                android:layout_marginHorizontal="16dp"
+                android:backgroundTint="#FF0000"
+                android:textColor="@android:color/white"/>
+
+
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

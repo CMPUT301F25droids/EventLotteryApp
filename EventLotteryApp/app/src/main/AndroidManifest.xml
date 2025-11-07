@@ -31,6 +31,9 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".EntrantView.InvitationResponseActivity"
+            android:exported="false"
+            android:theme="@style/Theme.EventLotteryApp" />
             android:name=".organizer.CreateEventActivity"
             android:exported="false" />
         <activity

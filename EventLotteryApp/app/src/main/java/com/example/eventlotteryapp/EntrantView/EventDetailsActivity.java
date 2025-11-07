@@ -1,10 +1,12 @@
 package com.example.eventlotteryapp.EntrantView;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
+import android.view.ViewGroup;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -13,6 +15,9 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.view.View;
+import android.content.Intent;
 
 import com.example.eventlotteryapp.R;
 import com.google.firebase.Timestamp;
@@ -31,6 +36,8 @@ public class EventDetailsActivity extends AppCompatActivity {
     private Button notifyWaitlistButton, notifySelectedButton, notifyCancelledButton;
     private TextView waitlistCountView;
     private DocumentReference currentUserRef;
+
+    private TextView tvLotteryInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,16 +77,34 @@ public class EventDetailsActivity extends AppCompatActivity {
             confirmation.show(getSupportFragmentManager(), confirmation.getTag());
         });
 
+        Button join_button = findViewById(R.id.join_waitlist_button);
+        join_button.setOnClickListener(v -> {
+            // Handle join button click
+            JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
+            ;
         // Leave button click
         leaveButton.setOnClickListener(v -> {
             LeaveConfirmationFragment confirmation = new LeaveConfirmationFragment().newInstance(eventId);
             confirmation.show(getSupportFragmentManager(), confirmation.getTag());
         });
 
-        // Organizer notification buttons
-        notifyWaitlistButton.setOnClickListener(v -> sendNotificationsToGroup("Waitlist", "Event Update", "You’re on the waiting list for this event."));
-        notifySelectedButton.setOnClickListener(v -> sendNotificationsToGroup("Selected", "Congratulations!", "You have been selected for the event!"));
-        notifyCancelledButton.setOnClickListener(v -> sendNotificationsToGroup("Cancelled", "Update", "Unfortunately, your entry has been cancelled."));
+        // TEMPORARY: Test invitation response screen
+        Button testButton = findViewById(R.id.btn_test_invitation);
+        testButton.setOnClickListener(v -> {
+            Intent intent = new Intent(EventDetailsActivity.this, InvitationResponseActivity.class);
+            intent.putExtra("eventId", eventId);
+            startActivity(intent);
+        });
+
+
+        eventId = getIntent().getStringExtra("eventId");
+        Log.d("EventDetails", "Event ID: " + eventId);
+        db = FirebaseFirestore.getInstance();
+
+        tvLotteryInfo = findViewById(R.id.tv_lottery_info);
+
+
+        userInWaitlist();
 
         populateUI();
         updateWaitlistState();
@@ -99,6 +124,11 @@ public class EventDetailsActivity extends AppCompatActivity {
             }
         });
     }
+
+    protected void userInWaitlist() {
+        UserSession userSession = new UserSession();
+        DocumentReference user_ref = UserSession.getCurrentUserRef();
+        Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + user_ref);
 
     /** Sends notifications to all users in a specific group field (Waitlist / Selected / Cancelled) */
     private void sendNotificationsToGroup(String fieldName, String title, String message) {
@@ -161,32 +191,32 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> Log.e("Firestore", "Error reading waitlist", e));
     }
 
-    /** Loads event info from Firestore and updates UI */
-    private void populateUI() {
-        db.collection("Events").document(eventId)
-                .addSnapshotListener((documentSnapshot, e) -> {
-                    if (e != null) {
-                        Log.e("Firestore", "Error fetching event data", e);
-                        return;
-                    }
+    protected void populateUI() {
+        if (eventId != null) {
+            db.collection("Events").document(eventId).get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            String name = documentSnapshot.getString("Name");
+                            String cost = documentSnapshot.getString("Cost");
+                            DocumentReference organizer = documentSnapshot.getDocumentReference("Organizer");
+                            String image = documentSnapshot.getString("Image");
+                            String lotteryInfo = documentSnapshot.getString("LotteryInfo"); // for lottery info
 
-                    if (documentSnapshot != null && documentSnapshot.exists()) {
-                        String name = documentSnapshot.getString("Name");
-                        String cost = documentSnapshot.getString("Cost");
-                        DocumentReference organizer = documentSnapshot.getDocumentReference("Organizer");
-                        String image = documentSnapshot.getString("Image");
+                            tvLotteryInfo.setText(lotteryInfo);
 
-                        // Set text fields
-                        TextView nameView = findViewById(R.id.event_name);
-                        TextView costView = findViewById(R.id.event_cost);
-                        TextView organizerView = findViewById(R.id.event_organizer);
-
-                        nameView.setText(name != null ? name : "Unnamed Event");
-                        costView.setText(cost != null ? "Cost: " + cost : "Cost: -");
-
-                        if (organizer != null) {
+                            // populate UI
+                            TextView nameView = findViewById(R.id.event_name);
+                            nameView.setText(name);
+                            TextView costView = findViewById(R.id.event_cost);
+                            costView.setText("Cost: " + cost);
+                            TextView organizerView = findViewById(R.id.event_organizer);
+                            assert organizer != null;
                             populateOrganizer(organizer, organizerView);
-                            showOrganizerControlsIfOwner(organizer);
+                            ImageView imageView = findViewById(R.id.event_poster);
+                            populateImage(image, imageView);
+
+                            displayLotteryCriteria(lotteryInfo);
+
                         }
                         if (image != null) populateImage(image, findViewById(R.id.event_poster));
 
@@ -199,8 +229,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                 });
     }
 
-    /** Retrieves and displays organizer name */
-    private void populateOrganizer(DocumentReference organizerRef, TextView organizerView) {
+    protected void populateOrganizer(DocumentReference organizerRef, TextView organizerView) {
         organizerRef.get().addOnSuccessListener(userSnapshot -> {
             if (userSnapshot.exists()) {
                 String organizerName = userSnapshot.getString("Name");
@@ -209,14 +238,23 @@ public class EventDetailsActivity extends AppCompatActivity {
         });
     }
 
-    /** Decodes base64 event image and displays it */
-    private void populateImage(String base64Image, ImageView holder) {
-        if (base64Image == null || base64Image.isEmpty()) return;
+    protected void populateImage(String base64Image, ImageView holder) {
+        if (base64Image != null && !base64Image.isEmpty()) {
+            try {
+                // Remove the "data:image/jpeg;base64," or similar prefix
+                if (base64Image.startsWith("data:image")) {
+                    base64Image = base64Image.substring(base64Image.indexOf(",") + 1);
+                }
 
-        try {
-            if (base64Image.startsWith("data:image")) {
-                base64Image = base64Image.substring(base64Image.indexOf(",") + 1);
+                byte[] decodedBytes = android.util.Base64.decode(base64Image, android.util.Base64.DEFAULT);
+                Bitmap bitmap = android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+
+                holder.setImageBitmap(bitmap);
+            } catch (Exception e) {
+                Log.e("EventAdapter", "Failed to decode image: " + e.getMessage());
             }
+        } else {
+        }
 
             byte[] decodedBytes = Base64.decode(base64Image, Base64.DEFAULT);
             Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
@@ -224,6 +262,19 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             Log.e("EventDetailsActivity", "Failed to decode image: " + e.getMessage());
+        }
+    }
+
+    /**
+     * US 01.05.05: Display lottery selection criteria to entrants
+     */
+    private void displayLotteryCriteria(String lotteryInfo) {
+        if (lotteryInfo != null && !lotteryInfo.isEmpty()) {
+            tvLotteryInfo.setText("Lottery Info: " + lotteryInfo);
+            tvLotteryInfo.setVisibility(View.VISIBLE);
+        } else {
+            tvLotteryInfo.setText("Lottery Info: Random selection. All entrants have equal chance.");
+            tvLotteryInfo.setVisibility(View.VISIBLE);
         }
     }
 }
