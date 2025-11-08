@@ -36,7 +36,7 @@ public class EntrantListActivity extends AppCompatActivity {
         String eventId = getIntent().getStringExtra("eventId");
         if (eventId == null || eventId.isEmpty()) return;
 
-        db.collection("events").document(eventId)
+        db.collection("Events").document(eventId)
                 .collection("entrants")
                 .get()
                 .addOnSuccessListener(snap -> {
