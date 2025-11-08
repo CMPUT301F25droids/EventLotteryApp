@@ -1,4 +1,4 @@
-package com.example.eventlotteryapp.Organizer;
+package com.example.eventlotteryapp.organizer;
 
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
