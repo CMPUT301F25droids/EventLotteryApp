@@ -30,7 +30,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Organizer.EntrantListActivity"
+            android:name=".organizer.EntrantListActivity"
             android:exported="false" />
         <activity
             android:name=".EntrantHomePage"
