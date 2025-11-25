@@ -63,7 +63,7 @@ public class OrganizerHomePage extends AppCompatActivity {
                     Intent intent = new Intent(OrganizerHomePage.this, CreateEventActivity.class);
                     startActivity(intent);
                 } else if (position == 2) {
-                    selectFragment(new NotificationsFragment(db));
+                    selectFragment(NotificationsFragment.newInstance(db));
                 } else if (position == 3) {
                     selectFragment(new ProfileFragment());
                 }

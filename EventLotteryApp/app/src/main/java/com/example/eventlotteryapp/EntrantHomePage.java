@@ -42,7 +42,7 @@ public class EntrantHomePage extends AppCompatActivity{
             public void onTabSelected(TabLayout.Tab tab) {
                 int position = tab.getPosition();
                 if (position == 2) {
-                    selectFragment(new NotificationsFragment(db));
+                    selectFragment(NotificationsFragment.newInstance(db));
                 } else if (position == 3) {
                     selectFragment(new ProfileFragment());
                 }
