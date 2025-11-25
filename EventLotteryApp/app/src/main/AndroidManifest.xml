@@ -27,13 +27,23 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
+            android:name=".organizer.EntrantListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EntrantHomePage"
+            android:exported="false" />
+        <activity
             android:name=".organizer.CreateEventActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".EntrantView.InvitationResponseActivity"
+            android:exported="false"
+            android:theme="@style/Theme.EventLotteryApp" />
         <activity
             android:name=".organizer.ShareQrCodeActivity"
             android:exported="false" />

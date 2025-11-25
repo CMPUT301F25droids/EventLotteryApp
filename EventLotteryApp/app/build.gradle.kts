@@ -5,7 +5,9 @@ plugins {
 
 android {
     namespace = "com.example.eventlotteryapp"
-    compileSdk = 36
+    compileSdk {
+        version = release(36)
+    }
 
     defaultConfig {
         applicationId = "com.example.eventlotteryapp"
