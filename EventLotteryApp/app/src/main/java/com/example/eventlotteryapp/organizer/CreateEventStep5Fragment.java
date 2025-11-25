@@ -66,6 +66,38 @@ public class CreateEventStep5Fragment extends Fragment {
         Uri existingUri = viewModel.posterImageUri.getValue();
         if (existingUri != null) {
             binding.posterImageView.setImageURI(existingUri);
+        } else {
+            // Try to load from base64 (for edit mode)
+            String base64Image = viewModel.posterImageBase64.getValue();
+            if (base64Image != null && !base64Image.isEmpty()) {
+                loadImageFromBase64(base64Image);
+            }
+        }
+        
+        // Observe base64 image changes (for edit mode)
+        viewModel.posterImageBase64.observe(getViewLifecycleOwner(), base64Image -> {
+            if (base64Image != null && !base64Image.isEmpty() && viewModel.posterImageUri.getValue() == null) {
+                loadImageFromBase64(base64Image);
+            }
+        });
+    }
+    
+    private void loadImageFromBase64(String base64Image) {
+        try {
+            // Remove the "data:image/jpeg;base64," or similar prefix
+            String base64Data = base64Image;
+            if (base64Image.startsWith("data:image")) {
+                base64Data = base64Image.substring(base64Image.indexOf(",") + 1);
+            }
+            
+            byte[] decodedBytes = Base64.decode(base64Data, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+            
+            if (bitmap != null) {
+                binding.posterImageView.setImageBitmap(bitmap);
+            }
+        } catch (Exception e) {
+            android.util.Log.e("CreateEventStep5Fragment", "Error loading image from base64", e);
         }
     }
     

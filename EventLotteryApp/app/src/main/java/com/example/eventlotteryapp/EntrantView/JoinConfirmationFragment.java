@@ -1,12 +1,20 @@
 package com.example.eventlotteryapp.EntrantView;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.example.eventlotteryapp.UserSession;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import android.util.Log;
@@ -19,6 +27,8 @@ import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.databinding.FragmentJoinConfirmationListDialogBinding;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>A fragment that shows a list of items as a modal bottom sheet.</p>
@@ -31,8 +41,10 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
 
     // TODO: Customize parameter argument names
     private static final String ARG_EVENT_ID = "event_id";
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private String eventId;
     private FragmentJoinConfirmationListDialogBinding binding;
+    private FusedLocationProviderClient fusedLocationClient;
 
     // TODO: Customize parameters
     public static JoinConfirmationFragment newInstance(String eventId) {
@@ -58,33 +70,165 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
         Button joinButton = view.findViewById(R.id.confirm_join_button);
         Button cancelButton = view.findViewById(R.id.cancel_join_button);
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
 
         joinButton.setOnClickListener(v -> {
-                    FirebaseFirestore db = FirebaseFirestore.getInstance();
-                    UserSession user_session = new UserSession();
-                    DocumentReference user_ref = UserSession.getCurrentUserRef();
-
-                    DocumentReference event_ref = db.collection("Events").document(eventId);
-                    event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayUnion(user_ref))
-                            .addOnSuccessListener(aVoid -> {
-                                Log.d("Firestore", "User added to waitlist");
-                            })
-                            .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
-                    user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))
-                            .addOnSuccessListener(aVoid -> {
-                                Log.d("Firestore", "Events added to users joined events");
-                            })
-                            .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
-
-            // Handle join action
-            Intent intent = new Intent(getContext(), EntrantHomePageActivity.class);
-            intent.putExtra("open_tab", 1); // e.g. 0 = Home, 1 = MyEvents, 2 = Notifications
-            startActivity(intent);
-
-            dismiss(); // close modal
+            // Check if event requires geolocation
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("Events").document(eventId)
+                .get()
+                .addOnSuccessListener(eventDoc -> {
+                    Boolean requireGeolocation = eventDoc.getBoolean("requireGeolocation");
+                    boolean needsLocation = (requireGeolocation != null && requireGeolocation);
+                    
+                    if (needsLocation) {
+                        // Geolocation is required - must capture location
+                        requestLocationAndJoin();
+                    } else {
+                        // Geolocation is optional - try to get location but don't require it
+                        tryToGetLocationAndJoin();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error checking geolocation requirement", e);
+                    // Join without location if we can't check
+                    joinEvent(null, null);
+                });
         });
 
         cancelButton.setOnClickListener(v -> dismiss());
+    }
+    
+    private void requestLocationAndJoin() {
+        // Check permissions
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) 
+                != PackageManager.PERMISSION_GRANTED) {
+            // Request permission
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 
+                    LOCATION_PERMISSION_REQUEST_CODE);
+            return;
+        }
+        
+        // Get location (required)
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) 
+                == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        joinEvent(location.getLatitude(), location.getLongitude());
+                    } else {
+                        // Location not available - required, so show error
+                        Toast.makeText(requireContext(), "Location is required but not available. Please enable location services.", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Location", "Error getting location", e);
+                    Toast.makeText(requireContext(), "Could not get location. Location is required for this event.", Toast.LENGTH_LONG).show();
+                });
+        } else {
+            Toast.makeText(requireContext(), "Location permission is required for this event.", Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    private void tryToGetLocationAndJoin() {
+        // Check permissions
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) 
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission not granted - join without location (it's optional)
+            joinEvent(null, null);
+            return;
+        }
+        
+        // Try to get location (optional)
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) 
+                == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        // Got location - save it
+                        joinEvent(location.getLatitude(), location.getLongitude());
+                    } else {
+                        // Location not available - that's okay, it's optional
+                        joinEvent(null, null);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Location", "Error getting location", e);
+                    // Failed to get location - that's okay, it's optional
+                    joinEvent(null, null);
+                });
+        } else {
+            // No permission - that's okay, it's optional
+            joinEvent(null, null);
+        }
+    }
+    
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                requestLocationAndJoin();
+            } else {
+                Toast.makeText(requireContext(), "Location permission denied. Joining without location.", Toast.LENGTH_SHORT).show();
+                joinEvent(null, null);
+            }
+        }
+    }
+    
+    private void joinEvent(Double latitude, Double longitude) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        UserSession user_session = new UserSession();
+        DocumentReference user_ref = UserSession.getCurrentUserRef();
+        String userId = user_ref.getId();
+
+        DocumentReference event_ref = db.collection("Events").document(eventId);
+        
+        // Update old system waitlist
+        event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayUnion(user_ref))
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "User added to waitlist");
+                })
+                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+        
+        // Update new system waiting list
+        event_ref.update("waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayUnion(userId))
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "User added to new waiting list");
+                })
+                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to new waiting list", e));
+        
+        // Update user's joined events
+        user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "Events added to users joined events");
+                })
+                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+
+        // Store location if available
+        if (latitude != null && longitude != null) {
+            Map<String, Object> locationData = new HashMap<>();
+            locationData.put("latitude", latitude);
+            locationData.put("longitude", longitude);
+            locationData.put("timestamp", com.google.firebase.firestore.FieldValue.serverTimestamp());
+            
+            db.collection("Events").document(eventId)
+                .collection("joinLocations").document(userId)
+                .set(locationData)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "Location saved for user");
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error saving location", e);
+                });
+        }
+
+        // Handle join action
+        Intent intent = new Intent(getContext(), EntrantHomePageActivity.class);
+        intent.putExtra("open_tab", 1); // e.g. 0 = Home, 1 = MyEvents, 2 = Notifications
+        startActivity(intent);
+
+        dismiss(); // close modal
     }
 
 
