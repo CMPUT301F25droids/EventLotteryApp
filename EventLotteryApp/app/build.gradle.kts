@@ -57,6 +57,13 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.legacy.support.v4)
     implementation(libs.recyclerview)
+    
+    // OpenStreetMap (Osmdroid) - Free alternative to Google Maps
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
+    implementation("org.osmdroid:osmdroid-wms:6.1.18")
+    
+    // Google Play Services Location (for getting user location)
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

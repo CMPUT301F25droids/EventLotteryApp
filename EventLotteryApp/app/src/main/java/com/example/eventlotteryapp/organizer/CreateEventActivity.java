@@ -30,6 +30,7 @@ public class CreateEventActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private CreateEventViewModel viewModel;
     private CreateEventPagerAdapter pagerAdapter;
+    private String eventId; // null for create mode, non-null for edit mode
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -53,6 +54,15 @@ public class CreateEventActivity extends AppCompatActivity {
         firestore = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
         viewModel = new ViewModelProvider(this).get(CreateEventViewModel.class);
+        
+        // Check if we're in edit mode
+        eventId = getIntent().getStringExtra("eventId");
+        if (eventId != null && !eventId.isEmpty()) {
+            setTitle("Edit Event");
+            loadEventForEditing(eventId);
+        } else {
+            setTitle("Create Event");
+        }
 
         pagerAdapter = new CreateEventPagerAdapter(this);
         binding.viewPager.setAdapter(pagerAdapter);
@@ -274,44 +284,136 @@ public class CreateEventActivity extends AppCompatActivity {
         // Event settings
         eventData.put("requireGeolocation", requireGeolocation != null ? requireGeolocation : false);
         
-        // Initialize empty lists for entrant tracking
-        eventData.put("waitingListEntrantIds", new ArrayList<String>());
-        eventData.put("selectedEntrantIds", new ArrayList<String>());
-        eventData.put("cancelledEntrantIds", new ArrayList<String>());
-        
-        // createdAt will be set by Firestore server timestamp
-        eventData.put("createdAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
+        // Only initialize empty lists for new events, preserve existing lists for edits
+        if (eventId == null) {
+            eventData.put("waitingListEntrantIds", new ArrayList<String>());
+            eventData.put("selectedEntrantIds", new ArrayList<String>());
+            eventData.put("cancelledEntrantIds", new ArrayList<String>());
+            // createdAt will be set by Firestore server timestamp for new events
+            eventData.put("createdAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
+        }
+        // For edit mode, we don't overwrite existing lists or createdAt
 
-        firestore.collection("Events")
-                .add(eventData)
-                .addOnSuccessListener(documentReference -> {
-                    String eventId = documentReference.getId();
-                    android.util.Log.d("CreateEventActivity", "Event saved successfully with ID: " + eventId);
-                    android.util.Log.d("CreateEventActivity", "Event organizerId: " + organizerId);
-                    
-                    // Verify the saved event
-                    firestore.collection("Events").document(eventId).get()
-                        .addOnSuccessListener(documentSnapshot -> {
-                            if (documentSnapshot.exists()) {
-                                String savedOrganizerId = documentSnapshot.getString("organizerId");
-                                android.util.Log.d("CreateEventActivity", "Verified saved event - organizerId in Firestore: " + savedOrganizerId);
-                            }
-                        });
-                    
-                    Toast.makeText(this, "Event created successfully", Toast.LENGTH_SHORT).show();
-                    
-                    if (listener != null) {
-                        listener.onEventSaved(eventId);
+        if (eventId != null) {
+            // Update existing event
+            firestore.collection("Events").document(eventId)
+                    .update(eventData)
+                    .addOnSuccessListener(aVoid -> {
+                        android.util.Log.d("CreateEventActivity", "Event updated successfully with ID: " + eventId);
+                        Toast.makeText(this, "Event updated successfully", Toast.LENGTH_SHORT).show();
+                        
+                        if (listener != null) {
+                            listener.onEventSaved(eventId);
+                        } else {
+                            finish();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        android.util.Log.e("CreateEventActivity", "Error updating event", e);
+                        Toast.makeText(this, "Error updating event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        } else {
+            // Create new event
+            firestore.collection("Events")
+                    .add(eventData)
+                    .addOnSuccessListener(documentReference -> {
+                        String newEventId = documentReference.getId();
+                        android.util.Log.d("CreateEventActivity", "Event saved successfully with ID: " + newEventId);
+                        android.util.Log.d("CreateEventActivity", "Event organizerId: " + organizerId);
+                        
+                        // Verify the saved event
+                        firestore.collection("Events").document(newEventId).get()
+                            .addOnSuccessListener(documentSnapshot -> {
+                                if (documentSnapshot.exists()) {
+                                    String savedOrganizerId = documentSnapshot.getString("organizerId");
+                                    android.util.Log.d("CreateEventActivity", "Verified saved event - organizerId in Firestore: " + savedOrganizerId);
+                                }
+                            });
+                        
+                        Toast.makeText(this, "Event created successfully", Toast.LENGTH_SHORT).show();
+                        
+                        if (listener != null) {
+                            listener.onEventSaved(newEventId);
+                        } else {
+                            // Use finish() to return to previous activity instead of recreating it
+                            // This ensures the fragment's onResume() is called
+                            finish();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        android.util.Log.e("CreateEventActivity", "Error creating event", e);
+                        Toast.makeText(this, "Error creating event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        }
+    }
+
+    private void loadEventForEditing(String eventId) {
+        firestore.collection("Events").document(eventId)
+            .get()
+            .addOnSuccessListener(documentSnapshot -> {
+                if (!documentSnapshot.exists()) {
+                    android.util.Log.e("CreateEventActivity", "Event not found for editing: " + eventId);
+                    Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
+                    finish();
+                    return;
+                }
+                
+                // Populate ViewModel with event data
+                viewModel.title.setValue(documentSnapshot.getString("title") != null ? 
+                    documentSnapshot.getString("title") : documentSnapshot.getString("Name"));
+                viewModel.description.setValue(documentSnapshot.getString("description"));
+                viewModel.location.setValue(documentSnapshot.getString("location"));
+                
+                // Price
+                Double price = documentSnapshot.getDouble("price");
+                if (price == null) {
+                    String costStr = documentSnapshot.getString("Cost");
+                    if (costStr != null && costStr.startsWith("$")) {
+                        try {
+                            price = Double.parseDouble(costStr.substring(1));
+                        } catch (NumberFormatException e) {
+                            price = 0.0;
+                        }
                     } else {
-                        // Use finish() to return to previous activity instead of recreating it
-                        // This ensures the fragment's onResume() is called
-                        finish();
+                        price = 0.0;
                     }
-                })
-                .addOnFailureListener(e -> {
-                    android.util.Log.e("CreateEventActivity", "Error creating event", e);
-                    Toast.makeText(this, "Error creating event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                }
+                viewModel.price.setValue(price);
+                
+                // Dates
+                viewModel.eventStartDate.setValue(documentSnapshot.getDate("eventStartDate"));
+                viewModel.eventEndDate.setValue(documentSnapshot.getDate("eventEndDate"));
+                viewModel.registrationOpenDate.setValue(documentSnapshot.getDate("registrationOpenDate"));
+                viewModel.registrationCloseDate.setValue(documentSnapshot.getDate("registrationCloseDate"));
+                
+                // Participant settings
+                Long maxParticipantsLong = documentSnapshot.getLong("maxParticipants");
+                viewModel.maxParticipants.setValue(maxParticipantsLong != null ? maxParticipantsLong.intValue() : 0);
+                
+                Long waitingListSizeLong = documentSnapshot.getLong("waitingListSize");
+                viewModel.waitingListSize.setValue(waitingListSizeLong != null ? waitingListSizeLong.intValue() : 0);
+                
+                // Settings
+                Boolean requireGeolocation = documentSnapshot.getBoolean("requireGeolocation");
+                viewModel.requireGeolocation.setValue(requireGeolocation != null ? requireGeolocation : false);
+                
+                Boolean limitWaitingList = documentSnapshot.getBoolean("limitWaitingList");
+                viewModel.limitWaitingList.setValue(limitWaitingList != null ? limitWaitingList : false);
+                
+                // Image
+                String posterImageBase64 = documentSnapshot.getString("Image");
+                if (posterImageBase64 != null && !posterImageBase64.isEmpty()) {
+                    viewModel.posterImageBase64.setValue(posterImageBase64);
+                    // Note: posterImageUri will be set by Step5Fragment when it observes posterImageBase64
+                }
+                
+                android.util.Log.d("CreateEventActivity", "Event data loaded for editing");
+            })
+            .addOnFailureListener(e -> {
+                android.util.Log.e("CreateEventActivity", "Error loading event for editing", e);
+                Toast.makeText(this, "Error loading event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                finish();
+            });
     }
 
     public interface OnEventSavedListener {

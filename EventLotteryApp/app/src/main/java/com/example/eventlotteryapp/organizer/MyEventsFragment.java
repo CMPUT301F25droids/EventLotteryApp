@@ -1,5 +1,6 @@
 package com.example.eventlotteryapp.organizer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -60,6 +61,11 @@ public class MyEventsFragment extends Fragment {
 
     private void setupRecyclerView() {
         eventAdapter = new EventAdapter(new ArrayList<>());
+        eventAdapter.setOnItemClickListener(eventId -> {
+            Intent intent = new Intent(getContext(), OrganizerEventDetailsActivity.class);
+            intent.putExtra("eventId", eventId);
+            startActivity(intent);
+        });
         binding.eventsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         binding.eventsRecyclerView.setAdapter(eventAdapter);
     }
