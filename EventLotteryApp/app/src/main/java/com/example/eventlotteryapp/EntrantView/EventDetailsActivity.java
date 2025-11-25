@@ -20,6 +20,8 @@ import com.example.eventlotteryapp.UserSession;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.example.eventlotteryapp.NotificationController;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,6 +30,10 @@ public class EventDetailsActivity extends AppCompatActivity {
     private FirebaseFirestore db;
 
     private TextView tvLotteryInfo;
+    private TextView tvWaitlistCount;
+
+    private NotificationController notificationController;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,12 +46,18 @@ public class EventDetailsActivity extends AppCompatActivity {
             // Handle back button click
             finish();
         });
+        notificationController = new NotificationController();
+
 
         // Join button click
         Button join_button = findViewById(R.id.join_waitlist_button);
         join_button.setOnClickListener(v -> {
             JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
             confirmation.show(getSupportFragmentManager(), confirmation.getTag());
+            // Send notification to organizer about the new entrant
+            notificationController.sendToSelectedEntrants(eventId,
+                    "New Entrant",
+                    "A user has joined the waiting list for your event.");
         });
 
         Button leave_button = findViewById(R.id.leave_waitlist_button);
@@ -54,6 +66,10 @@ public class EventDetailsActivity extends AppCompatActivity {
             LeaveConfirmationFragment confirmation = new LeaveConfirmationFragment().newInstance(eventId);
             confirmation.show(getSupportFragmentManager(), confirmation.getTag());
             userInWaitlist();
+            // Notify organizer about the user leaving
+            notificationController.sendToCancelledEntrants(eventId,
+                    "Entrant Left",
+                    "A user has left the waiting list for your event.");
         });
 
         eventId = getIntent().getStringExtra("eventId");
@@ -69,7 +85,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         });
 
         tvLotteryInfo = findViewById(R.id.tv_lottery_info);
-
+        tvWaitlistCount = findViewById(R.id.waitlist_count);
         userInWaitlist();
         populateUI();
     }
@@ -168,10 +184,12 @@ public class EventDetailsActivity extends AppCompatActivity {
 
                             // Update waitlist count dynamically
                             List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
-                            // TODO: Add waitlist count view if needed
-                            // if (waitlist != null && waitlistCountView != null) {
-                            //     waitlistCountView.setText(waitlist.size() + " entrants on waitlist");
-                            // }
+
+                            if (waitlist != null) {
+                                tvWaitlistCount.setText("Waiting List Entrants: " + waitlist.size());
+                            } else {
+                                tvWaitlistCount.setText("Waiting List Entrants: 0");
+                            }
                         }
                     });
         }
