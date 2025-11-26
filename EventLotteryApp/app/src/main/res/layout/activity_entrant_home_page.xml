@@ -5,23 +5,25 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_margin="0dp"
+    android:background="@color/white"
     tools:context=".EntrantView.EntrantHomePageActivity">
-
-    <FrameLayout
-        android:id="@+id/fragment_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/entrant_home_tabs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="0dp"
+        android:paddingTop="0dp"
+        android:paddingBottom="0dp"
+        android:background="@color/white"
+        app:tabTextAppearance="@style/TabTextSmall"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:fitsSystemWindows="true"
         app:tabGravity="fill"
         app:tabIndicatorFullWidth="true"
+        android:fitsSystemWindows="true"
         app:tabMaxWidth="0dp"
         app:tabMode="fixed">
 

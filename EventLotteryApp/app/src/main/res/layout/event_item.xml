@@ -1,40 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="20dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
 
-            <ImageView
-                android:id="@+id/event_poster"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:maxHeight="200dp"
-                android:paddingBottom="15dp"
-                android:scaleType="centerCrop"
-                android:layout_gravity="center"
+        <ImageView
+            android:id="@+id/event_poster"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:maxHeight="200dp"
+            android:paddingBottom="15dp"
+            android:scaleType="centerCrop"
+            android:layout_gravity="center"
 
-                app:layout_constraintDimensionRatio="1:1.5"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:srcCompat="@tools:sample/avatars" />
+            app:layout_constraintDimensionRatio="1:1.5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:srcCompat="@tools:sample/avatars" />
 
-            <TextView
+
+        <TextView
+            android:id="@+id/event_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="15dp"
+            android:background="@drawable/rounded_badge"
+            android:backgroundTint="@color/purple_500"
+            android:paddingStart="12dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="6dp"
+            android:text="🟢 Accepted"
+            android:visibility="visible"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/event_poster"
+            app:layout_constraintTop_toTopOf="@+id/event_poster" />
+
+        <TextView
                 android:id="@+id/event_name"
                 android:layout_width="match_parent"
                 android:layout_height="65dp"

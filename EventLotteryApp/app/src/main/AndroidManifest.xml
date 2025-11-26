@@ -20,6 +20,7 @@
         android:theme="@style/Theme.EventLotteryApp">
         <activity
             android:name=".EntrantView.EventDetailsActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
 
         <activity

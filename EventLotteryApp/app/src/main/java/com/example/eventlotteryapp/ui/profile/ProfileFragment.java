@@ -118,39 +118,37 @@ public class ProfileFragment extends Fragment {
         }
 
         String uid = auth.getCurrentUser().getUid();
-        
-        // Load user data from Firestore
-        firestore.collection("entrants").document(uid).get()
-            .addOnSuccessListener(document -> {
-                if (document.exists()) {
-                    binding.fullNameEdit.setText(document.getString("name"));
-                    binding.emailEdit.setText(document.getString("email"));
-                    binding.phoneEdit.setText(document.getString("phone"));
-                    binding.profileName.setText(document.getString("name"));
-                    binding.profileEmail.setText(document.getString("email"));
-                    if (document.getString("phone") != null) {
-                        binding.profilePhone.setText(document.getString("phone") + " Phone");
-                    }
-                }
-            })
-            .addOnFailureListener(e -> {
-                // Try organizer collection
-                firestore.collection("organizers").document(uid).get()
-                    .addOnSuccessListener(doc -> {
-                        if (doc.exists()) {
-                            binding.fullNameEdit.setText(doc.getString("name"));
-                            binding.emailEdit.setText(doc.getString("email"));
-                            binding.phoneEdit.setText(doc.getString("phone"));
-                            binding.profileName.setText(doc.getString("name"));
-                            binding.profileEmail.setText(doc.getString("email"));
-                            if (doc.getString("phone") != null) {
-                                binding.profilePhone.setText(doc.getString("phone") + " Phone");
-                            }
+
+        firestore.collection("Users").document(uid).get()
+                .addOnSuccessListener(document -> {
+                    if (document.exists()) {
+                        // Load user data
+                        binding.fullNameEdit.setText(document.getString("name"));
+                        binding.emailEdit.setText(document.getString("email"));
+                        binding.phoneEdit.setText(document.getString("phone"));
+
+                        binding.profileName.setText(document.getString("name"));
+                        binding.profileEmail.setText(document.getString("email"));
+                        if (document.getString("phone") != null && !document.getString("phone").isEmpty()) {
+                            binding.profilePhone.setText(document.getString("phone") + " Phone");
+                        }
+
+                        // Optionally, detect role if you store it in the user document
+                        String role = document.getString("role");
+                        if ("organizer".equals(role)) {
                             isOrganizer = true;
                             binding.roleToggleGroup.check(R.id.organizer_button);
+                        } else {
+                            isOrganizer = false;
+                            binding.roleToggleGroup.check(R.id.entrant_button);
                         }
-                    });
-            });
+                    } else {
+                        Toast.makeText(getContext(), "User data not found", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Error loading user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void saveProfileChanges() {
@@ -165,7 +163,7 @@ public class ProfileFragment extends Fragment {
         String phone = binding.phoneEdit.getText().toString();
 
         String collection = isOrganizer ? "organizers" : "entrants";
-        
+
         firestore.collection(collection).document(uid).update(
             "name", name,
             "email", email,
