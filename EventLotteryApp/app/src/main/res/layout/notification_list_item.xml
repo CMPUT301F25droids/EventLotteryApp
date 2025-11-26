@@ -17,7 +17,9 @@
         android:contentDescription="Notification icon"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:src="@drawable/ic_delete" />
+        app:layout_constraintEnd_toStartOf="@+id/tvNotificationTitle"
+        android:paddingRight="3dp"
+        tools:src="@drawable/ticket" />
 
     <TextView
         android:id="@+id/tvNotificationTitle"
@@ -29,9 +31,9 @@
         android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/ivNotificationIcon"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="🎟️ Lottery" />
+        tools:text="Loading" />
 
     <TextView
         android:id="@+id/tvTimestamp"
@@ -42,7 +44,7 @@
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="2h ago" />
+        tools:text="Loading" />
 
     <TextView
         android:id="@+id/tvNotificationMessage"
@@ -55,6 +57,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvNotificationTitle"
-        tools:text="Lottery results for Beginner Swim Lessons are out." />
+        tools:text="Loading" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

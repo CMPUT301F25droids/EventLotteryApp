@@ -17,7 +17,9 @@ import android.view.ViewGroup;
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.EntrantView.placeholder.PlaceholderContent;
 import com.example.eventlotteryapp.UserSession;
+import com.google.android.gms.common.api.internal.StatusCallback;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -68,21 +70,20 @@ public class MyEventsFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.events_list);
         recyclerView.setHasFixedSize(true);
 
-        List<EventItem> eventList = new ArrayList<>();
-        EventsListRecyclerViewAdapter adapter = new EventsListRecyclerViewAdapter(eventList,position -> {
-            EventItem clickedEvent = eventList.get(position);
+        List<MyEventItem> eventList = new ArrayList<>();
+        MyEventsListRecyclerViewAdapter adapter = new MyEventsListRecyclerViewAdapter(eventList,position -> {
+            MyEventItem clickedEvent = eventList.get(position);
             // view event details
             Intent intent = new Intent(getContext(), EventDetailsActivity.class);
             intent.putExtra("eventId", clickedEvent.getId());
             startActivity(intent);
-
         });
 
         recyclerView.setAdapter(adapter);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         String userId = UserSession.getCurrentUserId();
-        db.collection("Users").document(userId)
+        db.collection("users").document(userId)
                 .addSnapshotListener((documentSnapshot, e) -> {
                     if (e != null) {
                         Log.e("Firestore", "Listen failed.", e);
@@ -102,8 +103,15 @@ public class MyEventsFragment extends Fragment {
                                     eventRef.get()
                                             .addOnSuccessListener(eventDoc -> {
                                                 if (eventDoc.exists()) {
-                                                    EventItem event = eventDoc.toObject(EventItem.class);
+                                                    MyEventItem event = (MyEventItem) eventDoc.toObject(EventItem.class);
                                                     event.setId(eventDoc.getId());
+
+                                                    getEventStatus(event, userId, db, new StatusCallback() {
+                                                        @Override
+                                                        public void onStatusRetrieved(MyEventItem.Status status) {
+                                                            event.setStatus(status);
+                                                        }
+                                                    });
                                                     eventList.add(event);
                                                 }
 
@@ -138,5 +146,39 @@ public class MyEventsFragment extends Fragment {
                 });
 
         return view;
+    }
+
+    public interface StatusCallback {
+        void onStatusRetrieved(MyEventItem.Status status);
+    }
+    private void getEventStatus(EventItem event, String userId, FirebaseFirestore db, StatusCallback callback) {
+        DocumentReference eventRef = db.collection("Events").document(event.getId());
+
+        eventRef.get().addOnSuccessListener(eventDoc -> {
+            MyEventItem.Status status =  determineStatus(eventDoc, userId);
+            callback.onStatusRetrieved(status);
+        });
+    }
+
+    private static MyEventItem.Status determineStatus(DocumentSnapshot eventDoc, String userId) {
+        // Get the three arrays
+        List<String> selectedEntrants = (List<String>) eventDoc.get("selectedEntrantIds");
+        List<String> cancelledEntrants = (List<String>) eventDoc.get("cancelledEntrantIds");
+        List<String> waitingListEntrants = (List<String>) eventDoc.get("waitingListEntrantIds");
+        
+        // Check which array contains the userId
+        if (selectedEntrants != null && selectedEntrants.contains(userId)) {
+            return MyEventItem.Status.SELECTED;
+        }
+        
+        if (cancelledEntrants != null && cancelledEntrants.contains(userId)) {
+            return MyEventItem.Status.NOT_SELECTED;
+        }
+        
+        if (waitingListEntrants != null && waitingListEntrants.contains(userId)) {
+            return MyEventItem.Status.PENDING;
+        }
+        
+        return MyEventItem.Status.UNKNOWN;
     }
 }

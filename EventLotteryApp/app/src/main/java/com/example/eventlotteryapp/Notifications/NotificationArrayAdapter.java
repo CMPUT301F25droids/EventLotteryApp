@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -38,6 +39,13 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
         TextView timeStamp = view.findViewById(R.id.tvTimestamp);
         TextView message = view.findViewById(R.id.tvNotificationMessage);
         TextView title = view.findViewById(R.id.tvNotificationTitle);
+        ImageView icon = view.findViewById(R.id.ivNotificationIcon);
+
+        if (notification.getType().contains("lottery")) {
+            icon.setImageResource(R.drawable.ticket);
+        } else {
+            icon.setImageResource(R.drawable.mail_box);
+        }
 
         timeStamp.setText(notification.getRelevantTime());
         message.setText(notification.getMessage());

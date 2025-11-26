@@ -9,7 +9,7 @@ public class UserSession {
 
     public static DocumentReference getCurrentUserRef() {
         return FirebaseFirestore.getInstance()
-                .collection("Users")
+                .collection("users")
                 .document(DEFAULT_USER_ID);
     }
 

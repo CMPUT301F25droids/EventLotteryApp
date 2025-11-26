@@ -5,44 +5,44 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eventlotteryapp.R;
 import com.google.firebase.firestore.DocumentReference;
 
 import java.util.List;
 
-public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsListRecyclerViewAdapter.ViewHolder> {
-    public interface onEventClickListener {
-        void onItemClick(int position);
-    }
+public class MyEventsListRecyclerViewAdapter extends EventsListRecyclerViewAdapter{
 
-    protected final List<EventItem> eventList;
-    private final onEventClickListener listener;
-    public EventsListRecyclerViewAdapter(List<EventItem> eventList,
-                                         onEventClickListener listener) {
-        this.eventList = eventList;
-        this.listener = listener;
+    public MyEventsListRecyclerViewAdapter(List<? extends EventItem> list, onEventClickListener listener) {
+        super((List<EventItem>) list, listener);
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public EventsListRecyclerViewAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         // Inflate your event_list.xml layout
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.event_item, parent, false);
-        return new ViewHolder(view);
+                .inflate(R.layout.myevent_item, parent, false);
+        return new EventsListRecyclerViewAdapter.ViewHolder(view);
     }
 
+
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        EventItem event = eventList.get(position);
+    public void onBindViewHolder(@NonNull EventsListRecyclerViewAdapter.ViewHolder holder, int position) {
+        MyEventItem event = (MyEventItem) eventList.get(position);
         holder.nameView.setText(event.getName());
+        if (event.getStatus() == MyEventItem.Status.PENDING) {
+            ((ViewHolder) holder).statusView.setText("Pending");
+        } else if (event.getStatus() == MyEventItem.Status.SELECTED) {
+            ((ViewHolder) holder).statusView.setText("Selected");
+        } else if (event.getStatus() == MyEventItem.Status.NOT_SELECTED){
+            ((ViewHolder) holder).statusView.setText("Not Selected");
+        } else {
+            ((ViewHolder) holder).statusView.setText("Unknown");
+        }
         DocumentReference organizerRef = event.getOrganizer();
         if (organizerRef != null) { // ✅ check null
             organizerRef.get().addOnSuccessListener(userSnapshot -> {
@@ -79,36 +79,13 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
 
     }
 
-    @Override
-    public int getItemCount() {
-        return eventList.size();
-    }
-
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        public final TextView nameView;
-        public final TextView organizerView;
-        public final TextView costView;
-        public final ImageView imageView;
+    public class ViewHolder extends EventsListRecyclerViewAdapter.ViewHolder {
+        public final TextView statusView;
 
         public ViewHolder(View view) {
             super(view);
-            nameView = view.findViewById(R.id.event_name);
-            organizerView = view.findViewById(R.id.event_organizer);
-            costView = view.findViewById(R.id.event_cost);
-            imageView = view.findViewById(R.id.event_poster);
-
-            itemView.setOnClickListener(v -> {
-                if (listener != null) {
-                    int position = getAdapterPosition();
-                    Log.d("RecyclerClick", "Item clicked: " + position);
-
-                    if (position != RecyclerView.NO_POSITION) {
-                        listener.onItemClick(position);
-                    }
-                }
-            });
+            statusView = view.findViewById(R.id.event_status);
         }
-
     }
 
 }
