@@ -231,13 +231,14 @@
         android:id="@+id/loading_indicator"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_gravity="center"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/filter_scroller"
+        android:elevation="10dp"
+        style="?android:attr/progressBarStyleLarge"
+        app:layout_constraintTop_toTopOf="@id/events_list"
         app:layout_constraintBottom_toBottomOf="@id/events_list"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        style="?android:attr/progressBarStyleLarge"/>
+        />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/events_list"

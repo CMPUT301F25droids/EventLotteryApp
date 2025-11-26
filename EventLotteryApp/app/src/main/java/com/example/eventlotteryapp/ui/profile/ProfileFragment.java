@@ -12,6 +12,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import com.example.eventlotteryapp.Authorization.AuthActivity;
 import com.example.eventlotteryapp.EntrantView.EntrantHomePageActivity;
 import com.example.eventlotteryapp.OrganizerHomePage;
 import com.example.eventlotteryapp.R;
@@ -25,7 +27,7 @@ public class ProfileFragment extends Fragment {
     private FragmentProfileBinding binding;
     private FirebaseFirestore firestore;
     private FirebaseAuth auth;
-    private boolean isOrganizer = false;
+    private boolean isOrganizer;
 
     @Nullable
     @Override
@@ -58,6 +60,9 @@ public class ProfileFragment extends Fragment {
 
     private void setupRoleToggle() {
         binding.roleToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            firestore.collection("users").document(auth.getUid())
+                    .update("role", isOrganizer ? "organizer" : "entrant");
+
             if (isChecked) {
                 if (checkedId == R.id.organizer_button) {
                     isOrganizer = true;
@@ -103,6 +108,13 @@ public class ProfileFragment extends Fragment {
     }
 
     private void setupButtons() {
+        binding.logoutButton.setOnClickListener(v -> {
+            auth.signOut();
+            Intent intent = new Intent(requireActivity(), AuthActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        });
+
         binding.saveChangesButton.setOnClickListener(v -> {
             saveProfileChanges();
         });
@@ -134,14 +146,14 @@ public class ProfileFragment extends Fragment {
                         }
 
                         // Optionally, detect role if you store it in the user document
-                        String role = document.getString("role");
-                        if ("organizer".equals(role)) {
-                            isOrganizer = true;
-                            binding.roleToggleGroup.check(R.id.organizer_button);
-                        } else {
-                            isOrganizer = false;
-                            binding.roleToggleGroup.check(R.id.entrant_button);
-                        }
+//                        String role = document.getString("role");
+//                        if ("organizer".equals(role)) {
+//                            isOrganizer = true;
+//                            binding.roleToggleGroup.check(R.id.organizer_button);
+//                        } else {
+//                            isOrganizer = false;
+//                            binding.roleToggleGroup.check(R.id.entrant_button);
+//                        }
                     } else {
                         Toast.makeText(getContext(), "User data not found", Toast.LENGTH_SHORT).show();
                     }
@@ -164,7 +176,7 @@ public class ProfileFragment extends Fragment {
 
         String collection = isOrganizer ? "organizers" : "entrants";
 
-        firestore.collection(collection).document(uid).update(
+        firestore.collection("users").document(uid).update(
             "name", name,
             "email", email,
             "phone", phone
