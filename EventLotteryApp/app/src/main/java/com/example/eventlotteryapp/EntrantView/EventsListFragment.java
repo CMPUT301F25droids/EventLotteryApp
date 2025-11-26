@@ -205,6 +205,8 @@ public class EventsListFragment extends Fragment {
         MaterialButton workshopsBtn = root.findViewById(R.id.workshops_filter);
         MaterialButton freeBtn = root.findViewById(R.id.free_filter);
         MaterialButton communityBtn = root.findViewById(R.id.community_filter);
+        
+        android.widget.HorizontalScrollView scrollView = root.findViewById(R.id.filter_scroller);
 
         List<MaterialButton> buttons = List.of(allBtn, sportsBtn, musicBtn, workshopsBtn, freeBtn, communityBtn);
 
@@ -217,6 +219,9 @@ public class EventsListFragment extends Fragment {
 
             // update button styles
             updateFilterButtonStyles(buttons, selected);
+            
+            // Center the selected button in the scroll view
+            centerButtonInScrollView(scrollView, selected);
         };
 
         allBtn.setOnClickListener(listener);
@@ -315,6 +320,21 @@ public class EventsListFragment extends Fragment {
         dp.getDatePicker().setMinDate(today.getTimeInMillis());
 
         dp.show();
+    }
+
+    private void centerButtonInScrollView(android.widget.HorizontalScrollView scrollView, MaterialButton button) {
+        // Post to ensure layout is complete
+        scrollView.post(() -> {
+            int scrollViewWidth = scrollView.getWidth();
+            int buttonLeft = button.getLeft();
+            int buttonWidth = button.getWidth();
+            int buttonCenter = buttonLeft + (buttonWidth / 2);
+            int scrollViewCenter = scrollViewWidth / 2;
+            int targetScrollX = buttonCenter - scrollViewCenter;
+            
+            // Smooth scroll to center the button
+            scrollView.smoothScrollTo(targetScrollX, 0);
+        });
     }
 
 

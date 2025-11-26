@@ -28,9 +28,11 @@
     <color name="button_background">#FF4E3CDB</color>
     <color name="button_text">#FFFFFFFF</color>
     <color name="run_lottery_button_bg">#0A000000</color>
-    <color name="filter_selected_bg">#6200EE</color> <!-- purple -->
-    <color name="filter_selected_text">#FFFFFF</color> <!-- white -->
-    <color name="filter_unselected_bg">#FFFFFF</color> <!-- light gray -->
-    <color name="filter_unselected_text">#000000</color> <!-- black -->
+    
+    <!-- Filter Colors - Purple style -->
+    <color name="filter_selected_bg">#6200EE</color> 
+    <color name="filter_selected_text">#FFFFFF</color> 
+    <color name="filter_unselected_bg">#FFFFFF</color> 
+    <color name="filter_unselected_text">#000000</color> 
 
 </resources>

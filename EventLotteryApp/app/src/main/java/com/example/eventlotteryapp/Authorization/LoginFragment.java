@@ -1,13 +1,16 @@
 package com.example.eventlotteryapp.Authorization;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
@@ -39,6 +42,12 @@ public class LoginFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
         
         auth = FirebaseAuth.getInstance();
+
+        // auto login
+        if (auth.getCurrentUser() != null) {
+            navigateToHome();
+        }
+
         emailEditText = view.findViewById(R.id.editTextTextEmailAddress2);
         passwordEditText = view.findViewById(R.id.editTextTextPassword);
         loginButton = view.findViewById(R.id.login_button);
@@ -58,10 +67,45 @@ public class LoginFragment extends Fragment {
                 }
             }
         });
+        TextView forgotPassword = view.findViewById(R.id.forgot_password);
+
+        forgotPassword.setOnClickListener(v -> showResetPasswordDialog());
 
         return view;
     }
-    
+    private void showResetPasswordDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Reset Password");
+
+        final EditText input = new EditText(requireContext());
+        input.setHint("Enter your email");
+        input.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+
+        builder.setView(input);
+
+        builder.setPositiveButton("Send Reset Link", (dialog, which) -> {
+            String email = input.getText().toString().trim();
+
+            if (email.isEmpty()) {
+                Toast.makeText(getContext(), "Email is required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(getContext(), "Password reset link sent!", Toast.LENGTH_LONG).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                    });
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+        builder.show();
+    }
+
+
     private void signInAnonymously() {
         auth.signInAnonymously()
             .addOnCompleteListener(requireActivity(), task -> {

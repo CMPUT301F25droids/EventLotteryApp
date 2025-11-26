@@ -49,7 +49,7 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
 
         // --- CRITICAL: Clear recycled content ---
         holder.imageView.setImageDrawable(null);
-        holder.organizerView.setText("Loading...");
+        holder.organizerView.setText("Organized by: Loading...");
         holder.nameView.setText("");
         holder.costView.setText("");
 
@@ -67,16 +67,16 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
 
                 if (userSnapshot.exists()) {
                     String organizerName = userSnapshot.getString("Name");
-                    holder.organizerView.setText(organizerName);
+                    holder.organizerView.setText("Organized by: " + organizerName);
                 } else {
-                    holder.organizerView.setText("Unknown Organizer");
+                    holder.organizerView.setText("Organized by: Unknown");
                 }
 
-            }).addOnFailureListener(e ->
+            }            ).addOnFailureListener(e ->
                     Log.e("EventAdapter", "Error loading organizer", e)
             );
         } else {
-            holder.organizerView.setText("Unknown Organizer");
+            holder.organizerView.setText("Organized by: Unknown");
         }
 
         // --- Load image safely ---
