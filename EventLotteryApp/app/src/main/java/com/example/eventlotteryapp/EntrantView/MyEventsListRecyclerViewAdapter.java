@@ -22,26 +22,28 @@ public class MyEventsListRecyclerViewAdapter extends EventsListRecyclerViewAdapt
 
     @NonNull
     @Override
-    public EventsListRecyclerViewAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         // Inflate your event_list.xml layout
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.myevent_item, parent, false);
-        return new EventsListRecyclerViewAdapter.ViewHolder(view);
+        return new ViewHolder(view);
     }
 
 
     @Override
     public void onBindViewHolder(@NonNull EventsListRecyclerViewAdapter.ViewHolder holder, int position) {
-        MyEventItem event = (MyEventItem) eventList.get(position);
+
+        MyEventItem event = (MyEventItem) originalList.get(position);
         holder.nameView.setText(event.getName());
+        String lotteryPlaceHolder = "Lottery Status: ";
         if (event.getStatus() == MyEventItem.Status.PENDING) {
-            ((ViewHolder) holder).statusView.setText("Pending");
+            ((ViewHolder) holder).statusView.setText(lotteryPlaceHolder + "Pending");
         } else if (event.getStatus() == MyEventItem.Status.SELECTED) {
-            ((ViewHolder) holder).statusView.setText("Selected");
+            ((ViewHolder) holder).statusView.setText(lotteryPlaceHolder + "Selected");
         } else if (event.getStatus() == MyEventItem.Status.NOT_SELECTED){
-            ((ViewHolder) holder).statusView.setText("Not Selected");
+            ((ViewHolder) holder).statusView.setText(lotteryPlaceHolder + "Not Selected");
         } else {
-            ((ViewHolder) holder).statusView.setText("Unknown");
+            ((ViewHolder) holder).statusView.setText(lotteryPlaceHolder + "Unknown");
         }
         DocumentReference organizerRef = event.getOrganizer();
         if (organizerRef != null) { // ✅ check null

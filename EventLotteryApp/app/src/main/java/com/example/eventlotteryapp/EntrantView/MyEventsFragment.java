@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 
 import com.example.eventlotteryapp.R;
+import com.google.android.gms.common.api.internal.StatusCallback;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -67,6 +68,21 @@ public class MyEventsFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.events_list);
         recyclerView.setHasFixedSize(true);
 
+        // ADD THIS LINE - Set the LayoutManager:
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        // Get empty state views
+        View emptyStateContainer = view.findViewById(R.id.empty_state_container);
+        Button browseEventsButton = view.findViewById(R.id.browse_events_button);
+
+        // Browse events button click listener
+        browseEventsButton.setOnClickListener(v -> {
+            // Switch to the Events tab (position 0)
+            if (getActivity() instanceof EntrantHomePageActivity) {
+                ((EntrantHomePageActivity) getActivity()).viewPager2.setCurrentItem(0);
+            }
+        });
+
         List<MyEventItem> eventList = new ArrayList<>();
         MyEventsListRecyclerViewAdapter adapter = new MyEventsListRecyclerViewAdapter(eventList,position -> {
             MyEventItem clickedEvent = eventList.get(position);
@@ -111,7 +127,6 @@ public class MyEventsFragment extends Fragment {
                             final int[] loadedCount = {0};
 
                             for (DocumentReference eventRef : joinedEvents) {
-
                                 if (eventRef == null) {
                                     checkFinished(loadedCount, total, eventList, adapter, loading, recyclerView, emptyStateContainer);
                                     continue;
@@ -120,7 +135,7 @@ public class MyEventsFragment extends Fragment {
                                 eventRef.get()
                                         .addOnSuccessListener(eventDoc -> {
                                             if (eventDoc.exists()) {
-                                                EventItem event = eventDoc.toObject(EventItem.class);
+                                                MyEventItem event = eventDoc.toObject(MyEventItem.class);
                                                 if (event != null) {
                                                     event.setId(eventDoc.getId());
 
@@ -128,12 +143,17 @@ public class MyEventsFragment extends Fragment {
                                                         @Override
                                                         public void onStatusRetrieved(MyEventItem.Status status) {
                                                             event.setStatus(status);
+                                                            eventList.add(event);
+                                                            checkFinished(loadedCount, total, eventList, adapter, loading, recyclerView, emptyStateContainer);
                                                         }
                                                     });
-                                                    eventList.add(event);
+
+                                                } else {
+                                                    checkFinished(loadedCount, total, eventList, adapter, loading, recyclerView, emptyStateContainer);
                                                 }
+                                            } else {
+                                                checkFinished(loadedCount, total, eventList, adapter, loading, recyclerView, emptyStateContainer);
                                             }
-                                            checkFinished(loadedCount, total, eventList, adapter, loading, recyclerView, emptyStateContainer);
                                         })
                                         .addOnFailureListener(e2 -> {
                                             Log.e("Firestore", "Error loading event", e2);
@@ -190,5 +210,27 @@ public class MyEventsFragment extends Fragment {
         }
         
         return MyEventItem.Status.UNKNOWN;
+    }
+    private void checkFinished(int[] loadedCount, int total, List<MyEventItem> eventList,
+                           MyEventsListRecyclerViewAdapter adapter, ProgressBar loading,
+                           RecyclerView recyclerView, View emptyStateContainer) {
+
+        loadedCount[0]++;
+        if (loadedCount[0] == total) {
+            adapter.updateList(eventList);
+            loading.setVisibility(View.GONE);
+            updateEmptyState(eventList, recyclerView, emptyStateContainer);
+        }
+    }
+
+    // Helper method to show/hide empty state
+    private void updateEmptyState(List<MyEventItem> eventList, RecyclerView recyclerView, View emptyStateContainer) {
+        if (eventList.isEmpty()) {
+            recyclerView.setVisibility(View.GONE);
+            emptyStateContainer.setVisibility(View.VISIBLE);
+        } else {
+            recyclerView.setVisibility(View.VISIBLE);
+            emptyStateContainer.setVisibility(View.GONE);
+        }
     }
 }

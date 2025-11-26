@@ -24,7 +24,7 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
         void onItemClick(int position);
     }
 
-    private final List<EventItem> originalList;  // all events
+    protected final List<EventItem> originalList;  // all events
     private final List<EventItem> filteredList;  // currently displayed events
     private final onEventClickListener listener;
 
@@ -138,7 +138,7 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
 
         notifyDataSetChanged();
     }
-    public void updateList(List<EventItem> newList) {
+    public void updateList(List<? extends EventItem> newList) {
         originalList.clear();
         originalList.addAll(newList);
         filteredList.clear();

@@ -1,5 +1,7 @@
 package com.example.eventlotteryapp.EntrantView;
 
+import com.google.firebase.firestore.DocumentSnapshot;
+
 public class MyEventItem extends EventItem{
     public enum Status {
         PENDING,
@@ -12,6 +14,10 @@ public class MyEventItem extends EventItem{
 
     public MyEventItem() {
         super();
+    }
+
+    public static void fromDocument(DocumentSnapshot doc) {
+
     }
 
     public void setStatus(Status status) {
