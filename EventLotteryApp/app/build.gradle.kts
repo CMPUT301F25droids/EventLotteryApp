@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.legacy.support.v4)
     implementation(libs.recyclerview)
+    implementation("com.google.android.flexbox:flexbox:3.0.0")
     
     // OpenStreetMap (Osmdroid) - Free alternative to Google Maps
     implementation("org.osmdroid:osmdroid-android:6.1.18")
