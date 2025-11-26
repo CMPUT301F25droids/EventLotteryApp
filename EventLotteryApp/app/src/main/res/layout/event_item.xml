@@ -1,103 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/white"
+    android:layout_margin="8dp"
     android:clickable="true"
     android:focusable="true"
-    android:foreground="?attr/selectableItemBackground">
+    android:foreground="?attr/selectableItemBackground"
+    app:cardCornerRadius="6dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@android:color/white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
+        android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/event_poster"
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:maxHeight="200dp"
-            android:paddingBottom="15dp"
+            android:layout_height="173dp"
             android:scaleType="centerCrop"
-            android:layout_gravity="center"
-
-            app:layout_constraintDimensionRatio="1:1.5"
+            android:background="#F0F0F0"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:srcCompat="@tools:sample/avatars" />
 
-
+        <!-- Status badge hidden as per Figma -->
         <TextView
             android:id="@+id/event_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="15dp"
-            android:background="@drawable/rounded_badge"
-            android:backgroundTint="@color/purple_500"
-            android:paddingStart="12dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="6dp"
-            android:text="🟢 Accepted"
-            android:visibility="visible"
-            android:textColor="@android:color/white"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/event_poster"
-            app:layout_constraintTop_toTopOf="@+id/event_poster" />
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-                android:id="@+id/event_name"
-                android:layout_width="match_parent"
-                android:layout_height="65dp"
-                android:text="Jazz Night Event"
+            android:id="@+id/event_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:text="Event Title"
+            android:textColor="@android:color/black"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif"
+            android:maxLines="2"
+            android:ellipsize="end"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/event_poster" />
 
-                android:textSize="15sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="@+id/event_poster"
-                app:layout_constraintTop_toBottomOf="@+id/event_poster" />
+        <TextView
+            android:id="@+id/event_organizer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:text="Organized by"
+            android:textColor="#80000000"
+            android:textSize="13sp"
+            android:fontFamily="sans-serif"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/event_name" />
 
-            <TextView
-                android:id="@+id/event_organizer"
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:paddingBottom="15dp"
-                android:text="Organized By: Melody Makers"
-
-                android:textColor="@color/opaque_black"
-                android:textSize="13sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="@+id/event_name"
-                app:layout_constraintTop_toBottomOf="@+id/event_name" />
-
-            <TextView
-                android:id="@+id/event_cost"
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:paddingBottom="15dp"
-                android:text="Free"
-                android:textColor="@color/opaque_black"
-
-                android:textSize="13sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="@+id/event_organizer"
-                app:layout_constraintTop_toBottomOf="@+id/event_organizer"
-                app:layout_constraintVertical_bias="0.0" />
+        <TextView
+            android:id="@+id/event_cost"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:text="Free"
+            android:textColor="#80000000"
+            android:textSize="13sp"
+            android:fontFamily="sans-serif"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/event_organizer" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>
