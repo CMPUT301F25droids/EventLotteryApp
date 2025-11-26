@@ -6,14 +6,15 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 
-import com.example.eventlotteryapp.UserSession;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.firebase.auth.FirebaseAuth;
 
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.databinding.FragmentJoinConfirmationListDialogBinding;
@@ -60,10 +61,17 @@ public class LeaveConfirmationFragment extends BottomSheetDialogFragment {
 
 
         leaveButton.setOnClickListener(v -> {
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            UserSession user_session = new UserSession();
-            DocumentReference user_ref = UserSession.getCurrentUserRef();
+            // Check if user is authenticated
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            if (auth.getCurrentUser() == null) {
+                Toast.makeText(requireContext(), "Please log in to leave events", Toast.LENGTH_SHORT).show();
+                dismiss();
+                return;
+            }
 
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            String userId = auth.getCurrentUser().getUid();
+            DocumentReference user_ref = db.collection("users").document(userId);
             DocumentReference event_ref = db.collection("Events").document(eventId);
             event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayRemove(user_ref))
                     .addOnSuccessListener(aVoid -> {

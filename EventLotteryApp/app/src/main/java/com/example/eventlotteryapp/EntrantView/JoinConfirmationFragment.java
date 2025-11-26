@@ -12,8 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.example.eventlotteryapp.UserSession;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
@@ -177,12 +177,18 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
     }
     
     private void joinEvent(Double latitude, Double longitude) {
-                    FirebaseFirestore db = FirebaseFirestore.getInstance();
-                    UserSession user_session = new UserSession();
-                    DocumentReference user_ref = UserSession.getCurrentUserRef();
-        String userId = user_ref.getId();
+        // Check if user is authenticated
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(requireContext(), "Please log in to join events", Toast.LENGTH_SHORT).show();
+            dismiss();
+            return;
+        }
 
-                    DocumentReference event_ref = db.collection("Events").document(eventId);
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String userId = auth.getCurrentUser().getUid();
+        DocumentReference user_ref = db.collection("users").document(userId);
+        DocumentReference event_ref = db.collection("Events").document(eventId);
         
         // Update old system waitlist
                     event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayUnion(user_ref))

@@ -15,7 +15,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 
 import com.example.eventlotteryapp.R;
-import com.example.eventlotteryapp.UserSession;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -95,8 +95,16 @@ public class MyEventsFragment extends Fragment {
         ProgressBar loading = view.findViewById(R.id.loading_indicator);
         loading.setVisibility(View.VISIBLE);
 
+        // Check if user is authenticated
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            loading.setVisibility(View.GONE);
+            updateEmptyState(eventList, recyclerView, emptyStateContainer);
+            return view;
+        }
+
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        String userId = UserSession.getCurrentUserId();
+        String userId = auth.getCurrentUser().getUid();
         db.collection("users").document(userId)
                 .addSnapshotListener((documentSnapshot, e) -> {
                     if (e != null) {
