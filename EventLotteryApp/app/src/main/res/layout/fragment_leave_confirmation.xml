@@ -14,13 +14,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="@string/join_confirmation_title"
+            android:text="@string/leave_confirmation_title"
             android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/join_confirm_message"
-            android:text="@string/join_confirmation_message"
+            android:text="@string/leave_confirmation_message"
             android:layout_marginTop="8dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />

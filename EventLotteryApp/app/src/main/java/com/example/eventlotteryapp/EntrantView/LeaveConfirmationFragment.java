@@ -48,7 +48,7 @@ public class LeaveConfirmationFragment extends BottomSheetDialogFragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         this.eventId = getArguments().getString(ARG_EVENT_ID);
-        return inflater.inflate(R.layout.fragment_join_confirmation_list_dialog, container, false);
+        return inflater.inflate(R.layout.fragment_leave_confirmation, container, false);
 
     }
 
