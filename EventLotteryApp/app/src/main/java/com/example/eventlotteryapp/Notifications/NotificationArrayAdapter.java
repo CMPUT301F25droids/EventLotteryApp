@@ -41,7 +41,7 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
 
         timeStamp.setText(notification.getRelevantTime());
         message.setText(notification.getMessage());
-        title.setText(notification.getType());
+        title.setText(notification.getEventName());
 
         return view;
     }

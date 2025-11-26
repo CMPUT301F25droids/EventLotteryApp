@@ -2,59 +2,75 @@ package com.example.eventlotteryapp.Notifications;
 
 import com.example.eventlotteryapp.Helpers.DateTimeFormat;
 import com.example.eventlotteryapp.Helpers.RelativeTime;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Notification implements Comparable<Notification>{
-    public static Object Helpers;
-
-    public enum NotificationType{
-        LOTTERY,
-        MESSAGE
-    }
+    private final String type;
     private final Date timeStamp;
-    private final NotificationType type;
     private final String message;
+    private String eventName;
 
-    public Notification(Date timeStamp, NotificationType type, String message){
+    private Notification(Date timeStamp, String type, String message){
         this.timeStamp = timeStamp;
         this.type = type;
         this.message = message;
+        this.eventName = "Unknown";
     }
 
-    public static Notification fromDocument(DocumentSnapshot doc) {
-        String message = doc.getString("message");
+    public interface NotificationLoadCallback {
+        void onNotificationLoaded(Notification notification);
+    }
 
-        String typeString = doc.getString("type");
-        NotificationType type = NotificationType.MESSAGE;
-        if (typeString != null && typeString.equalsIgnoreCase("lottery")) {
-            type = NotificationType.LOTTERY;
+    public static void fromDocument(DocumentSnapshot doc, NotificationLoadCallback callback) {
+        String message = doc.getString("Message");
+        String type = doc.getString("Type");
+        Date date = DateTimeFormat.toDate(doc.getString("TimeStamp"));
+
+        DocumentReference eventRef = doc.getDocumentReference("EventId");
+        Notification notification = new Notification(date, type, message);
+
+        if (eventRef != null) {
+            eventRef.get().addOnSuccessListener(eventSnap -> {
+                if (eventSnap.exists()) {
+                    notification.setEventName(eventSnap.getString("Name"));
+                }
+                callback.onNotificationLoaded(notification);
+            }).addOnFailureListener(e -> {
+                callback.onNotificationLoaded(notification);
+            });
+        } else {
+            callback.onNotificationLoaded(notification);
         }
-
-        com.google.firebase.Timestamp ts = doc.getTimestamp("timeStamp");
-        Date date = ts != null ? ts.toDate() : new Date();
-
-        return new Notification(date, type, message);
     }
-
 
     public String getRelevantTime() {
         return RelativeTime.getRelativeTime(timeStamp);
     }
 
+    public void setEventName(String eventName) {
+        this.eventName = eventName;
+    }
+
     // Return type as string
     public String getType() {
-        if (type == Notification.NotificationType.MESSAGE) {
-            return "Message";
-        } else {
-            return "Lottery";
-        }
+        return type;
     }
 
     public String getMessage() {
         return message;
+    }
+
+    public String getEventName() {
+        return eventName;
+    }
+
+    public Date getTimeStamp() {
+        return timeStamp;
     }
 
     // Implement compareTo for ordering by relevant time

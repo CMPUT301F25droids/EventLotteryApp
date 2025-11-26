@@ -11,12 +11,15 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.eventlotteryapp.R;
+import com.example.eventlotteryapp.UserSession;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class NotificationsFragment extends Fragment {
 
@@ -53,24 +56,42 @@ public class NotificationsFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         notificationsList.setVisibility(View.GONE);
 
-        notificationsRef = db.collection("notifications");
+        notificationsRef = db.collection("Notifications");
+        String userId = UserSession.getCurrentUserId();
+        DocumentReference userRef = db.document("Users/" + userId);
+        notificationsArray.clear();
+        notificationsRef.whereEqualTo("UserId", userRef)
+                        .get()
+                        .addOnCompleteListener((task) -> {
+                            if (task.isSuccessful()) {
+                                int totalDocs = task.getResult().size();
 
-        notificationsRef.addSnapshotListener((value, error) -> {
-            if (error != null) {
-                Log.e("NotificationsFragment", error.toString());
-                return;
-            }
+                                if (totalDocs == 0) {
+                                    updateUI();
+                                    return;
+                                }
 
-            notificationsArray.clear();
-            if (value != null) {
-                for (DocumentSnapshot doc : value.getDocuments()) {
-                    notificationsArray.add(Notification.fromDocument(doc));
-                }
-            }
+                                AtomicInteger loadedCount = new AtomicInteger(0);
 
-            Collections.sort(notificationsArray);
-            updateUI();
-        });
+                                for (DocumentSnapshot doc : task.getResult()) {
+                                    Notification.fromDocument(doc, notification -> {
+                                        notificationsArray.add(notification);
+
+                                        if (loadedCount.incrementAndGet() == totalDocs) {
+                                            Collections.sort(notificationsArray);
+                                            updateUI();
+                                        }
+                                    });
+                                }
+                            } else {
+                                Log.e("notif", "error getting documents", task.getException());
+                                updateUI();
+                            }
+
+
+                            Collections.sort(notificationsArray);
+                            updateUI();
+                        });
     }
 
     private void updateUI() {
