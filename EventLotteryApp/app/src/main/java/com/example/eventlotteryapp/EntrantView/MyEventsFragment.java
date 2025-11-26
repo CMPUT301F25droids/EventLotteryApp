@@ -97,7 +97,7 @@ public class MyEventsFragment extends Fragment {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         String userId = UserSession.getCurrentUserId();
-        db.collection("Users").document(userId)
+        db.collection("users").document(userId)
                 .addSnapshotListener((documentSnapshot, e) -> {
                     if (e != null) {
                         Log.e("Firestore", "Listen failed.", e);

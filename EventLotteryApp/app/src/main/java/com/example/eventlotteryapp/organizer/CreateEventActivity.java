@@ -255,7 +255,7 @@ public class CreateEventActivity extends AppCompatActivity {
         // OLD SYSTEM FIELDS (to match existing Events collection structure)
         eventData.put("Name", title);  // Old field name
         eventData.put("Cost", price != null ? String.format("$%.2f", price) : "$0.00");  // Old field name, formatted as string
-        eventData.put("Organizer", firestore.collection("Users").document(organizerId));  // Old field name, as DocumentReference
+        eventData.put("Organizer", firestore.collection("users").document(organizerId));  // Old field name, as DocumentReference
         if (posterImageBase64 != null && !posterImageBase64.isEmpty()) {
             eventData.put("Image", posterImageBase64);  // Old field name, base64 string
         }
@@ -286,11 +286,11 @@ public class CreateEventActivity extends AppCompatActivity {
         
         // Only initialize empty lists for new events, preserve existing lists for edits
         if (eventId == null) {
-            eventData.put("waitingListEntrantIds", new ArrayList<String>());
-            eventData.put("selectedEntrantIds", new ArrayList<String>());
-            eventData.put("cancelledEntrantIds", new ArrayList<String>());
+        eventData.put("waitingListEntrantIds", new ArrayList<String>());
+        eventData.put("selectedEntrantIds", new ArrayList<String>());
+        eventData.put("cancelledEntrantIds", new ArrayList<String>());
             // createdAt will be set by Firestore server timestamp for new events
-            eventData.put("createdAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
+        eventData.put("createdAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
         }
         // For edit mode, we don't overwrite existing lists or createdAt
 
@@ -314,35 +314,35 @@ public class CreateEventActivity extends AppCompatActivity {
                     });
         } else {
             // Create new event
-            firestore.collection("Events")
-                    .add(eventData)
-                    .addOnSuccessListener(documentReference -> {
+        firestore.collection("Events")
+                .add(eventData)
+                .addOnSuccessListener(documentReference -> {
                         String newEventId = documentReference.getId();
                         android.util.Log.d("CreateEventActivity", "Event saved successfully with ID: " + newEventId);
-                        android.util.Log.d("CreateEventActivity", "Event organizerId: " + organizerId);
-                        
-                        // Verify the saved event
+                    android.util.Log.d("CreateEventActivity", "Event organizerId: " + organizerId);
+                    
+                    // Verify the saved event
                         firestore.collection("Events").document(newEventId).get()
-                            .addOnSuccessListener(documentSnapshot -> {
-                                if (documentSnapshot.exists()) {
-                                    String savedOrganizerId = documentSnapshot.getString("organizerId");
-                                    android.util.Log.d("CreateEventActivity", "Verified saved event - organizerId in Firestore: " + savedOrganizerId);
-                                }
-                            });
-                        
-                        Toast.makeText(this, "Event created successfully", Toast.LENGTH_SHORT).show();
-                        
-                        if (listener != null) {
+                        .addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                String savedOrganizerId = documentSnapshot.getString("organizerId");
+                                android.util.Log.d("CreateEventActivity", "Verified saved event - organizerId in Firestore: " + savedOrganizerId);
+                            }
+                        });
+                    
+                    Toast.makeText(this, "Event created successfully", Toast.LENGTH_SHORT).show();
+                    
+                    if (listener != null) {
                             listener.onEventSaved(newEventId);
-                        } else {
-                            // Use finish() to return to previous activity instead of recreating it
-                            // This ensures the fragment's onResume() is called
-                            finish();
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        android.util.Log.e("CreateEventActivity", "Error creating event", e);
-                        Toast.makeText(this, "Error creating event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Use finish() to return to previous activity instead of recreating it
+                        // This ensures the fragment's onResume() is called
+                        finish();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    android.util.Log.e("CreateEventActivity", "Error creating event", e);
+                    Toast.makeText(this, "Error creating event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
         }
     }
@@ -413,7 +413,7 @@ public class CreateEventActivity extends AppCompatActivity {
                 android.util.Log.e("CreateEventActivity", "Error loading event for editing", e);
                 Toast.makeText(this, "Error loading event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 finish();
-            });
+                });
     }
 
     public interface OnEventSavedListener {

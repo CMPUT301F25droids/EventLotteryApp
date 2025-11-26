@@ -147,7 +147,7 @@ public class EntrantListActivity extends AppCompatActivity {
         adapter = new WaitingListAdapter(filteredEntrants);
         entrantsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         entrantsRecyclerView.setAdapter(adapter);
-        
+
         // Setup search
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -306,7 +306,7 @@ public class EntrantListActivity extends AppCompatActivity {
     
     private void loadEventData() {
         firestore.collection("Events").document(eventId)
-            .get()
+                .get()
             .addOnSuccessListener(document -> {
                 if (!document.exists()) {
                     Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
@@ -411,7 +411,7 @@ public class EntrantListActivity extends AppCompatActivity {
                     
                     final String finalStatus = status;
                     
-                    firestore.collection("Users").document(entrantId)
+                    firestore.collection("users").document(entrantId)
                         .get()
                         .addOnSuccessListener(userDoc -> {
                             if (userDoc.exists()) {
@@ -642,7 +642,7 @@ public class EntrantListActivity extends AppCompatActivity {
                                     locations.add(location);
                                     
                                     // Get entrant name for marker
-                                    firestore.collection("Users").document(entrantId)
+                                    firestore.collection("users").document(entrantId)
                                         .get()
                                         .addOnSuccessListener(userDoc -> {
                                             String name = userDoc.getString("Name");
@@ -692,7 +692,7 @@ public class EntrantListActivity extends AppCompatActivity {
                                 }
                             } else {
                                 // Try to get location from user document (if stored there)
-                                firestore.collection("Users").document(entrantId)
+                                firestore.collection("users").document(entrantId)
                                     .get()
                                     .addOnSuccessListener(userDoc -> {
                                         // Check for location in user's joined events data

@@ -103,7 +103,7 @@ public class MyEventsFragment extends Fragment {
         Date now = new Date();
         
         // Create DocumentReference for the current organizer
-        com.google.firebase.firestore.DocumentReference organizerRef = firestore.collection("Users").document(organizerId);
+        com.google.firebase.firestore.DocumentReference organizerRef = firestore.collection("users").document(organizerId);
 
         Log.d("MyEventsFragment", "Loading events for organizerId: " + organizerId);
         Log.d("MyEventsFragment", "Current user UID: " + organizerId);

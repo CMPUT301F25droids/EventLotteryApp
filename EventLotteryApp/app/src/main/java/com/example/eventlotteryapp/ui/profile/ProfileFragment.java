@@ -119,7 +119,7 @@ public class ProfileFragment extends Fragment {
 
         String uid = auth.getCurrentUser().getUid();
 
-        firestore.collection("Users").document(uid).get()
+        firestore.collection("users").document(uid).get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
                         // Load user data

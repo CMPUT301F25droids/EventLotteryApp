@@ -177,19 +177,19 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
     }
     
     private void joinEvent(Double latitude, Double longitude) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        UserSession user_session = new UserSession();
-        DocumentReference user_ref = UserSession.getCurrentUserRef();
+                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+                    UserSession user_session = new UserSession();
+                    DocumentReference user_ref = UserSession.getCurrentUserRef();
         String userId = user_ref.getId();
 
-        DocumentReference event_ref = db.collection("Events").document(eventId);
+                    DocumentReference event_ref = db.collection("Events").document(eventId);
         
         // Update old system waitlist
-        event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayUnion(user_ref))
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "User added to waitlist");
-                })
-                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+                    event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayUnion(user_ref))
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d("Firestore", "User added to waitlist");
+                            })
+                            .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
         
         // Update new system waiting list
         event_ref.update("waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayUnion(userId))
@@ -199,11 +199,11 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
                 .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to new waiting list", e));
         
         // Update user's joined events
-        user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "Events added to users joined events");
-                })
-                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+                    user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d("Firestore", "Events added to users joined events");
+                            })
+                            .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
 
         // Store location if available
         if (latitude != null && longitude != null) {
@@ -223,12 +223,12 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
                 });
         }
 
-        // Handle join action
-        Intent intent = new Intent(getContext(), EntrantHomePageActivity.class);
-        intent.putExtra("open_tab", 1); // e.g. 0 = Home, 1 = MyEvents, 2 = Notifications
-        startActivity(intent);
+            // Handle join action
+            Intent intent = new Intent(getContext(), EntrantHomePageActivity.class);
+            intent.putExtra("open_tab", 1); // e.g. 0 = Home, 1 = MyEvents, 2 = Notifications
+            startActivity(intent);
 
-        dismiss(); // close modal
+            dismiss(); // close modal
     }
 
 

@@ -207,7 +207,7 @@ public class LotteryResultsActivity extends AppCompatActivity {
         final List<String> names = new ArrayList<>();
         
         for (String entrantId : namesToLoad) {
-            firestore.collection("Users").document(entrantId)
+            firestore.collection("users").document(entrantId)
                 .get()
                 .addOnSuccessListener(document -> {
                     String name = document.getString("Name");
@@ -276,7 +276,7 @@ public class LotteryResultsActivity extends AppCompatActivity {
                 final int[] loaded = {0};
 
                 for (String entrantId : selectedIds) {
-                    firestore.collection("Users").document(entrantId)
+                    firestore.collection("users").document(entrantId)
                         .get()
                         .addOnSuccessListener(userDoc -> {
                             String name = userDoc.getString("Name");
