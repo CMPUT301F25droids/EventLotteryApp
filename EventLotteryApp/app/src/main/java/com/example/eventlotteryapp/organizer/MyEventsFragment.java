@@ -1,6 +1,7 @@
 package com.example.eventlotteryapp.organizer;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.data.Event;
 import com.example.eventlotteryapp.databinding.FragmentMyEventsBinding;
+import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -71,26 +73,53 @@ public class MyEventsFragment extends Fragment {
     }
 
     private void setupFilterButtons() {
-        binding.activeFilterButton.setOnClickListener(v -> setFilter("active"));
-        binding.upcomingFilterButton.setOnClickListener(v -> setFilter("upcoming"));
-        binding.closedFilterButton.setOnClickListener(v -> setFilter("closed"));
+        MaterialButton activeBtn = binding.activeFilterButton;
+        MaterialButton upcomingBtn = binding.upcomingFilterButton;
+        MaterialButton closedBtn = binding.closedFilterButton;
+
+        List<MaterialButton> buttons = List.of(activeBtn, upcomingBtn, closedBtn);
+
+        // Tag each button so we know which filter it represents
+        activeBtn.setTag("active");
+        upcomingBtn.setTag("upcoming");
+        closedBtn.setTag("closed");
+
+        View.OnClickListener listener = v -> {
+            MaterialButton selected = (MaterialButton) v;
+            String filter = (String) selected.getTag();
+
+            setFilter(filter);                // Update current filter
+            updateFilterButtonStyles(buttons, selected);  // Update colors
+        };
+
+        activeBtn.setOnClickListener(listener);
+        upcomingBtn.setOnClickListener(listener);
+        closedBtn.setOnClickListener(listener);
+
+        // Default selection
+        updateFilterButtonStyles(buttons, activeBtn);
     }
 
     private void setFilter(String filter) {
         currentFilter = filter;
-        updateFilterButtons();
         filterEvents();
     }
 
-    private void updateFilterButtons() {
-        // All buttons have the same style (black 4% opacity background, black text)
-        // They all look the same, but we keep the method for consistency
-        binding.activeFilterButton.setBackgroundResource(R.drawable.filter_button_inactive);
-        binding.activeFilterButton.setTextColor(getResources().getColor(R.color.black));
-        binding.upcomingFilterButton.setBackgroundResource(R.drawable.filter_button_inactive);
-        binding.upcomingFilterButton.setTextColor(getResources().getColor(R.color.black));
-        binding.closedFilterButton.setBackgroundResource(R.drawable.filter_button_inactive);
-        binding.closedFilterButton.setTextColor(getResources().getColor(R.color.black));
+    private void updateFilterButtonStyles(List<MaterialButton> buttons, MaterialButton selected) {
+        int selectedBg = getResources().getColor(R.color.filter_selected_bg);
+        int selectedText = getResources().getColor(R.color.filter_selected_text);
+        int unselectedBg = getResources().getColor(R.color.filter_unselected_bg);
+        int unselectedText = getResources().getColor(R.color.filter_unselected_text);
+
+        for (MaterialButton btn : buttons) {
+            if (btn == selected) {
+                btn.setBackgroundTintList(ColorStateList.valueOf(selectedBg));
+                btn.setTextColor(selectedText);
+            } else {
+                btn.setBackgroundTintList(ColorStateList.valueOf(unselectedBg));
+                btn.setTextColor(unselectedText);
+            }
+        }
     }
 
     public void loadEvents() {

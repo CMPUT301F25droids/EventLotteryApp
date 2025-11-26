@@ -204,13 +204,45 @@ public class EventsListFragment extends Fragment {
         MaterialButton freeBtn = root.findViewById(R.id.free_filter);
         MaterialButton communityBtn = root.findViewById(R.id.community_filter);
 
-        allBtn.setOnClickListener(v -> adapter.applyCategoryFilter("all"));
-        sportsBtn.setOnClickListener(v -> adapter.applyCategoryFilter("sports"));
-        musicBtn.setOnClickListener(v -> adapter.applyCategoryFilter("music"));
-        workshopsBtn.setOnClickListener(v -> adapter.applyCategoryFilter("workshops"));
-        freeBtn.setOnClickListener(v -> adapter.applyCategoryFilter("free"));
-        communityBtn.setOnClickListener(v -> adapter.applyCategoryFilter("community"));
+        List<MaterialButton> buttons = List.of(allBtn, sportsBtn, musicBtn, workshopsBtn, freeBtn, communityBtn);
+
+        View.OnClickListener listener = v -> {
+            MaterialButton selected = (MaterialButton) v;
+
+            // update adapter
+            String category = (String) selected.getTag(); // we'll set tags in XML
+            adapter.applyCategoryFilter(category);
+
+            // update button styles
+            updateFilterButtonStyles(buttons, selected);
+        };
+
+        allBtn.setOnClickListener(listener);
+        sportsBtn.setOnClickListener(listener);
+        musicBtn.setOnClickListener(listener);
+        workshopsBtn.setOnClickListener(listener);
+        freeBtn.setOnClickListener(listener);
+        communityBtn.setOnClickListener(listener);
+
+        // default selection
+        updateFilterButtonStyles(buttons, allBtn);
     }
+    private void updateFilterButtonStyles(List<MaterialButton> buttons, MaterialButton selected) {
+        for (MaterialButton btn : buttons) {
+            if (btn == selected) {
+                btn.setBackgroundTintList(ColorStateList.valueOf(
+                        getResources().getColor(R.color.filter_selected_bg)
+                ));
+                btn.setTextColor(getResources().getColor(R.color.filter_selected_text));
+            } else {
+                btn.setBackgroundTintList(ColorStateList.valueOf(
+                        getResources().getColor(R.color.filter_unselected_bg)
+                ));
+                btn.setTextColor(getResources().getColor(R.color.filter_unselected_text));
+            }
+        }
+    }
+
     private void openDatePicker(EventsListRecyclerViewAdapter adapter) {
         // Get today's date
         Calendar today = Calendar.getInstance();
