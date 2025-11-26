@@ -26,13 +26,20 @@ public class Notification implements Comparable<Notification>{
 
     public static Notification fromDocument(DocumentSnapshot doc) {
         String message = doc.getString("message");
-        NotificationType type = doc.getString("type").equals("Message") ?
-                NotificationType.MESSAGE : NotificationType.LOTTERY;
-        Date ts = DateTimeFormat.toDate(doc.getString("timeStamp"));
 
-        return new Notification(ts, type, message);
+        String typeString = doc.getString("type");
+        NotificationType type = NotificationType.MESSAGE;
+        if (typeString != null && typeString.equalsIgnoreCase("lottery")) {
+            type = NotificationType.LOTTERY;
+        }
+
+        com.google.firebase.Timestamp ts = doc.getTimestamp("timeStamp");
+        Date date = ts != null ? ts.toDate() : new Date();
+
+        return new Notification(date, type, message);
     }
-    
+
+
     public String getRelevantTime() {
         return RelativeTime.getRelativeTime(timeStamp);
     }

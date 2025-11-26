@@ -18,6 +18,7 @@
     <!-- Missing Colors -->
     <color name="opaque_light_grey">#F5F5F5</color>
     <color name="medium_grey">#808080</color>
+    <color name="button_grey">#CCCCCC</color>
 
     <color name="None">#00FFFFFF</color>
 
@@ -26,5 +27,6 @@
 
     <color name="button_background">#FF4E3CDB</color>
     <color name="button_text">#FFFFFFFF</color>
+    <color name="run_lottery_button_bg">#0A000000</color>
 
 </resources>

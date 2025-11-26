@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:background="@color/white">
+
+    <!-- Avatar -->
+    <ImageView
+        android:id="@+id/avatar_image"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_profile"
+        android:background="@drawable/circular_avatar"
+        android:scaleType="centerCrop"
+        android:padding="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Name -->
+    <TextView
+        android:id="@+id/entrant_name_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Sarah Nguyen"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@id/avatar_image"
+        app:layout_constraintTop_toTopOf="@id/avatar_image"
+        app:layout_constraintEnd_toStartOf="@id/joined_date_text"
+        android:layout_marginStart="12dp" />
+
+    <!-- Status -->
+    <LinearLayout
+        android:id="@+id/status_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintStart_toEndOf="@id/avatar_image"
+        app:layout_constraintTop_toBottomOf="@id/entrant_name_text"
+        app:layout_constraintBottom_toBottomOf="@id/avatar_image"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="4dp">
+
+        <View
+            android:id="@+id/status_indicator"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/status_indicator_yellow"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:id="@+id/status_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pending"
+            android:textSize="14sp"
+            android:textColor="@color/black" />
+    </LinearLayout>
+
+    <!-- Joined Date -->
+    <TextView
+        android:id="@+id/joined_date_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Joined Dec 3"
+        android:textSize="14sp"
+        android:textColor="@color/medium_grey"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/avatar_image" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

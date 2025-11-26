@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fitsSystemWindows="true">
+
+    <!-- Top Bar -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="56dp"
+        android:background="@color/white"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="@dimen/status_bar_padding"
+        android:paddingBottom="12dp"
+        android:elevation="4dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Back Button -->
+        <ImageView
+            android:id="@+id/back_button"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="Back"
+            android:clickable="true"
+            android:focusable="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/title_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Notify Entrants"
+            android:gravity="center"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/back_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Scrollable content -->
+    <ScrollView
+        android:id="@+id/scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/top_bar"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Event Image -->
+            <ImageView
+                android:id="@+id/event_image"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:scaleType="centerCrop"
+                android:background="@color/opaque_light_grey"
+                tools:src="@drawable/ic_profile" />
+
+            <!-- Event Title -->
+            <TextView
+                android:id="@+id/event_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Event Title"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:padding="16dp"
+                android:paddingBottom="8dp" />
+
+            <!-- Description -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="You can edit your message before sending."
+                android:textColor="@color/medium_grey"
+                android:textSize="14sp"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="8dp" />
+
+            <!-- Participant Counts -->
+            <TextView
+                android:id="@+id/participant_counts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Selected: 20, Waitlisted: 25"
+                android:textColor="@color/medium_grey"
+                android:textSize="14sp"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="16dp" />
+
+            <!-- Entrant Selection Tabs -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="16dp">
+
+                <!-- Selected Entrants Tab -->
+                <LinearLayout
+                    android:id="@+id/selected_tab"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="12dp"
+                    android:background="@drawable/chip_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginEnd="8dp">
+
+                    <RadioButton
+                        android:id="@+id/selected_radio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:buttonTint="@color/selected_tab_color" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Selected Entrants"
+                        android:textColor="@color/selected_tab_color"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="8dp" />
+                </LinearLayout>
+
+                <!-- Waitlisted Entrants Tab -->
+                <LinearLayout
+                    android:id="@+id/waitlisted_tab"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="12dp"
+                    android:background="@drawable/chip_background"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <RadioButton
+                        android:id="@+id/waitlisted_radio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="false"
+                        android:buttonTint="@color/medium_grey" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Waitlisted Entrants"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        android:layout_marginStart="8dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Message Input -->
+            <TextView
+                android:id="@+id/message_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Message to Selected Entrants"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="8dp" />
+
+            <EditText
+                android:id="@+id/message_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="120dp"
+                android:hint="Congratulations! You've been selected to..."
+                android:textSize="14sp"
+                android:background="@drawable/edit_text_custom_bg"
+                android:padding="16dp"
+                android:gravity="top|start"
+                android:inputType="textMultiLine"
+                android:textColorHint="@color/medium_grey"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Recipient List -->
+            <LinearLayout
+                android:id="@+id/recipient_list_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="8dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Recipient List"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/more_recipients_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+17 more"
+                    android:textColor="@color/selected_tab_color"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Horizontal ScrollView for Recipients -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:clipToPadding="false"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:id="@+id/recipients_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Recipients will be added dynamically -->
+
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Send Notifications Button -->
+            <Button
+                android:id="@+id/send_notifications_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Send Notifications"
+                android:textColor="@color/black"
+                android:background="@drawable/export_csv_button_bg"
+                android:backgroundTint="@null"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="24dp"
+                android:padding="16dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Navigation -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:tabGravity="fill"
+        app:tabIndicatorFullWidth="true"
+        app:tabMaxWidth="0dp"
+        app:tabMode="fixed">
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:icon="@drawable/ic_dashboard"
+            android:text="Dashboard" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:icon="@drawable/ic_plus"
+            android:text="Create" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:icon="@drawable/ic_notifications"
+            android:text="Notifications" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:icon="@drawable/ic_profile"
+            android:text="Profile" />
+
+    </com.google.android.material.tabs.TabLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

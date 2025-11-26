@@ -1,5 +1,6 @@
 package com.example.eventlotteryapp.organizer;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,9 +20,18 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
 
     private List<MyEventsFragment.EventWithId> events;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+    private OnItemClickListener clickListener;
+
+    public interface OnItemClickListener {
+        void onItemClick(String eventId);
+    }
 
     public EventAdapter(List<MyEventsFragment.EventWithId> events) {
         this.events = new ArrayList<>(events);
+    }
+    
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.clickListener = listener;
     }
 
     @NonNull
@@ -68,6 +78,13 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
 
         holder.statusText.setText(status);
         holder.statusIndicator.setBackgroundResource(statusIndicatorRes);
+        
+        // Set click listener
+        holder.itemView.setOnClickListener(v -> {
+            if (clickListener != null) {
+                clickListener.onItemClick(eventWithId.id);
+            }
+        });
     }
 
     @Override

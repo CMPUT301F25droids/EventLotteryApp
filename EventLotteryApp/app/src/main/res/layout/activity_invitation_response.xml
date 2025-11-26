@@ -1,108 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:gravity="center"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="@color/white">
+    android:padding="20dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/text_response"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
-
-        <!-- Progress Bar -->
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone"
-            android:layout_marginTop="100dp"/>
-
-        <!-- Celebration Emoji -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🎉"
-            android:textSize="80sp"
-            android:layout_gravity="center"
-            android:layout_marginTop="40dp"/>
-
-        <!-- Event Name -->
-        <TextView
-            android:id="@+id/tv_event_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Event Name"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            android:gravity="center"
-            android:layout_marginTop="20dp"/>
-
-        <!-- Invitation Message -->
-        <TextView
-            android:id="@+id/tv_invitation_message"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Congratulations! You've been selected!"
-            android:textSize="16sp"
-            android:textColor="@color/medium_grey"
-            android:gravity="center"
-            android:layout_marginTop="12dp"/>
-
-        <!-- Lottery Criteria (reusing from US 01.05.05) -->
-        <TextView
-            android:id="@+id/tv_lottery_criteria"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="14sp"
-            android:textColor="@color/medium_grey"
-            android:gravity="center"
-            android:layout_marginTop="16dp"
-            android:padding="16dp"
-            android:background="@drawable/edittext"
-            android:visibility="gone"/>
-
-        <!-- Information Box -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="What happens next?\n\n• If you ACCEPT, you'll be registered for the event\n• If you DECLINE, someone else will get this opportunity\n• You must respond to secure your spot"
-            android:textSize="14sp"
-            android:textColor="@color/medium_grey"
-            android:layout_marginTop="24dp"
-            android:padding="16dp"
-            android:background="@drawable/edittext"
-            android:lineSpacingExtra="4dp"/>
-
-        <!-- Accept Button (US 01.05.02) -->
-        <Button
-            android:id="@+id/btn_accept_invitation"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="✓ Accept Invitation"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:backgroundTint="@color/selected_tab_color"
-            android:textColor="@color/white"
-            android:layout_marginTop="32dp"/>
-
-        <!-- Decline Button (US 01.05.03) -->
-        <Button
-            android:id="@+id/btn_decline_invitation"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="✕ Decline Invitation"
-            android:textSize="18sp"
-            android:backgroundTint="@color/white"
-            android:textColor="@color/medium_grey"
-            android:strokeColor="@color/medium_grey"
-            android:layout_marginTop="12dp"
-            style="?attr/materialButtonOutlinedStyle"/>
-
-    </LinearLayout>
-</ScrollView>
+        android:text="Invitation Response"
+        android:textSize="20sp"/>
+</LinearLayout>

@@ -21,7 +21,7 @@ public class EntrantViewPagerAdapter extends FragmentStateAdapter {
             case 1:
                 return new MyEventsFragment();
             case 2:
-                return new NotificationsFragment(FirebaseFirestore.getInstance());
+                return NotificationsFragment.newInstance(FirebaseFirestore.getInstance());
             case 3:
                 return new ProfileFragment();
             default:
