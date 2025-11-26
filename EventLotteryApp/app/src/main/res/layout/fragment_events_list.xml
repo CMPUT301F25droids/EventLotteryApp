@@ -208,7 +208,7 @@
 
     <ProgressBar
         android:id="@+id/loading_indicator"
-        anAdroid:layout_width="wrap_content"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/filter_scroller"
