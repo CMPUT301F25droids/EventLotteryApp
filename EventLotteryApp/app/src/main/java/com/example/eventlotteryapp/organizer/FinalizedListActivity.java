@@ -278,7 +278,7 @@ public class FinalizedListActivity extends AppCompatActivity {
     }
     
     private void loadParticipant(String entrantId, String status, int[] loaded, int total) {
-        firestore.collection("Users").document(entrantId)
+        firestore.collection("users").document(entrantId)
             .get()
             .addOnSuccessListener(document -> {
                 if (document.exists()) {
@@ -358,7 +358,7 @@ public class FinalizedListActivity extends AppCompatActivity {
                 final int[] loaded = {0};
 
                 for (String entrantId : selectedIds) {
-                    firestore.collection("Users").document(entrantId)
+                    firestore.collection("users").document(entrantId)
                         .get()
                         .addOnSuccessListener(userDoc -> {
                             String name = userDoc.getString("Name");

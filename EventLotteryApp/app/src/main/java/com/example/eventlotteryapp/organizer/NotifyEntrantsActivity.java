@@ -277,7 +277,7 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
             return;
         }
         
-        firestore.collection("Users").document(entrantId)
+        firestore.collection("users").document(entrantId)
             .get()
             .addOnSuccessListener(document -> {
                 if (!document.exists()) {
@@ -358,7 +358,7 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
         final int total = currentList.size();
         
         for (String entrantId : currentList) {
-            firestore.collection("Users").document(entrantId)
+            firestore.collection("users").document(entrantId)
                 .get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {

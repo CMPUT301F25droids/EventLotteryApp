@@ -2,12 +2,22 @@ package com.example.eventlotteryapp.EntrantView;
 
 import com.google.firebase.firestore.DocumentReference;
 
+import java.util.Date;
+
 public class EventItem {
     private String id;
     private String Name;
     private DocumentReference Organizer;
     private String Cost;
     private String Image;
+    private Date eventStartDate;
+
+    private Date eventEndDate;
+    private Date registrationOpenDate;
+    private Date registrationCloseDate;
+    private int maxParticipants;
+
+    private String description;
 
     public EventItem() {
     } // Firestore needs this empty constructor
@@ -29,5 +39,15 @@ public class EventItem {
     }
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
+    public String getDescription() {
+        return description;
+    }
+    public Date getEventStartDate() {
+        return eventStartDate;
+    }
+
+    public Date getEventEndDate() {
+        return eventEndDate;
+    }
 
 }

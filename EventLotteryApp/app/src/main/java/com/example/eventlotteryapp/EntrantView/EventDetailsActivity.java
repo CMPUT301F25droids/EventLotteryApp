@@ -16,8 +16,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.EntrantView.JoinConfirmationFragment;
 import com.example.eventlotteryapp.EntrantView.LeaveConfirmationFragment;
-import com.example.eventlotteryapp.UserSession;
 import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.example.eventlotteryapp.NotificationController;
@@ -92,7 +92,11 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     /** Checks if current user is organizer and updates UI accordingly */
     private void showOrganizerControlsIfOwner(DocumentReference organizerRef) {
-        DocumentReference currentUserRef = UserSession.getCurrentUserRef();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            return;
+        }
+        DocumentReference currentUserRef = db.collection("users").document(auth.getCurrentUser().getUid());
         organizerRef.get().addOnSuccessListener(doc -> {
             if (doc.exists() && doc.getReference().equals(currentUserRef)) {
                 // TODO: Add organizer control buttons if needed
@@ -118,9 +122,13 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     protected void userInWaitlist() {
-        UserSession userSession = new UserSession();
-        DocumentReference user_ref = UserSession.getCurrentUserRef();
-        Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + user_ref);
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            return;
+        }
+        String userId = auth.getCurrentUser().getUid();
+        DocumentReference user_ref = db.collection("users").document(userId);
+        Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + userId);
 
         db.collection("Events").document(eventId)
                 .get()

@@ -338,7 +338,7 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 final int[] loaded = {0};
                 
                 for (String entrantId : selectedIds) {
-                    firestore.collection("Users").document(entrantId)
+                    firestore.collection("users").document(entrantId)
                         .get()
                         .addOnSuccessListener(userDoc -> {
                             String name = userDoc.getString("Name");
@@ -435,7 +435,7 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                     final double longitude = baseLng + lngOffset;
                     
                     // Create user document
-                    firestore.collection("Users").document(userId)
+                    firestore.collection("users").document(userId)
                         .set(new HashMap<String, Object>() {{
                             put("Name", testName);
                             put("email", testEmail);
@@ -526,7 +526,7 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                     if (userId != null && userId.startsWith("test_user_")) {
                         removedCount[0]++;
                         // Also delete the test user document
-                        firestore.collection("Users").document(userId).delete();
+                        firestore.collection("users").document(userId).delete();
                     } else {
                         filteredWaitingList.add(userId);
                     }
@@ -536,7 +536,7 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 for (String userId : selectedList) {
                     if (userId != null && userId.startsWith("test_user_")) {
                         removedCount[0]++;
-                        firestore.collection("Users").document(userId).delete();
+                        firestore.collection("users").document(userId).delete();
                     } else {
                         filteredSelectedList.add(userId);
                     }
@@ -546,7 +546,7 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 for (String userId : cancelledList) {
                     if (userId != null && userId.startsWith("test_user_")) {
                         removedCount[0]++;
-                        firestore.collection("Users").document(userId).delete();
+                        firestore.collection("users").document(userId).delete();
                     } else {
                         filteredCancelledList.add(userId);
                     }

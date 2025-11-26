@@ -32,7 +32,7 @@ public class LotteryController {
      */
     public void acceptInvitation(String eventId, String userId, AcceptCallback callback) {
         DocumentReference eventRef = db.collection("Events").document(eventId);
-        DocumentReference userRef = db.collection("Users").document(userId);
+        DocumentReference userRef = db.collection("users").document(userId);
 
         db.runTransaction((Transaction.Function<Void>) transaction -> {
             // Get current event data
@@ -71,7 +71,7 @@ public class LotteryController {
      */
     public void declineInvitation(String eventId, String userId, DeclineCallback callback) {
         DocumentReference eventRef = db.collection("Events").document(eventId);
-        DocumentReference userRef = db.collection("Users").document(userId);
+        DocumentReference userRef = db.collection("users").document(userId);
 
         db.runTransaction((Transaction.Function<Void>) transaction -> {
             // Get current event data
@@ -109,7 +109,7 @@ public class LotteryController {
      */
     private void createNotification(String userId, String eventId, String type, String message) {
         Map<String, Object> notification = new HashMap<>();
-        notification.put("UserId", db.collection("Users").document(userId));
+        notification.put("UserId", db.collection("users").document(userId));
         notification.put("EventId", db.collection("Events").document(eventId));
         notification.put("Type", type);
         notification.put("Message", message);
