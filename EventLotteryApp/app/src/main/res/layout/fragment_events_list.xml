@@ -61,6 +61,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/all_filter"
+                android:tag="all"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="All"
@@ -87,6 +88,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/sports_filter"
+                android:tag="sports"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Sports"
@@ -114,6 +116,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/music_filter"
+                android:tag="music"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Music"
@@ -141,6 +144,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/workshops_filter"
+                android:tag="workshops"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Workshops"
@@ -167,6 +171,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/free_filter"
+                android:tag="free"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="No Cost"
@@ -193,6 +198,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/community_filter"
+                android:tag="community"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Community"
