@@ -1,5 +1,7 @@
 package com.example.eventlotteryapp.organizer;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
@@ -106,19 +108,57 @@ public class MyEventsFragment extends Fragment {
     }
 
     private void updateFilterButtonStyles(List<MaterialButton> buttons, MaterialButton selected) {
-        int selectedBg = getResources().getColor(R.color.filter_selected_bg);
-        int selectedText = getResources().getColor(R.color.filter_selected_text);
-        int unselectedBg = getResources().getColor(R.color.filter_unselected_bg);
-        int unselectedText = getResources().getColor(R.color.filter_unselected_text);
-
+        int selectedBgColor = getResources().getColor(R.color.filter_selected_bg);
+        int selectedTextColor = getResources().getColor(R.color.filter_selected_text);
+        int unselectedBgColor = getResources().getColor(R.color.filter_unselected_bg);
+        int unselectedTextColor = getResources().getColor(R.color.filter_unselected_text);
+        
+        int animationDuration = 250; // milliseconds
+        
         for (MaterialButton btn : buttons) {
-            if (btn == selected) {
-                btn.setBackgroundTintList(ColorStateList.valueOf(selectedBg));
-                btn.setTextColor(selectedText);
-            } else {
-                btn.setBackgroundTintList(ColorStateList.valueOf(unselectedBg));
-                btn.setTextColor(unselectedText);
+            // Get current colors - handle transparent/initial state
+            ColorStateList currentBgTint = btn.getBackgroundTintList();
+            int currentBgColor = unselectedBgColor; // Default starting point
+            if (currentBgTint != null) {
+                int color = currentBgTint.getDefaultColor();
+                // If not transparent, use the actual color; otherwise start from unselected
+                if ((color & 0xFF000000) != 0) { // Check if not fully transparent
+                    currentBgColor = color;
+                }
             }
+            
+            int currentTextColor = btn.getCurrentTextColor();
+            // If text color appears to be default (likely black), use unselected color as baseline
+            if (currentTextColor == 0xFF000000 || currentTextColor == 0) {
+                currentTextColor = unselectedTextColor;
+            }
+            
+            // Determine target colors
+            int targetBgColor = (btn == selected) ? selectedBgColor : unselectedBgColor;
+            int targetTextColor = (btn == selected) ? selectedTextColor : unselectedTextColor;
+            
+            // Skip animation if already at target colors
+            if (currentBgColor == targetBgColor && currentTextColor == targetTextColor) {
+                continue;
+            }
+            
+            // Animate background color
+            ValueAnimator bgAnimator = ValueAnimator.ofObject(new ArgbEvaluator(), currentBgColor, targetBgColor);
+            bgAnimator.setDuration(animationDuration);
+            bgAnimator.addUpdateListener(animator -> {
+                int color = (int) animator.getAnimatedValue();
+                btn.setBackgroundTintList(ColorStateList.valueOf(color));
+            });
+            bgAnimator.start();
+            
+            // Animate text color
+            ValueAnimator textAnimator = ValueAnimator.ofObject(new ArgbEvaluator(), currentTextColor, targetTextColor);
+            textAnimator.setDuration(animationDuration);
+            textAnimator.addUpdateListener(animator -> {
+                int color = (int) animator.getAnimatedValue();
+                btn.setTextColor(color);
+            });
+            textAnimator.start();
         }
     }
 
