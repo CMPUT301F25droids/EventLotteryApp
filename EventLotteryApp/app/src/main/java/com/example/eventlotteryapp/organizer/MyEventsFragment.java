@@ -320,11 +320,11 @@ public class MyEventsFragment extends Fragment {
     }
 
     // Helper class to store event with its ID
-    static class EventWithId {
-        String id;
-        Event event;
+    public static class EventWithId {
+        public String id;
+        public Event event;
 
-        EventWithId(String id, Event event) {
+        public EventWithId(String id, Event event) {
             this.id = id;
             this.event = event;
         }
