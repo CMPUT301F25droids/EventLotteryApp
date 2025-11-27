@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:fitsSystemWindows="true"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/white">
 
     <!-- Top Bar -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -13,12 +14,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="56dp"
-        android:background="@color/None"
-        android:paddingHorizontal="12dp"
+        android:background="@color/white"
+        android:paddingHorizontal="16dp"
         android:paddingTop="@dimen/status_bar_padding"
         android:paddingBottom="12dp"
-        android:elevation="4dp"
-        android:layout_marginTop="20dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
@@ -35,19 +34,20 @@
             android:id="@+id/title_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Event Details"
-            android:textSize="20sp"
+            android:text="Event Lottery"
+            android:textSize="17sp"
             android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
             android:gravity="center"
             android:textColor="@color/black"
-            app:layout_constraintStart_toEndOf="@id/back_button"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Scroll Content -->
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -55,113 +55,300 @@
         app:layout_constraintTop_toBottomOf="@id/top_bar"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
-            <!-- Event Poster -->
+            <!-- Event Poster Image -->
             <ImageView
                 android:id="@+id/event_poster"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/black"
-                android:adjustViewBounds="true"
-                android:scaleType="fitCenter"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:scaleType="centerCrop"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 tools:srcCompat="@tools:sample/avatars" />
 
-            <!-- Event Info -->
+            <!-- Status Tag Overlay -->
+            <TextView
+                android:id="@+id/event_status_tag"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/status_tag_background"
+                android:elevation="4dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:gravity="center_vertical"
+                android:text="🟢 Open - 50/60"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                app:layout_constraintBottom_toBottomOf="@+id/event_poster"
+                app:layout_constraintStart_toStartOf="@+id/event_poster" />
+
+            <!-- Event Title -->
             <TextView
                 android:id="@+id/event_name"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Event Name"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="16dp"
+                android:text="Jazz Night at the Park"
                 android:textColor="@color/black"
-                android:textSize="22sp"
+                android:textSize="28sp"
                 android:textStyle="bold"
-                android:layout_marginHorizontal="16dp"
-                android:paddingTop="16dp"/>
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="-0.01"
+                app:layout_constraintTop_toBottomOf="@+id/event_poster"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
+            <!-- Organizer -->
             <TextView
                 android:id="@+id/event_organizer"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Organizer:"
-                android:textSize="16sp"
-                android:layout_marginHorizontal="16dp"
-                android:paddingTop="8dp"/>
-            <TextView
-                android:id="@+id/event_date"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="None"
-                android:drawableStart="@drawable/ic_calendar"
-                android:drawablePadding="8dp"
-                android:textSize="16sp"
-                android:layout_marginHorizontal="16dp"
-                android:paddingTop="8dp"/>
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:text="Organized by John Doe"
+                android:textColor="@color/calendar_weekday_text"
+                android:textSize="17sp"
+                android:fontFamily="sans-serif"
+                app:layout_constraintTop_toBottomOf="@+id/event_name"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
+            <!-- Schedule -->
             <TextView
-                android:id="@+id/event_cost"
-                android:layout_width="match_parent"
+                android:id="@+id/event_schedule"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:drawableStart="@drawable/ic_dollar"
-                android:drawablePadding="14dp"
-                android:text="$0"
-                android:textSize="16sp"
-                android:layout_marginHorizontal="16dp"
-                android:paddingTop="8dp"/>
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:text="One-time event"
+                android:textColor="@color/calendar_weekday_text"
+                android:textSize="17sp"
+                android:fontFamily="sans-serif"
+                app:layout_constraintTop_toBottomOf="@+id/event_organizer"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <!-- Date Range with Calendar Icon -->
+            <LinearLayout
+                android:id="@+id/date_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                app:layout_constraintTop_toBottomOf="@+id/event_schedule"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_calendar"
+                    android:tint="@color/calendar_weekday_text"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/event_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Jan 15, 2024 - Jan 31 2024"
+                    android:textColor="@color/calendar_weekday_text"
+                    android:textSize="17sp"
+                    android:fontFamily="sans-serif" />
+            </LinearLayout>
+
+            <!-- Time with Clock Icon -->
+            <LinearLayout
+                android:id="@+id/time_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                app:layout_constraintTop_toBottomOf="@+id/date_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_clock"
+                    android:tint="@color/calendar_weekday_text"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/event_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="6:00 PM"
+                    android:textColor="@color/calendar_weekday_text"
+                    android:textSize="17sp"
+                    android:fontFamily="sans-serif" />
+            </LinearLayout>
+
+            <!-- Price with Dollar Icon -->
+            <LinearLayout
+                android:id="@+id/price_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                app:layout_constraintTop_toBottomOf="@+id/time_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageView
+                    android:layout_width="17dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_dollar"
+                    android:tint="@color/calendar_weekday_text"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/event_cost"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="$60"
+                    android:textColor="@color/calendar_weekday_text"
+                    android:textSize="17sp"
+                    android:fontFamily="sans-serif" />
+            </LinearLayout>
+
+            <!-- Location with Location Icon -->
+            <LinearLayout
+                android:id="@+id/location_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                app:layout_constraintTop_toBottomOf="@+id/price_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_location"
+                    android:tint="@color/calendar_weekday_text"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/event_location"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Riverbend Community Centre"
+                    android:textColor="@color/calendar_weekday_text"
+                    android:textSize="17sp"
+                    android:fontFamily="sans-serif" />
+            </LinearLayout>
+
+            <!-- About This Event Section -->
             <TextView
-                android:id="@+id/title"
-                android:layout_width="match_parent"
+                android:id="@+id/about_title"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="24dp"
                 android:text="About This Event"
                 android:textColor="@color/black"
-                android:textSize="17sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                android:layout_marginHorizontal="16dp"
-                android:paddingTop="12dp"/>
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="-0.01"
+                app:layout_constraintTop_toBottomOf="@+id/location_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <TextView
                 android:id="@+id/event_description"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Event details..."
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:text="Join us for a night of soulful jazz music featuring top artists from around the world. Enjoy an unforgettable experience at the Riverbend Community Centre."
+                android:textColor="@color/calendar_weekday_text"
                 android:textSize="15sp"
-                android:layout_marginHorizontal="16dp"
-                android:paddingTop="12dp"/>
+                android:fontFamily="sans-serif"
+                android:lineSpacingExtra="4dp"
+                app:layout_constraintTop_toBottomOf="@+id/about_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
+            <!-- Lottery Info (hidden by default, shown if exists) -->
             <TextView
                 android:id="@+id/tv_lottery_info"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Lottery Info:"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="8dp"
+                android:text="Random selection. All entrants have equal chance."
+                android:textColor="@color/calendar_weekday_text"
                 android:textSize="15sp"
-                android:layout_marginHorizontal="16dp"
-                android:paddingTop="8dp"
-                android:visibility="gone"/>
+                android:fontFamily="sans-serif"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@+id/event_description"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- ✅ WAITLIST COUNT -->
+            <!-- Waitlist Count (hidden by default) -->
             <TextView
                 android:id="@+id/waitlist_count"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Loading waitlist..."
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="8dp"
+                android:text="Waiting List Entrants: 0"
+                android:textColor="@color/calendar_weekday_text"
                 android:textSize="15sp"
-                android:layout_marginHorizontal="16dp"
-                android:paddingTop="8dp"
-                android:textColor="@color/black"/>
+                android:fontFamily="sans-serif"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@+id/tv_lottery_info"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <!-- Notification Section -->
             <LinearLayout
                 android:id="@+id/notification_section"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginTop="24dp"
                 android:orientation="horizontal"
+                android:gravity="center_vertical"
                 android:padding="12dp"
-                android:background="#F5F5F5">
+                android:background="@color/opaque_light_grey"
+                app:layout_constraintTop_toBottomOf="@+id/waitlist_count"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <TextView
                     android:id="@+id/notification_label"
@@ -170,49 +357,77 @@
                     android:layout_weight="1"
                     android:text="Enable Notifications"
                     android:textSize="16sp"
-                    android:textColor="@color/black"/>
+                    android:textColor="@color/black"
+                    android:fontFamily="sans-serif" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_notifications"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="true"/>
+                    app:thumbTint="@color/switch_thumb_tint"
+                    app:trackTint="@color/switch_track_tint"
+                    android:checked="true" />
             </LinearLayout>
 
-            <!-- Join/Leave Buttons -->
-            <Button
+            <!-- Registration Info Text -->
+            <TextView
+                android:id="@+id/registration_info"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="24dp"
+                android:text="Registration closes Jan 7, 2024"
+                android:textColor="@color/black"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                app:layout_constraintTop_toBottomOf="@+id/notification_section"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <!-- Join/Leave Button -->
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/join_waitlist_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp"
                 android:text="Join Waiting List"
-                android:layout_marginTop="24dp"
-                android:layout_marginHorizontal="16dp"
-                android:backgroundTint="?attr/colorPrimary"
-                android:textColor="@android:color/white"/>
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="@color/selected_tab_color"
+                app:cornerRadius="56dp"
+                app:layout_constraintTop_toBottomOf="@+id/registration_info"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/leave_waitlist_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp"
                 android:text="Leave Waiting List"
-                android:layout_marginTop="24dp"
-                android:layout_marginHorizontal="16dp"
-                android:backgroundTint="?attr/colorPrimary"
-                android:textColor="@android:color/white"
-                android:visibility="gone"/>
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="@color/selected_tab_color"
+                app:cornerRadius="56dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@+id/registration_info"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- Test Button -->
-            <Button
-                android:id="@+id/btn_test_invitation"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="🧪 TEST INVITATION (DELETE ME)"
-                android:layout_marginTop="12dp"
-                android:layout_marginHorizontal="16dp"
-                android:backgroundTint="#FF0000"
-                android:textColor="@android:color/white"/>
-
-        </LinearLayout>
-    </ScrollView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -7,6 +7,8 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -15,7 +17,10 @@ import androidx.core.content.ContextCompat;
 import com.example.eventlotteryapp.R;
 import com.google.firebase.firestore.DocumentReference;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class MyEventsListRecyclerViewAdapter extends EventsListRecyclerViewAdapter{
 
@@ -37,32 +42,38 @@ public class MyEventsListRecyclerViewAdapter extends EventsListRecyclerViewAdapt
     public void onBindViewHolder(@NonNull EventsListRecyclerViewAdapter.ViewHolder holder, int position) {
 
         MyEventItem event = (MyEventItem) originalList.get(position);
+        ViewHolder myViewHolder = (ViewHolder) holder;
+        
+        // Set event name
         holder.nameView.setText(event.getName());
+        
+        // Set status with emoji matching Figma design
         if (event.getStatus() == MyEventItem.Status.PENDING) {
-            ((ViewHolder) holder).statusView.setText("\uD83D\uDFE1 Pending");
+            myViewHolder.statusView.setText("🟡 Pending");
         } else if (event.getStatus() == MyEventItem.Status.SELECTED) {
-            ((ViewHolder) holder).statusView.setText("\uD83D\uDFE2 Selected");
+            myViewHolder.statusView.setText("🟢 Accepted");
         } else if (event.getStatus() == MyEventItem.Status.NOT_SELECTED){
-            ((ViewHolder) holder).statusView.setText("\uD83D\uDD34 Not Selected");
+            myViewHolder.statusView.setText("🔴 Not Selected");
         } else {
-            ((ViewHolder) holder).statusView.setText("Unknown");
+            myViewHolder.statusView.setText("Unknown");
         }
-        DocumentReference organizerRef = event.getOrganizer();
-        if (organizerRef != null) { // ✅ check null
-            organizerRef.get().addOnSuccessListener(userSnapshot -> {
-                if (userSnapshot.exists()) {
-                    String organizerName = userSnapshot.getString("name");
-                    holder.organizerView.setText(organizerName);
-                }
-            }).addOnFailureListener(e ->
-                    Log.e("EventAdapter", "Error loading organizer", e));
+        
+        // Format and set date
+        if (event.getEventStartDate() != null) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault());
+            myViewHolder.dateView.setText(dateFormat.format(event.getEventStartDate()));
         } else {
-            holder.organizerView.setText("Unknown Organizer");
+            myViewHolder.dateView.setText("Date TBD");
         }
+        
+        // Set location (placeholder for now - EventItem doesn't have location field)
+        myViewHolder.locationView.setText("Location TBD");
+        
+        // Set cost
         holder.costView.setText(event.getCost());
 
+        // Load and set image with rounded corners
         String base64Image = event.getImage();
-
         if (base64Image != null && !base64Image.isEmpty()) {
             try {
                 // Remove the "data:image/jpeg;base64," or similar prefix
@@ -78,17 +89,18 @@ public class MyEventsListRecyclerViewAdapter extends EventsListRecyclerViewAdapt
                 Log.e("EventAdapter", "Failed to decode image: " + e.getMessage());
             }
         }
-        else {
-        }
-
     }
 
     public class ViewHolder extends EventsListRecyclerViewAdapter.ViewHolder {
         public final TextView statusView;
+        public final TextView dateView;
+        public final TextView locationView;
 
         public ViewHolder(View view) {
             super(view);
             statusView = view.findViewById(R.id.event_status);
+            dateView = view.findViewById(R.id.event_date);
+            locationView = view.findViewById(R.id.event_location);
         }
     }
 

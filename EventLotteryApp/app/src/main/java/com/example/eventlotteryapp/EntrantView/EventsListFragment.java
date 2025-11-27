@@ -1,13 +1,11 @@
 package com.example.eventlotteryapp.EntrantView;
 
 import android.annotation.SuppressLint;
-import android.app.DatePickerDialog;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
-import android.graphics.Typeface;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -15,7 +13,6 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -293,34 +290,17 @@ public class EventsListFragment extends Fragment {
     private void openDatePicker(EventsListRecyclerViewAdapter adapter) {
         // Get today's date
         Calendar today = Calendar.getInstance();
-        int year = today.get(Calendar.YEAR);
-        int month = today.get(Calendar.MONTH);
-        int day = today.get(Calendar.DAY_OF_MONTH);
 
-
-        DatePickerDialog dp = new DatePickerDialog(
+        CustomDatePickerDialog dialog = new CustomDatePickerDialog(
                 requireContext(),
-                (view, selectedYear, selectedMonth, selectedDay) -> {
-                    adapter.applyDateFilter(selectedYear, selectedMonth, selectedDay);
+                (year, month, dayOfMonth) -> {
+                    adapter.applyDateFilter(year, month, dayOfMonth);
                 },
-                year, month, day // <-- opens to today's date
+                today,
+                today // min date
         );
-        // Title
-        // Create a centered title
-        TextView title = new TextView(requireContext());
-        title.setText("Filter by Event Start Date");
-        title.setPadding(20, 20, 20, 20);
-        title.setTextSize(20);
-        title.setGravity(Gravity.CENTER);
-        title.setTypeface(null, Typeface.BOLD);
 
-        dp.setCustomTitle(title);
-
-
-        // Disable past dates
-        dp.getDatePicker().setMinDate(today.getTimeInMillis());
-
-        dp.show();
+        dialog.show();
     }
 
     private void centerButtonInScrollView(android.widget.HorizontalScrollView scrollView, MaterialButton button) {
@@ -337,6 +317,5 @@ public class EventsListFragment extends Fragment {
             scrollView.smoothScrollTo(targetScrollX, 0);
         });
     }
-
 
 }

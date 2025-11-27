@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="361dp"
+    android:height="313dp"
+    android:viewportWidth="361"
+    android:viewportHeight="313">
+    <!-- Placeholder illustration - Simple calendar icon -->
+    <!-- Background -->
+    <path
+        android:fillColor="#F5F5F5"
+        android:pathData="M0,0h361v313h-361z"/>
+    
+    <!-- Calendar base -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M80,80h201v200h-201z"/>
+    <path
+        android:fillColor="#BDBDBD"
+        android:pathData="M80,80h201v30h-201z"/>
+    
+    <!-- Calendar grid lines -->
+    <path
+        android:strokeColor="#CCCCCC"
+        android:strokeWidth="1"
+        android:pathData="M130,110v150 M180,110v150 M230,110v150"/>
+    <path
+        android:strokeColor="#CCCCCC"
+        android:strokeWidth="1"
+        android:pathData="M80,160h201 M80,210h201"/>
+    
+    <!-- Empty state indicator -->
+    <path
+        android:fillColor="#9E9E9E"
+        android:pathData="M180.5,200m-20,0a20,20 0,1 1,40 0a20,20 0,1 1,-40 0"/>
+</vector>
+

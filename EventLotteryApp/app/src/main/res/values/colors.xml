@@ -35,4 +35,12 @@
     <color name="filter_unselected_bg">#FFFFFF</color> 
     <color name="filter_unselected_text">#000000</color> 
 
+    <!-- Date Picker Colors from Figma -->
+    <color name="calendar_selected_bg">#4E3CDB</color>
+    <color name="calendar_selected_text">#FFFFFF</color>
+    <color name="calendar_range_fill">#80D1FF66</color>
+    <color name="calendar_day_bg">#0F000000</color>
+    <color name="calendar_weekday_text">#80000000</color>
+    <color name="calendar_other_month_text">#4D000000</color>
+
 </resources>
