@@ -84,10 +84,10 @@
             android:theme="@style/zxing_capture" />
         <activity
             android:name=".Admin.AdminBrowseEventsActivity"
-            android:exported="false" />
+            android:exported="true" />
         <activity
             android:name=".Admin.AdminBrowseProfilesActivity"
-            android:exported="false" />
+            android:exported="true" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
