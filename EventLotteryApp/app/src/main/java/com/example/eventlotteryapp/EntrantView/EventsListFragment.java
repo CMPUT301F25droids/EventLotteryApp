@@ -158,7 +158,8 @@ public class EventsListFragment extends Fragment {
         searchBar.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_UP) {
                 int drawableRight = 2; // index for RIGHT drawable
-                if (event.getRawX() >= (searchBar.getRight() - searchBar.getCompoundDrawables()[drawableRight].getBounds().width())) {
+                int paddingRight = searchBar.getPaddingRight();
+                if (event.getRawX() >= (searchBar.getRight() - searchBar.getCompoundDrawables()[drawableRight].getBounds().width() - paddingRight)) {
                     // CLICKED the calendar icon
 
                     openDatePicker(adapter);

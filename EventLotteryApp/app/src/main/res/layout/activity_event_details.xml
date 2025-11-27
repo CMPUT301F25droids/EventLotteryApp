@@ -76,6 +76,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Event Name"
+                android:textColor="@color/black"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 android:layout_marginHorizontal="16dp"
@@ -89,15 +90,37 @@
                 android:textSize="16sp"
                 android:layout_marginHorizontal="16dp"
                 android:paddingTop="8dp"/>
+            <TextView
+                android:id="@+id/event_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="None"
+                android:drawableStart="@drawable/ic_calendar"
+                android:drawablePadding="8dp"
+                android:textSize="16sp"
+                android:layout_marginHorizontal="16dp"
+                android:paddingTop="8dp"/>
 
             <TextView
                 android:id="@+id/event_cost"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Cost:"
+                android:drawableStart="@drawable/ic_dollar"
+                android:drawablePadding="14dp"
+                android:text="$0"
                 android:textSize="16sp"
                 android:layout_marginHorizontal="16dp"
                 android:paddingTop="8dp"/>
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="About This Event"
+                android:textColor="@color/black"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:layout_marginHorizontal="16dp"
+                android:paddingTop="12dp"/>
 
             <TextView
                 android:id="@+id/event_description"

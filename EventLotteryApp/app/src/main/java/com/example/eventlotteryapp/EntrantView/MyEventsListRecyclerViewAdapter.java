@@ -1,13 +1,16 @@
 package com.example.eventlotteryapp.EntrantView;
 
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 import com.example.eventlotteryapp.R;
 import com.google.firebase.firestore.DocumentReference;
@@ -35,21 +38,20 @@ public class MyEventsListRecyclerViewAdapter extends EventsListRecyclerViewAdapt
 
         MyEventItem event = (MyEventItem) originalList.get(position);
         holder.nameView.setText(event.getName());
-        String lotteryPlaceHolder = "Lottery Status: ";
         if (event.getStatus() == MyEventItem.Status.PENDING) {
-            ((ViewHolder) holder).statusView.setText(lotteryPlaceHolder + "Pending");
+            ((ViewHolder) holder).statusView.setText("\uD83D\uDFE1 Pending");
         } else if (event.getStatus() == MyEventItem.Status.SELECTED) {
-            ((ViewHolder) holder).statusView.setText(lotteryPlaceHolder + "Selected");
+            ((ViewHolder) holder).statusView.setText("\uD83D\uDFE2 Selected");
         } else if (event.getStatus() == MyEventItem.Status.NOT_SELECTED){
-            ((ViewHolder) holder).statusView.setText(lotteryPlaceHolder + "Not Selected");
+            ((ViewHolder) holder).statusView.setText("\uD83D\uDD34 Not Selected");
         } else {
-            ((ViewHolder) holder).statusView.setText(lotteryPlaceHolder + "Unknown");
+            ((ViewHolder) holder).statusView.setText("Unknown");
         }
         DocumentReference organizerRef = event.getOrganizer();
         if (organizerRef != null) { // ✅ check null
             organizerRef.get().addOnSuccessListener(userSnapshot -> {
                 if (userSnapshot.exists()) {
-                    String organizerName = userSnapshot.getString("Name");
+                    String organizerName = userSnapshot.getString("name");
                     holder.organizerView.setText(organizerName);
                 }
             }).addOnFailureListener(e ->
