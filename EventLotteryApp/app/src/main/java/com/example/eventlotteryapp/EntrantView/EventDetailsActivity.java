@@ -196,7 +196,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                             if (cost != null && cost.startsWith("$")) {
                                 costView.setText(cost);
                             } else {
-                                costView.setText("$" + (cost != null ? cost : "0"));
+                                costView.setText("Free");
                             }
                             
                             // Organizer
@@ -358,7 +358,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     protected void populateOrganizer(DocumentReference organizerRef, TextView organizerView) {
         organizerRef.get().addOnSuccessListener(userSnapshot -> {
             if (userSnapshot.exists()) {
-                String organizerName = userSnapshot.getString("Name");
+                String organizerName = userSnapshot.getString("name");
                 if (organizerName != null && !organizerName.isEmpty()) {
                     organizerView.setText("Organized by " + organizerName);
                 } else {
