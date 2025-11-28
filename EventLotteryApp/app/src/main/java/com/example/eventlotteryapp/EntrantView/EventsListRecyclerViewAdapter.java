@@ -66,7 +66,7 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
                 if (currentPos == RecyclerView.NO_POSITION) return;
 
                 if (userSnapshot.exists()) {
-                    String organizerName = userSnapshot.getString("Name");
+                    String organizerName = userSnapshot.getString("name");
                     holder.organizerView.setText("Organized by: " + organizerName);
                 } else {
                     holder.organizerView.setText("Organized by: Unknown");
