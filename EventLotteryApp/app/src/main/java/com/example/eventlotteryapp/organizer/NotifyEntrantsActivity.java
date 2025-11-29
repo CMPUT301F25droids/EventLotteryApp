@@ -284,7 +284,7 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
                     return;
                 }
                 
-                String name = document.getString("Name");
+                String name = document.getString("name");
                 if (name == null) name = "Unknown";
                 
                 try {

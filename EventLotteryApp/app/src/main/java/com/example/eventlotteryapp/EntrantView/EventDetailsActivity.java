@@ -19,11 +19,16 @@ import com.example.eventlotteryapp.EntrantView.LeaveConfirmationFragment;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.example.eventlotteryapp.NotificationController;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 public class EventDetailsActivity extends AppCompatActivity {
     private String eventId;
@@ -46,6 +51,7 @@ public class EventDetailsActivity extends AppCompatActivity {
             // Handle back button click
             finish();
         });
+        
         notificationController = new NotificationController();
 
 
@@ -75,14 +81,6 @@ public class EventDetailsActivity extends AppCompatActivity {
         eventId = getIntent().getStringExtra("eventId");
         Log.d("EventDetails", "Event ID: " + eventId);
         db = FirebaseFirestore.getInstance();
-
-        // TEMPORARY: Test invitation response screen
-        Button testButton = findViewById(R.id.btn_test_invitation);
-        testButton.setOnClickListener(v -> {
-            Intent intent = new Intent(EventDetailsActivity.this, InvitationResponseActivity.class);
-            intent.putExtra("eventId", eventId);
-            startActivity(intent);
-        });
 
         tvLotteryInfo = findViewById(R.id.tv_lottery_info);
         tvWaitlistCount = findViewById(R.id.waitlist_count);
@@ -170,45 +168,207 @@ public class EventDetailsActivity extends AppCompatActivity {
                             String cost = documentSnapshot.getString("Cost");
                             DocumentReference organizer = documentSnapshot.getDocumentReference("Organizer");
                             String image = documentSnapshot.getString("Image");
-                            String lotteryInfo = documentSnapshot.getString("LotteryInfo"); // for lottery info
+                            String lotteryInfo = documentSnapshot.getString("LotteryInfo");
+                            String description = documentSnapshot.getString("description");
+                            String location = documentSnapshot.getString("location");
+                            
+                            Date eventStartDate = documentSnapshot.getDate("eventStartDate");
+                            Date eventEndDate = documentSnapshot.getDate("eventEndDate");
+                            Date registrationOpenDate = documentSnapshot.getDate("registrationOpenDate");
+                            Date registrationCloseDate = documentSnapshot.getDate("registrationCloseDate");
+                            
+                            Integer maxParticipants = documentSnapshot.get("maxParticipants") != null ? 
+                                documentSnapshot.getLong("maxParticipants").intValue() : 0;
+                            
+                            List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
+                            int waitlistSize = waitlist != null ? waitlist.size() : 0;
+                            
+                            // Get selected entrants count (new system)
+                            List<String> selectedEntrants = (List<String>) documentSnapshot.get("selectedEntrantIds");
+                            int selectedCount = selectedEntrants != null ? selectedEntrants.size() : 0;
 
-                            tvLotteryInfo.setText(lotteryInfo);
-
-                            // populate UI
+                            // Populate basic fields
                             TextView nameView = findViewById(R.id.event_name);
                             nameView.setText(name);
+                            
+                            // Cost - remove "Cost: " prefix, just show price
                             TextView costView = findViewById(R.id.event_cost);
-                            costView.setText("Cost: " + cost);
+                            if (cost != null && cost.startsWith("$")) {
+                                costView.setText(cost);
+                            } else {
+                                costView.setText("Free");
+                            }
+                            
+                            // Organizer
                             TextView organizerView = findViewById(R.id.event_organizer);
-                            assert organizer != null;
-                            populateOrganizer(organizer, organizerView);
+                            if (organizer != null) {
+                                populateOrganizer(organizer, organizerView);
+                            } else {
+                                organizerView.setText("Organized by Unknown");
+                            }
+                            
+                            // Image
                             ImageView imageView = findViewById(R.id.event_poster);
                             populateImage(image, imageView);
-
-                            displayLotteryCriteria(lotteryInfo);
-
-                            if (image != null)
-                                populateImage(image, findViewById(R.id.event_poster));
-
-                            // Update waitlist count dynamically
-                            List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
-
-                            if (waitlist != null) {
-                                tvWaitlistCount.setText("Waiting List Entrants: " + waitlist.size());
+                            
+                            // Description
+                            TextView descriptionView = findViewById(R.id.event_description);
+                            if (description != null && !description.isEmpty()) {
+                                descriptionView.setText(description);
                             } else {
-                                tvWaitlistCount.setText("Waiting List Entrants: 0");
+                                descriptionView.setText("No description available.");
                             }
+                            
+                            // Location
+                            TextView locationView = findViewById(R.id.event_location);
+                            if (location != null && !location.isEmpty()) {
+                                locationView.setText(location);
+                            } else {
+                                locationView.setText("Location TBD");
+                            }
+                            // Location is now inside a LinearLayout, so the TextView reference still works
+                            
+                            // Date range
+                            TextView dateView = findViewById(R.id.event_date);
+                            if (eventStartDate != null && eventEndDate != null) {
+                                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+                                dateView.setText(dateFormat.format(eventStartDate) + " - " + dateFormat.format(eventEndDate));
+                            } else if (eventStartDate != null) {
+                                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+                                dateView.setText(dateFormat.format(eventStartDate));
+                            } else {
+                                dateView.setText("Date TBD");
+                            }
+                            
+                            // Time
+                            TextView timeView = findViewById(R.id.event_time);
+                            if (eventStartDate != null) {
+                                SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm a", Locale.getDefault());
+                                timeView.setText(timeFormat.format(eventStartDate));
+                            } else {
+                                timeView.setText("Time TBD");
+                            }
+                            
+                            // Schedule (for now, just show "One-time event" or calculate if recurring)
+                            TextView scheduleView = findViewById(R.id.event_schedule);
+                            scheduleView.setText("One-time event");
+                            
+                            // Status tag - show selected count vs max participants
+                            TextView statusTag = findViewById(R.id.event_status_tag);
+                            updateStatusTag(statusTag, documentSnapshot, selectedCount, maxParticipants);
+                            
+                            // Registration info
+                            TextView registrationInfo = findViewById(R.id.registration_info);
+                            // Check if user is in waitlist (check both old and new systems)
+                            FirebaseAuth auth = FirebaseAuth.getInstance();
+                            boolean userInWaitlist = false;
+                            if (auth.getCurrentUser() != null) {
+                                String userId = auth.getCurrentUser().getUid();
+                                
+                                // Check new system (waitingListEntrantIds)
+                                List<String> waitingListEntrantIds = (List<String>) documentSnapshot.get("waitingListEntrantIds");
+                                if (waitingListEntrantIds != null && waitingListEntrantIds.contains(userId)) {
+                                    userInWaitlist = true;
+                                } else {
+                                    // Check old system (Waitlist) - reuse existing waitlist variable
+                                    DocumentReference user_ref = db.collection("users").document(userId);
+                                    userInWaitlist = waitlist != null && waitlist.contains(user_ref);
+                                }
+                            }
+                            updateRegistrationInfo(registrationInfo, registrationOpenDate, registrationCloseDate, userInWaitlist);
+                            
+                            // Lottery info
+                            displayLotteryCriteria(lotteryInfo);
                         }
                     });
+        }
+    }
+    
+    private void updateStatusTag(TextView statusTag, DocumentSnapshot documentSnapshot, int selectedCount, int maxParticipants) {
+        Date now = new Date();
+        Date registrationOpenDate = documentSnapshot.getDate("registrationOpenDate");
+        Date registrationCloseDate = documentSnapshot.getDate("registrationCloseDate");
+        
+        boolean isOpen = true;
+        if (registrationOpenDate != null && now.before(registrationOpenDate)) {
+            isOpen = false; // Registration not open yet
+        } else if (registrationCloseDate != null && now.after(registrationCloseDate)) {
+            isOpen = false; // Registration closed
+        }
+        
+        // Ensure maxParticipants is valid (at least 1)
+        if (maxParticipants <= 0) {
+            maxParticipants = 1; // Default to 1 to avoid division by zero or weird display
+        }
+        
+        String statusText;
+        if (isOpen) {
+            statusText = "🟢 Open - " + selectedCount + "/" + maxParticipants;
+        } else {
+            statusText = "🔴 Closed - " + selectedCount + "/" + maxParticipants;
+        }
+        
+        statusTag.setText(statusText);
+    }
+    
+    private void updateRegistrationInfo(TextView registrationInfo, Date registrationOpenDate, Date registrationCloseDate, boolean userInWaitlist) {
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+        
+        if (userInWaitlist) {
+            // User is in waiting list - show days remaining
+            long daysRemaining = 0;
+            String message = "";
+            
+            if (registrationOpenDate != null && now.before(registrationOpenDate)) {
+                // Registration hasn't opened yet
+                long diffInMillis = registrationOpenDate.getTime() - now.getTime();
+                daysRemaining = diffInMillis / (1000 * 60 * 60 * 24);
+                message = daysRemaining + " day" + (daysRemaining != 1 ? "s" : "") + " until registration opens";
+            } else if (registrationCloseDate != null) {
+                // Registration is open, show days until lottery/selection
+                long diffInMillis = registrationCloseDate.getTime() - now.getTime();
+                daysRemaining = diffInMillis / (1000 * 60 * 60 * 24);
+                if (daysRemaining > 0) {
+                    message = daysRemaining + " day" + (daysRemaining != 1 ? "s" : "") + " until lottery selection";
+                } else if (daysRemaining == 0) {
+                    message = "Lottery selection today";
+                } else {
+                    message = "Lottery selection completed";
+                }
+            }
+            
+            if (!message.isEmpty()) {
+                registrationInfo.setText(message);
+            } else {
+                registrationInfo.setVisibility(View.GONE);
+            }
+        } else {
+            // User not in waiting list - show normal registration info
+            if (registrationOpenDate != null && now.before(registrationOpenDate)) {
+                registrationInfo.setText("Registration opens " + dateFormat.format(registrationOpenDate));
+            } else if (registrationCloseDate != null) {
+                registrationInfo.setText("Registration closes " + dateFormat.format(registrationCloseDate));
+            } else {
+                registrationInfo.setVisibility(View.GONE);
+            }
         }
     }
 
     protected void populateOrganizer(DocumentReference organizerRef, TextView organizerView) {
         organizerRef.get().addOnSuccessListener(userSnapshot -> {
             if (userSnapshot.exists()) {
-                String organizerName = userSnapshot.getString("Name");
-                organizerView.setText(organizerName);
+                String organizerName = userSnapshot.getString("name");
+                if (organizerName != null && !organizerName.isEmpty()) {
+                    organizerView.setText("Organized by " + organizerName);
+                } else {
+                    organizerView.setText("Organized by Unknown");
+                }
+            } else {
+                organizerView.setText("Organized by Unknown");
             }
+        }).addOnFailureListener(e -> {
+            organizerView.setText("Organized by Unknown");
         });
     }
 
@@ -226,7 +386,12 @@ public class EventDetailsActivity extends AppCompatActivity {
                 holder.setImageBitmap(bitmap);
             } catch (Exception e) {
                 Log.e("EventAdapter", "Failed to decode image: " + e.getMessage());
+                // Set placeholder if image fails to load
+                holder.setImageResource(R.drawable.event_placeholder);
             }
+        } else {
+            // Set placeholder if no image
+            holder.setImageResource(R.drawable.event_placeholder);
         }
     }
 
@@ -241,6 +406,5 @@ public class EventDetailsActivity extends AppCompatActivity {
             tvLotteryInfo.setText("Lottery Info: Random selection. All entrants have equal chance.");
             tvLotteryInfo.setVisibility(View.VISIBLE);
         }
-
     }
 }

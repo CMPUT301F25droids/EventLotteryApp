@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="361dp"
+    android:height="361dp"
+    android:viewportWidth="361"
+    android:viewportHeight="361">
+    <!-- Background -->
+    <path
+        android:fillColor="#F5F5F5"
+        android:pathData="M0,0h361v361h-361z"/>
+    
+    <!-- Event Icon -->
+    <path
+        android:fillColor="#CCCCCC"
+        android:pathData="M180.5,100.5m-60,0a60,60 0,1 1,120 0a60,60 0,1 1,-120 0"/>
+    
+    <!-- Calendar Icon -->
+    <path
+        android:fillColor="#999999"
+        android:pathData="M120,180h121v121h-121z"/>
+    <path
+        android:fillColor="#CCCCCC"
+        android:pathData="M120,180h121v30h-121z"/>
+    
+    <!-- Text Placeholder -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M140,250h81v8h-81z"/>
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M140,270h121v8h-121z"/>
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M140,290h91v8h-91z"/>
+</vector>
+
