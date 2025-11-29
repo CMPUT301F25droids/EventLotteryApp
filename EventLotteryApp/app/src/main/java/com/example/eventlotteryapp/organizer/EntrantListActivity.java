@@ -415,7 +415,7 @@ public class EntrantListActivity extends AppCompatActivity {
                         .get()
                         .addOnSuccessListener(userDoc -> {
                             if (userDoc.exists()) {
-                                String name = userDoc.getString("Name");
+                                String name = userDoc.getString("name");
                                 String email = userDoc.getString("email");
                                 // Try to get join date from user's joined events timestamp, or use current date as fallback
                                 Date joinedDate = new Date(); // Default to current date

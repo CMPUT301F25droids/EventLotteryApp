@@ -145,6 +145,20 @@ public class ProfileFragment extends Fragment {
                             binding.profilePhone.setText(document.getString("phone") + " Phone");
                         }
 
+
+                        if (document.getBoolean("notificationPreference") != null) {
+                            boolean allow_notification = document.getBoolean("notificationPreference");
+                            binding.allowNotificationsSpinner.setSelection(allow_notification ? 0 : 1);
+                        } else {
+                            binding.allowNotificationsSpinner.setSelection(0); // default is allow notifications
+                        }
+                        if (document.getBoolean("lotteryPreference") != null) {
+                            boolean allow_lottery = document.getBoolean("lotteryPreference");
+                            binding.lotteryResultsSpinner.setSelection(allow_lottery ? 0 : 1);
+                        } else {
+                            binding.lotteryResultsSpinner.setSelection(0); // default is allow notifications
+                        }
+
                         // Optionally, detect role if you store it in the user document
 //                        String role = document.getString("role");
 //                        if ("organizer".equals(role)) {
@@ -173,13 +187,26 @@ public class ProfileFragment extends Fragment {
         String name = binding.fullNameEdit.getText().toString();
         String email = binding.emailEdit.getText().toString();
         String phone = binding.phoneEdit.getText().toString();
+        boolean valid_name = validateName(name);
+        boolean valid_email = validateEmail(email);
+        boolean valid_phone = validatePhone(phone);
 
+        if (!valid_name || !valid_email || !valid_phone) {
+            return;
+        }
+        boolean allow_notification = binding.allowNotificationsSpinner.getSelectedItemPosition() == 0;
+        boolean lottery_results = binding.lotteryResultsSpinner.getSelectedItemPosition() == 0;
+
+
+        // Update)
         String collection = isOrganizer ? "organizers" : "entrants";
 
         firestore.collection("users").document(uid).update(
             "name", name,
             "email", email,
-            "phone", phone
+            "phone", phone,
+            "notificationPreference", allow_notification,
+            "lotteryPreference", lottery_results
         ).addOnSuccessListener(aVoid -> {
             // Update display fields
             binding.profileName.setText(name);
@@ -229,9 +256,37 @@ public class ProfileFragment extends Fragment {
             });
     }
 
+    private boolean validateName(String name) {
+        if (name == null || name.isEmpty()) {
+            Toast.makeText(getContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+        // Add more validation as needed
+    }
+
+    private boolean validateEmail(String email) {
+        if (!email.contains("@") || !email.contains(".")) {
+            Toast.makeText(getContext(), "Invalid email format", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validatePhone(String phone) {
+        if (phone != null && !phone.isEmpty() && !phone.matches("\\d+")) {
+            Toast.makeText(getContext(), "Invalid phone number format", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+
+    }
+
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
     }
+
 }
