@@ -31,15 +31,26 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
         }
     }
 
-    private List<UserProfile> profiles = new ArrayList<>();
+    /** Callback for row tap -> delete */
+    public interface OnProfileClickListener {
+        void onClick(UserProfile profile);
+    }
 
-    public AdminProfileAdapter(List<UserProfile> profiles) {
-        this.profiles = new ArrayList<>(profiles);
+    private final List<UserProfile> profiles = new ArrayList<>();
+    private OnProfileClickListener clickListener;
+
+    public AdminProfileAdapter(List<UserProfile> initialProfiles) {
+        if (initialProfiles != null) profiles.addAll(initialProfiles);
     }
 
     public void updateProfiles(List<UserProfile> newProfiles) {
-        this.profiles = new ArrayList<>(newProfiles);
+        profiles.clear();
+        if (newProfiles != null) profiles.addAll(newProfiles);
         notifyDataSetChanged();
+    }
+
+    public void setOnProfileClickListener(OnProfileClickListener listener) {
+        this.clickListener = listener;
     }
 
     @NonNull
@@ -52,17 +63,22 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ProfileViewHolder holder, int position) {
-        UserProfile profile = profiles.get(position);
-        holder.nameText.setText(profile.name);
-        holder.emailText.setText(profile.email);
-        holder.roleText.setText("Role: " + profile.role);
-        if (profile.phone == null || profile.phone.isEmpty()) {
-            holder.phoneText.setText("");
-            holder.phoneText.setVisibility(View.GONE);
+        UserProfile user = profiles.get(position);
+
+        holder.name.setText(user.name != null ? user.name : "(no name)");
+        holder.email.setText(user.email);
+        holder.role.setText("Role: " + user.role);
+
+        if (user.phone == null || user.phone.isEmpty()) {
+            holder.phone.setVisibility(View.GONE);
         } else {
-            holder.phoneText.setVisibility(View.VISIBLE);
-            holder.phoneText.setText("Phone: " + profile.phone);
+            holder.phone.setVisibility(View.VISIBLE);
+            holder.phone.setText("Phone: " + user.phone);
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (clickListener != null) clickListener.onClick(user);
+        });
     }
 
     @Override
@@ -71,18 +87,16 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
     }
 
     static class ProfileViewHolder extends RecyclerView.ViewHolder {
-        TextView nameText;
-        TextView emailText;
-        TextView roleText;
-        TextView phoneText;
 
-        ProfileViewHolder(@NonNull View itemView) {
+        TextView name, email, role, phone;
+
+        public ProfileViewHolder(@NonNull View itemView) {
             super(itemView);
-            nameText = itemView.findViewById(R.id.profile_name);
-            emailText = itemView.findViewById(R.id.profile_email);
-            roleText = itemView.findViewById(R.id.profile_role);
-            phoneText = itemView.findViewById(R.id.profile_phone);
+
+            name = itemView.findViewById(R.id.adminProfileName);
+            email = itemView.findViewById(R.id.adminProfileEmail);
+            role = itemView.findViewById(R.id.adminProfileRole);
+            phone = itemView.findViewById(R.id.adminProfilePhone);
         }
     }
 }
-
