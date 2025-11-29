@@ -145,9 +145,19 @@ public class ProfileFragment extends Fragment {
                             binding.profilePhone.setText(document.getString("phone") + " Phone");
                         }
 
-                        binding.allowNotificationsSpinner.setSelection(document.getBoolean("notificationPreference") ? 0 : 1);
-                        binding.lotteryResultsSpinner.setSelection(document.getBoolean("lotteryPreference") ? 0 : 1);
 
+                        if (document.getBoolean("notificationPreference") != null) {
+                            boolean allow_notification = document.getBoolean("notificationPreference");
+                            binding.allowNotificationsSpinner.setSelection(allow_notification ? 0 : 1);
+                        } else {
+                            binding.allowNotificationsSpinner.setSelection(0); // default is allow notifications
+                        }
+                        if (document.getBoolean("lotteryPreference") != null) {
+                            boolean allow_lottery = document.getBoolean("lotteryPreference");
+                            binding.lotteryResultsSpinner.setSelection(allow_lottery ? 0 : 1);
+                        } else {
+                            binding.lotteryResultsSpinner.setSelection(0); // default is allow notifications
+                        }
 
                         // Optionally, detect role if you store it in the user document
 //                        String role = document.getString("role");
