@@ -17,16 +17,14 @@ import androidx.fragment.app.Fragment;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.eventlotteryapp.Admin.AdminHomeActivity;
 import com.example.eventlotteryapp.EntrantView.EntrantHomePageActivity;
 import com.example.eventlotteryapp.OrganizerHomePage;
 import com.example.eventlotteryapp.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
-/**
- * Handles user login functionality.
- * Navigates to EntrantHomePage after authenticating successfully.
- */
 public class LoginFragment extends Fragment {
 
     private EditText emailEditText;
@@ -40,39 +38,34 @@ public class LoginFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
-        
+
         auth = FirebaseAuth.getInstance();
 
-        // auto login
         if (auth.getCurrentUser() != null) {
-            navigateToHome();
+            fetchRoleAndRedirect(auth.getCurrentUser());
         }
 
         emailEditText = view.findViewById(R.id.editTextTextEmailAddress2);
         passwordEditText = view.findViewById(R.id.editTextTextPassword);
         loginButton = view.findViewById(R.id.login_button);
-        
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String email = emailEditText.getText().toString().trim();
-                String password = passwordEditText.getText().toString();
 
-                if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
-                    // For testing: use anonymous authentication if fields are empty
-                    signInAnonymously();
-                } else {
-                    // Try email/password authentication
-                    signInWithEmailPassword(email, password);
-                }
+        loginButton.setOnClickListener(v -> {
+            String email = emailEditText.getText().toString().trim();
+            String password = passwordEditText.getText().toString();
+
+            if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+                signInAnonymously();
+            } else {
+                signInWithEmailPassword(email, password);
             }
         });
-        TextView forgotPassword = view.findViewById(R.id.forgot_password);
 
+        TextView forgotPassword = view.findViewById(R.id.forgot_password);
         forgotPassword.setOnClickListener(v -> showResetPasswordDialog());
 
         return view;
     }
+
     private void showResetPasswordDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Reset Password");
@@ -92,56 +85,72 @@ public class LoginFragment extends Fragment {
             }
 
             FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(getContext(), "Password reset link sent!", Toast.LENGTH_LONG).show();
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                    });
+                    .addOnSuccessListener(aVoid ->
+                            Toast.makeText(getContext(), "Password reset link sent!", Toast.LENGTH_LONG).show()
+                    )
+                    .addOnFailureListener(e ->
+                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show()
+                    );
         });
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-
         builder.show();
     }
 
-
     private void signInAnonymously() {
         auth.signInAnonymously()
-            .addOnCompleteListener(requireActivity(), task -> {
-                if (task.isSuccessful()) {
-                    FirebaseUser user = auth.getCurrentUser();
-                    if (user != null) {
-                        Toast.makeText(getContext(), "Signed in anonymously for testing", Toast.LENGTH_SHORT).show();
-                        navigateToHome();
+                .addOnCompleteListener(requireActivity(), task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = auth.getCurrentUser();
+                        if (user != null) {
+                            Toast.makeText(getContext(), "Signed in anonymously for testing", Toast.LENGTH_SHORT).show();
+                            redirectUser("entrant");
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Authentication failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    Toast.makeText(getContext(), "Authentication failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
+                });
     }
-    
+
     private void signInWithEmailPassword(String email, String password) {
         auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(requireActivity(), task -> {
-                if (task.isSuccessful()) {
-                    FirebaseUser user = auth.getCurrentUser();
-                    if (user != null) {
-                        Toast.makeText(getContext(), "Signed in successfully", Toast.LENGTH_SHORT).show();
-                        navigateToHome();
+                .addOnCompleteListener(requireActivity(), task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = auth.getCurrentUser();
+                        if (user != null) {
+                            Toast.makeText(getContext(), "Signed in successfully", Toast.LENGTH_SHORT).show();
+                            fetchRoleAndRedirect(user);
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Login failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    Toast.makeText(getContext(), "Login failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
+                });
     }
-    
-    private void navigateToHome() {
-        // Navigate to EntrantHomePageActivity (the correct entrant home page)
-        Intent intent = new Intent(getActivity(), EntrantHomePageActivity.class);
-        startActivity(intent);
-        if (getActivity() != null) {
-            getActivity().finish();
+
+    private void fetchRoleAndRedirect(FirebaseUser user) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("users")
+                .document(user.getUid())
+                .get()
+                .addOnSuccessListener(doc -> {
+                    String role = doc.getString("role");
+                    redirectUser(role);
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Failed to load role", Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    private void redirectUser(String role) {
+        if ("admin".equals(role)) {
+            startActivity(new Intent(getActivity(), AdminHomeActivity.class));
+        } else if ("organizer".equals(role)) {
+            startActivity(new Intent(getActivity(), OrganizerHomePage.class));
+        } else {
+            startActivity(new Intent(getActivity(), EntrantHomePageActivity.class));
         }
+
+        requireActivity().finish();
     }
 }
