@@ -1,15 +1,17 @@
 package com.example.eventlotteryapp.organizer;
 
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.data.Event;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,7 +31,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     public EventAdapter(List<MyEventsFragment.EventWithId> events) {
         this.events = new ArrayList<>(events);
     }
-    
+
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.clickListener = listener;
     }
@@ -38,52 +40,47 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     @Override
     public EventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-            .inflate(R.layout.item_event_card, parent, false);
+                .inflate(R.layout.item_event_card, parent, false);
         return new EventViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull EventViewHolder holder, int position) {
-        MyEventsFragment.EventWithId eventWithId = events.get(position);
-        Event event = eventWithId.event;
+        MyEventsFragment.EventWithId wrapper = events.get(position);
+        Event event = wrapper.event;
 
-        holder.titleText.setText(event.title());
-        
-        if (event.eventStartDate() != null) {
-            holder.dateText.setText(dateFormat.format(event.eventStartDate()));
+        holder.titleText.setText(event.getTitle());
+        holder.locationText.setText(event.getLocation());
+
+        if (event.getEventStartDate() != null) {
+            holder.dateText.setText(dateFormat.format(event.getEventStartDate()));
         } else {
             holder.dateText.setText("Date TBD");
         }
 
-        holder.locationText.setText(event.location());
-
-        // Determine status
         Date now = new Date();
         String status;
-        int statusIndicatorRes;
-        
-        if (event.eventStartDate() == null || event.eventEndDate() == null) {
+        int indicator;
+
+        if (event.getEventStartDate() == null || event.getEventEndDate() == null) {
             status = "Pending";
-            statusIndicatorRes = R.drawable.status_indicator_yellow;
-        } else if (now.before(event.eventStartDate())) {
+            indicator = R.drawable.status_indicator_yellow;
+        } else if (now.before(event.getEventStartDate())) {
             status = "Upcoming";
-            statusIndicatorRes = R.drawable.status_indicator_yellow;
-        } else if (now.after(event.eventEndDate())) {
+            indicator = R.drawable.status_indicator_yellow;
+        } else if (now.after(event.getEventEndDate())) {
             status = "Closed";
-            statusIndicatorRes = R.drawable.status_indicator_red;
+            indicator = R.drawable.status_indicator_red;
         } else {
             status = "Open";
-            statusIndicatorRes = R.drawable.status_indicator_green;
+            indicator = R.drawable.status_indicator_green;
         }
 
         holder.statusText.setText(status);
-        holder.statusIndicator.setBackgroundResource(statusIndicatorRes);
-        
-        // Set click listener
+        holder.statusIndicator.setBackgroundResource(indicator);
+
         holder.itemView.setOnClickListener(v -> {
-            if (clickListener != null) {
-                clickListener.onItemClick(eventWithId.id);
-            }
+            if (clickListener != null) clickListener.onItemClick(wrapper.id);
         });
     }
 
@@ -98,15 +95,13 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     }
 
     static class EventViewHolder extends RecyclerView.ViewHolder {
-        TextView titleText;
-        TextView dateText;
-        TextView locationText;
-        TextView statusText;
+        TextView titleText, dateText, locationText, statusText;
         View statusIndicator;
         ImageView eventImage;
 
         EventViewHolder(@NonNull View itemView) {
             super(itemView);
+
             titleText = itemView.findViewById(R.id.event_title);
             dateText = itemView.findViewById(R.id.event_date);
             locationText = itemView.findViewById(R.id.event_location);
@@ -116,5 +111,3 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         }
     }
 }
-
-

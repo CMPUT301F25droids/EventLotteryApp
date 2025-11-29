@@ -1,23 +1,30 @@
 package com.example.eventlotteryapp.data;
 
-import com.google.firebase.firestore.ServerTimestamp;
 import java.util.Date;
 
-public record Event(
-    String title,
-    String description,
-    String location,
-    double price,
-    Date eventStartDate,
-    Date eventEndDate,
-    Date registrationOpenDate,
-    Date registrationCloseDate,
-    int maxParticipants,
-    String organizerId,
-    @ServerTimestamp Date createdAt
-) {
-    // No-arg constructor for Firestore
-    public Event() {
-        this("", "", "", 0.0, null, null, null, null, 0, "", null);
-    }
+public class Event {
+
+    private String title;
+    private String description;
+    private String location;
+    private double price;
+    private Date eventStartDate;
+    private Date eventEndDate;
+    private Date registrationOpenDate;
+    private Date registrationCloseDate;
+    private int maxParticipants;
+    private String organizerId;
+
+    public Event() { }
+
+    public String getTitle() { return title != null ? title : ""; }
+    public String getDescription() { return description != null ? description : ""; }
+    public String getLocation() { return location != null ? location : ""; }
+    public double getPrice() { return price; }
+    public Date getEventStartDate() { return eventStartDate; }
+    public Date getEventEndDate() { return eventEndDate; }
+    public Date getRegistrationOpenDate() { return registrationOpenDate; }
+    public Date getRegistrationCloseDate() { return registrationCloseDate; }
+    public int getMaxParticipants() { return maxParticipants; }
+    public String getOrganizerId() { return organizerId != null ? organizerId : ""; }
 }

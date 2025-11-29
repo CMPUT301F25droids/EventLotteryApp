@@ -69,6 +69,15 @@
         <activity
             android:name=".organizer.FinalizedListActivity"
             android:exported="false" />
+        <activity
+            android:name=".Admin.AdminBrowseEventsActivity"
+            android:exported="true" />
+        <activity android:name=".Admin.AdminHomeActivity" />
+        <activity
+            android:name=".Admin.AdminBrowseProfilesActivity"
+            android:exported="false" />
+
+
 
         <provider
             android:name="androidx.core.content.FileProvider"
