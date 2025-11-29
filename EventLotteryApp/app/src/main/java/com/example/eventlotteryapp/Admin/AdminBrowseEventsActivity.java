@@ -73,58 +73,10 @@ public class AdminBrowseEventsActivity extends AppCompatActivity {
                     List<MyEventsFragment.EventWithId> events = new ArrayList<>();
 
                     for (QueryDocumentSnapshot doc : querySnapshot) {
-                        // Manually deserialize Event from document snapshot
-                        // (Java records don't work with Firestore's toObject())
-                        String title = doc.getString("title");
-                        if (title == null) {
-                            title = doc.getString("Name"); // Fallback to old field name
+                        Event event = doc.toObject(Event.class);
+                        if (event != null) {
+                            events.add(new MyEventsFragment.EventWithId(doc.getId(), event));
                         }
-                        String description = doc.getString("description");
-                        String location = doc.getString("location");
-                        Double price = doc.getDouble("price");
-                        if (price == null) {
-                            String costStr = doc.getString("Cost");
-                            if (costStr != null && costStr.startsWith("$")) {
-                                try {
-                                    price = Double.parseDouble(costStr.substring(1));
-                                } catch (NumberFormatException e) {
-                                    price = 0.0;
-                                }
-                            } else {
-                                price = 0.0;
-                            }
-                        }
-                        java.util.Date eventStartDate = doc.getDate("eventStartDate");
-                        java.util.Date eventEndDate = doc.getDate("eventEndDate");
-                        java.util.Date registrationOpenDate = doc.getDate("registrationOpenDate");
-                        java.util.Date registrationCloseDate = doc.getDate("registrationCloseDate");
-                        Long maxParticipantsLong = doc.getLong("maxParticipants");
-                        int maxParticipants = maxParticipantsLong != null ? maxParticipantsLong.intValue() : 0;
-                        String organizerId = doc.getString("organizerId");
-                        if (organizerId == null) {
-                            com.google.firebase.firestore.DocumentReference organizerRef = doc.getDocumentReference("Organizer");
-                            if (organizerRef != null) {
-                                organizerId = organizerRef.getId();
-                            }
-                        }
-                        java.util.Date createdAt = doc.getDate("createdAt");
-                        
-                        // Create Event object manually
-                        Event event = new Event(
-                            title != null ? title : "",
-                            description != null ? description : "",
-                            location != null ? location : "",
-                            price != null ? price : 0.0,
-                            eventStartDate,
-                            eventEndDate,
-                            registrationOpenDate,
-                            registrationCloseDate,
-                            maxParticipants,
-                            organizerId != null ? organizerId : "",
-                            createdAt
-                        );
-                        
-                        events.add(new MyEventsFragment.EventWithId(doc.getId(), event));
                     }
 
                     progressBar.setVisibility(View.GONE);

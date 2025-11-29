@@ -8,10 +8,6 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <!-- Permission for QR Code Scanning -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -74,31 +70,12 @@
             android:name=".organizer.FinalizedListActivity"
             android:exported="false" />
         <activity
-<<<<<<< HEAD
             android:name=".Admin.AdminBrowseEventsActivity"
             android:exported="true" />
         <activity android:name=".Admin.AdminHomeActivity" />
         <activity
             android:name=".Admin.AdminBrowseProfilesActivity"
             android:exported="false" />
-
-
-=======
-            android:name=".EntrantView.ScanQrCodeActivity"
-            android:exported="false" />
-        <activity
-            android:name=".EntrantView.QrCaptureActivity"
-            android:exported="false"
-            android:stateNotNeeded="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/zxing_capture" />
-        <activity
-            android:name=".Admin.AdminBrowseEventsActivity"
-            android:exported="true" />
-        <activity
-            android:name=".Admin.AdminBrowseProfilesActivity"
-            android:exported="true" />
->>>>>>> 441de7b9e919fa8d9b3622ac7aa300e0f10f4697
 
         <provider
             android:name="androidx.core.content.FileProvider"
