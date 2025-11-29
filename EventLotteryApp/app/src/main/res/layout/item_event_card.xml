@@ -63,7 +63,7 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_calendar"
-                    android:tint="@color/medium_grey" />
+                    app:tint="@color/medium_grey" />
 
                 <TextView
                     android:id="@+id/event_date"
@@ -86,7 +86,7 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_location"
-                    android:tint="@color/medium_grey" />
+                    app:tint="@color/medium_grey" />
 
                 <TextView
                     android:id="@+id/event_location"

@@ -3,17 +3,32 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
+    android:gravity="center_horizontal"
     android:padding="24dp"
     android:background="@color/white">
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="80dp" />
+
+    <TextView
+        android:id="@+id/adminHomeTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Welcome to Admin Home!"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:paddingBottom="32dp" />
+
+    <!-- BUTTONS -->
     <Button
         android:id="@+id/adminBrowseEventsButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Browse All Events"
         android:padding="12dp"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="20dp" />
 
     <Button
         android:id="@+id/adminBrowseProfilesButton"
@@ -21,7 +36,7 @@
         android:layout_height="wrap_content"
         android:text="Browse Profiles"
         android:padding="12dp"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="20dp" />
 
     <Button
         android:id="@+id/adminLogoutButton"
@@ -31,4 +46,3 @@
         android:padding="12dp" />
 
 </LinearLayout>
-
