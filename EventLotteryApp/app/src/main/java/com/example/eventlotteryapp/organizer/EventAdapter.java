@@ -1,5 +1,8 @@
 package com.example.eventlotteryapp.organizer;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,6 +52,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         MyEventsFragment.EventWithId wrapper = events.get(position);
         Event event = wrapper.event;
 
+        // Title, date, location, status
         holder.titleText.setText(event.getTitle());
         holder.locationText.setText(event.getLocation());
 
@@ -79,6 +83,20 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         holder.statusText.setText(status);
         holder.statusIndicator.setBackgroundResource(indicator);
 
+        // Loads event image
+        String base64 = event.getImage();
+        if (base64 != null && !base64.trim().isEmpty()) {
+            Bitmap bitmap = decodeBase64(base64);
+
+            if (bitmap != null) {
+                holder.eventImage.setImageBitmap(bitmap);
+            } else {
+                holder.eventImage.setImageResource(R.drawable.placeholder_image);
+            }
+        } else {
+            holder.eventImage.setImageResource(R.drawable.placeholder_image);
+        }
+
         holder.itemView.setOnClickListener(v -> {
             if (clickListener != null) clickListener.onItemClick(wrapper.id);
         });
@@ -92,6 +110,19 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     public void updateEvents(List<MyEventsFragment.EventWithId> newEvents) {
         this.events = new ArrayList<>(newEvents);
         notifyDataSetChanged();
+    }
+
+    private Bitmap decodeBase64(String base64Str) {
+        try {
+            // Removes prefix if present
+            if (base64Str.contains(",")) {
+                base64Str = base64Str.substring(base64Str.indexOf(",") + 1);
+            }
+            byte[] decoded = Base64.decode(base64Str, Base64.DEFAULT);
+            return BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     static class EventViewHolder extends RecyclerView.ViewHolder {

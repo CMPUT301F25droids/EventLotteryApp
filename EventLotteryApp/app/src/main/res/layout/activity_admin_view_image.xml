@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal">
+
+    <!-- Full image -->
+    <ImageView
+        android:id="@+id/adminFullImageView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
+        android:contentDescription="Selected image" />
+
+    <!-- Delete button -->
+    <Button
+        android:id="@+id/adminDeleteImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Delete Image"
+        android:padding="12dp"
+        android:backgroundTint="@color/delete_red"
+        android:textColor="@android:color/white" />
+
+</LinearLayout>

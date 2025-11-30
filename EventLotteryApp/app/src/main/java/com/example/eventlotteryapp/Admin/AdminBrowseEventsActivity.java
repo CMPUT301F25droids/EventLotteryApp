@@ -49,7 +49,7 @@ public class AdminBrowseEventsActivity extends AppCompatActivity {
         eventAdapter = new EventAdapter(new ArrayList<>());
         recyclerView.setAdapter(eventAdapter);
 
-        // 🔹 When admin taps an event card, ask to delete it
+        //When admin taps an event card, ask to delete it
         eventAdapter.setOnItemClickListener(this::showDeleteDialog);
 
         Button logoutBtn = findViewById(R.id.adminLogoutButton);
@@ -97,7 +97,7 @@ public class AdminBrowseEventsActivity extends AppCompatActivity {
                 });
     }
 
-    // 🔹 Ask admin to confirm deletion, then delete from Firestore
+    // Ask admin to confirm deletion, then delete from Firestore
     private void showDeleteDialog(String eventId) {
         new AlertDialog.Builder(this)
                 .setTitle("Remove event")
