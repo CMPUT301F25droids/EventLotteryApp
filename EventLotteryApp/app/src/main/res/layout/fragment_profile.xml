@@ -52,8 +52,42 @@
                 android:paddingBottom="12dp"
                 style="?attr/materialButtonOutlinedStyle" />
         </com.google.android.material.button.MaterialButtonToggleGroup>
-
-        <!-- Profile Picture -->
+        <LinearLayout
+            android:id="@+id/banned_organizer_view_msg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="An administrator has banned you from organizer view."
+                android:textColor="@color/delete_red"
+                android:maxLines="1"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="8sp"
+                android:autoSizeMaxTextSize="12sp"
+                android:autoSizeStepGranularity="1sp"
+                android:gravity="center"
+                android:textStyle="italic">
+            </TextView>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Please email suhayb@ualberta.ca if you think an error has been made"
+                android:textColor="@color/black"
+                android:maxLines="1"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="8sp"
+                android:autoSizeMaxTextSize="10sp"
+                android:autoSizeStepGranularity="1sp"
+                android:gravity="center"
+                android:textStyle="italic">
+            </TextView>
+        </LinearLayout>
+    <!-- Profile Picture -->
         <ImageView
             android:id="@+id/profile_picture"
             android:layout_width="120dp"

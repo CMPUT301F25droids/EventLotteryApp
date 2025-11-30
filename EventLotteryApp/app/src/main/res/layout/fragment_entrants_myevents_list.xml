@@ -35,7 +35,7 @@
             android:id="@+id/scan_qr_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_qr_scan"
+            android:src="@drawable/ic_qr_scan1"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Scan QR Code"
             android:padding="8dp" />
@@ -56,10 +56,10 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/active_filter"
+            android:id="@+id/selected_filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Active"
+            android:text="Selected"
             android:textColor="@color/black"
             android:textAllCaps="false"
             android:textStyle="bold"
@@ -98,10 +98,10 @@
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/past_filter"
+            android:id="@+id/not_selected_filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Past"
+            android:text="Not Selected"
             android:textColor="@color/black"
             android:textAllCaps="false"
             android:textStyle="bold"

@@ -12,6 +12,9 @@ import androidx.fragment.app.Fragment;
 
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.UserSession;
+import com.google.firebase.Firebase;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -29,6 +32,7 @@ public class NotificationsFragment extends Fragment {
     private NotificationArrayAdapter notificationAdapter;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private CollectionReference notificationsRef;
+    FirebaseAuth auth;
 
     public NotificationsFragment() {
         super(R.layout.fragment_notifications);
@@ -55,12 +59,13 @@ public class NotificationsFragment extends Fragment {
     private void loadNotifications() {
         progressBar.setVisibility(View.VISIBLE);
         notificationsList.setVisibility(View.GONE);
-
+        auth = FirebaseAuth.getInstance();
         notificationsRef = db.collection("Notifications");
         String userId = UserSession.getCurrentUserId();
         DocumentReference userRef = db.document("Users/" + userId);
         notificationsArray.clear();
-        notificationsRef.whereEqualTo("UserId", userRef)
+
+        notificationsRef.whereEqualTo("UserId", auth.getUid() )
                         .get()
                         .addOnCompleteListener((task) -> {
                             if (task.isSuccessful()) {

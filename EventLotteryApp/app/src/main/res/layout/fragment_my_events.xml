@@ -21,76 +21,90 @@
             android:textStyle="bold"
             android:layout_marginBottom="16dp" />
 
-        <!-- Filter Buttons -->
-        <LinearLayout
+        <HorizontalScrollView
+            android:id="@+id/filter_scroll_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="16dp">
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:scrollbars="none"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/active_filter_button"
+
+        <!-- Filter Buttons -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Active: 0"
-                android:textColor="@color/black"
-                android:textAllCaps="false"
-                android:textStyle="bold"
-                app:strokeColor="@color/light_opaque_black"
-                app:strokeWidth="1dp"
-                app:cornerRadius="50dp"
-                app:backgroundTint="@android:color/transparent"
-                android:paddingLeft="16dp"
-                android:paddingTop="8dp"
-                android:paddingRight="16dp"
-                android:paddingBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/upcoming_filter_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Upcoming: 0"
-                android:textColor="@color/black"
-                android:textAllCaps="false"
-                android:textStyle="bold"
-                app:strokeColor="@color/light_opaque_black"
-                app:strokeWidth="1dp"
-                app:cornerRadius="50dp"
-                app:backgroundTint="@android:color/transparent"
-                android:paddingLeft="16dp"
-                android:paddingTop="8dp"
-                android:paddingRight="16dp"
-                android:paddingBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/active_filter_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Active: 0"
+                    android:textColor="@color/black"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    app:strokeColor="@color/light_opaque_black"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="50dp"
+                    app:backgroundTint="@android:color/transparent"
+                    android:paddingLeft="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingRight="16dp"
+                    android:paddingBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/closed_filter_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Closed: 0"
-                android:textColor="@color/black"
-                android:textAllCaps="false"
-                android:textStyle="bold"
-                app:strokeColor="@color/light_opaque_black"
-                app:strokeWidth="1dp"
-                app:cornerRadius="50dp"
-                app:backgroundTint="@android:color/transparent"
-                android:paddingLeft="16dp"
-                android:paddingTop="8dp"
-                android:paddingRight="16dp"
-                android:paddingBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-        </LinearLayout>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/upcoming_filter_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Upcoming: 0"
+                    android:textColor="@color/black"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    app:strokeColor="@color/light_opaque_black"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="50dp"
+                    app:backgroundTint="@android:color/transparent"
+                    android:paddingLeft="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingRight="16dp"
+                    android:paddingBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/closed_filter_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Closed: 0"
+                    android:textColor="@color/black"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    app:strokeColor="@color/light_opaque_black"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="50dp"
+                    app:backgroundTint="@android:color/transparent"
+                    android:paddingLeft="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingRight="16dp"
+                    android:paddingBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+            </LinearLayout>
+
+        </HorizontalScrollView>
 
         <!-- Events RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
