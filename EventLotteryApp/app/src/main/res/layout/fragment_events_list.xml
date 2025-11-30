@@ -37,7 +37,7 @@
             android:id="@+id/scan_qr_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_qr_scan"
+            android:src="@drawable/ic_qr_scan1"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Scan QR Code"
             android:padding="8dp" />

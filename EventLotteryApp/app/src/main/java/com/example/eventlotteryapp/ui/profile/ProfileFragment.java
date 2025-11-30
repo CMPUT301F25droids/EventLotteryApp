@@ -3,6 +3,7 @@ package com.example.eventlotteryapp.ui.profile;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,10 +60,25 @@ public class ProfileFragment extends Fragment {
     }
 
     private void setupRoleToggle() {
-        binding.roleToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            firestore.collection("users").document(auth.getUid())
-                    .update("role", isOrganizer ? "organizer" : "entrant");
+        firestore.collection("users")
+                .document(auth.getUid())
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    Boolean banned = snapshot.getBoolean("organizerModeBanned");
 
+                    if (banned != null && banned) {
+                        binding.roleToggleGroup.check(R.id.entrant_button);
+                        binding.roleToggleGroup.setEnabled(false);
+                        isOrganizer = false;
+                        binding.bannedOrganizerViewMsg.setVisibility(View.VISIBLE);
+                    } else {
+                        binding.roleToggleGroup.setEnabled(true);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("TAG", "Error getting document", e);
+                });
+        binding.roleToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked) {
                 if (checkedId == R.id.organizer_button) {
                     isOrganizer = true;
@@ -84,6 +100,9 @@ public class ProfileFragment extends Fragment {
                     }
                 }
             }
+            firestore.collection("users").document(auth.getUid())
+                    .update("role", isOrganizer ? "organizer" : "entrant");
+
         });
     }
 

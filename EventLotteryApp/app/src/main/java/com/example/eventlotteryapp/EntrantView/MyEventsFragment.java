@@ -1,13 +1,17 @@
 package com.example.eventlotteryapp.EntrantView;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +20,7 @@ import android.widget.ProgressBar;
 
 import com.example.eventlotteryapp.R;
 import com.google.android.gms.common.api.internal.StatusCallback;
+import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -33,6 +38,8 @@ public class MyEventsFragment extends Fragment {
     private static final String ARG_COLUMN_COUNT = "column-count";
     // TODO: Customize parameters
     private int mColumnCount = 1;
+    private MyEventItem.Status currentFilter = null;
+    private List<MyEventItem> fullEventList; // Store all events
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -71,7 +78,7 @@ public class MyEventsFragment extends Fragment {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
     }
-    
+
     @Override
     public void onResume() {
         super.onResume();
@@ -93,24 +100,24 @@ public class MyEventsFragment extends Fragment {
                 loading.setVisibility(View.VISIBLE);
             }
             adapter.updateList(eventList);
-            
+
             // Re-run all waitlist queries to get fresh data
             // This is needed because the snapshot listener only watches the user document,
             // not the event documents, so it won't fire when event arrays change
             runWaitlistQueries();
         }
     }
-    
+
     private void runWaitlistQueries() {
         if (userId == null || db == null || adapter == null || eventList == null) {
             return;
         }
-        
+
         final int totalQueries = 3; // 3 waitlist queries (waitingListEntrantIds, selectedEntrantIds, cancelledEntrantIds)
         if (completedQueries == null) completedQueries = new int[]{0};
         if (pendingStatusLoads == null) pendingStatusLoads = new int[]{0};
         if (loadedEventIds == null) loadedEventIds = new java.util.HashSet<>();
-        
+
         // Helper functions (need to recreate them here or make them instance methods)
         java.util.function.Consumer<Void> checkAllDone = (v) -> {
             Log.d("MyEventsFragment", "onResume check - Queries: " + completedQueries[0] + "/" + totalQueries + ", Pending: " + pendingStatusLoads[0]);
@@ -125,20 +132,20 @@ public class MyEventsFragment extends Fragment {
                 updateEmptyState(eventList, recyclerView, emptyStateContainer);
             }
         };
-        
+
         // Simplified loadEvent for onResume
         java.util.function.Consumer<com.google.firebase.firestore.DocumentSnapshot> loadEvent = (eventDoc) -> {
             if (!eventDoc.exists()) return;
             String eventId = eventDoc.getId();
             if (loadedEventIds.contains(eventId)) return;
-            
+
             MyEventItem event = eventDoc.toObject(MyEventItem.class);
             if (event == null) return;
-            
+
             event.setId(eventId);
             loadedEventIds.add(eventId);
             pendingStatusLoads[0]++;
-            
+
             getEventStatus(event, userId, db, new StatusCallback() {
                 @Override
                 public void onStatusRetrieved(MyEventItem.Status status) {
@@ -149,7 +156,7 @@ public class MyEventsFragment extends Fragment {
                 }
             });
         };
-        
+
         // Run all queries
         db.collection("Events").whereArrayContains("waitingListEntrantIds", userId).get()
                 .addOnSuccessListener(snap -> {
@@ -164,7 +171,7 @@ public class MyEventsFragment extends Fragment {
                     completedQueries[0]++;
                     checkAllDone.accept(null);
                 });
-        
+
         db.collection("Events").whereArrayContains("selectedEntrantIds", userId).get()
                 .addOnSuccessListener(snap -> {
                     for (com.google.firebase.firestore.QueryDocumentSnapshot doc : snap) {
@@ -177,7 +184,7 @@ public class MyEventsFragment extends Fragment {
                     completedQueries[0]++;
                     checkAllDone.accept(null);
                 });
-        
+
         db.collection("Events").whereArrayContains("cancelledEntrantIds", userId).get()
                 .addOnSuccessListener(snap -> {
                     for (com.google.firebase.firestore.QueryDocumentSnapshot doc : snap) {
@@ -190,7 +197,7 @@ public class MyEventsFragment extends Fragment {
                     completedQueries[0]++;
                     checkAllDone.accept(null);
                 });
-        
+
         // Removed old Waitlist query - using only waitingListEntrantIds now
     }
 
@@ -208,7 +215,7 @@ public class MyEventsFragment extends Fragment {
         // Get empty state views
         emptyStateContainer = view.findViewById(R.id.empty_state_container);
         Button browseEventsButton = view.findViewById(R.id.browse_events_button);
-        
+
         // Get scan QR button
         android.widget.ImageButton scanQrButton = view.findViewById(R.id.scan_qr_button);
 
@@ -219,7 +226,7 @@ public class MyEventsFragment extends Fragment {
                 ((EntrantHomePageActivity) getActivity()).viewPager2.setCurrentItem(0);
             }
         });
-        
+
         // Scan QR button click listener
         scanQrButton.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), ScanQrCodeActivity.class);
@@ -239,7 +246,7 @@ public class MyEventsFragment extends Fragment {
 
         loading = view.findViewById(R.id.loading_indicator);
         loading.setVisibility(View.VISIBLE);
-        
+
         // Initialize instance variables for refresh capability
         loadedEventIds = new java.util.HashSet<>();
         completedQueries = new int[]{0};
@@ -257,18 +264,18 @@ public class MyEventsFragment extends Fragment {
         userId = auth.getCurrentUser().getUid();
         String userEmail = auth.getCurrentUser().getEmail();
         user_ref = db.collection("users").document(userId);
-        
+
         Log.d("MyEventsFragment", "=== Loading My Events for user ===");
         Log.d("MyEventsFragment", "User ID: " + userId);
         Log.d("MyEventsFragment", "User Email: " + (userEmail != null ? userEmail : "null"));
         Log.d("MyEventsFragment", "Setting up data structures and listeners...");
-        
+
         // Reset tracking variables
         loadedEventIds.clear();
         completedQueries[0] = 0;
         pendingStatusLoads[0] = 0;
         final int totalQueries = 4; // JoinedEvents + 3 waitlist queries (waitingListEntrantIds, selectedEntrantIds, cancelledEntrantIds)
-        
+
         // Helper to check if all queries and status loads are done
         java.util.function.Consumer<Void> checkAllDone = (v) -> {
             Log.d("MyEventsFragment", "Checking completion - Queries: " + completedQueries[0] + "/" + totalQueries + ", Pending status: " + pendingStatusLoads[0]);
@@ -279,7 +286,7 @@ public class MyEventsFragment extends Fragment {
                 updateEmptyState(eventList, recyclerView, emptyStateContainer);
             }
         };
-        
+
         // Helper to sync event to JoinedEvents if not already there
         java.util.function.Consumer<String> syncEventToJoinedEvents = (eventId) -> {
             db.collection("users").document(userId).get()
@@ -287,7 +294,7 @@ public class MyEventsFragment extends Fragment {
                         if (userDoc.exists()) {
                             List<DocumentReference> joinedEvents = (List<DocumentReference>) userDoc.get("JoinedEvents");
                             DocumentReference eventRef = db.collection("Events").document(eventId);
-                            
+
                             boolean needsSync = true;
                             if (joinedEvents != null) {
                                 for (DocumentReference ref : joinedEvents) {
@@ -297,7 +304,7 @@ public class MyEventsFragment extends Fragment {
                                     }
                                 }
                             }
-                            
+
                             if (needsSync) {
                                 Log.d("MyEventsFragment", "Syncing event " + eventId + " to JoinedEvents for user " + userEmail);
                                 user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(eventRef))
@@ -311,32 +318,32 @@ public class MyEventsFragment extends Fragment {
                         }
                     });
         };
-        
+
         // Helper to load an event (avoid duplicates)
         java.util.function.Consumer<com.google.firebase.firestore.DocumentSnapshot> loadEvent = (eventDoc) -> {
             if (!eventDoc.exists()) {
                 return;
             }
-            
+
             String eventId = eventDoc.getId();
             if (loadedEventIds.contains(eventId)) {
                 return; // Already loading or loaded
             }
-            
+
             MyEventItem event = eventDoc.toObject(MyEventItem.class);
             if (event == null) {
                 return;
             }
-            
+
             event.setId(eventId);
             loadedEventIds.add(eventId);
             pendingStatusLoads[0]++;
-            
+
             Log.d("MyEventsFragment", "Loading event: " + eventId + " (" + (event.getName() != null ? event.getName() : "unknown") + ")");
-            
+
             // Sync this event to JoinedEvents if it's from a waitlist query
             syncEventToJoinedEvents.accept(eventId);
-            
+
             getEventStatus(event, userId, db, new StatusCallback() {
                 @Override
                 public void onStatusRetrieved(MyEventItem.Status status) {
@@ -348,7 +355,7 @@ public class MyEventsFragment extends Fragment {
                 }
             });
         };
-        
+        setupFilterButtons(view );
         // Load from user's JoinedEvents array
         try {
             Log.d("MyEventsFragment", "Setting up snapshot listener for user document...");
@@ -370,13 +377,13 @@ public class MyEventsFragment extends Fragment {
                         completedQueries[0] = 0;
 
                         List<DocumentReference> joinedEvents = (List<DocumentReference>) documentSnapshot.get("JoinedEvents");
-                        
+
                         Log.d("MyEventsFragment", "JoinedEvents count: " + (joinedEvents != null ? joinedEvents.size() : 0));
-                        
+
                         if (joinedEvents != null && !joinedEvents.isEmpty()) {
                             final int[] loadedFromJoined = {0};
                             final int totalJoined = joinedEvents.size();
-                            
+
                             for (DocumentReference eventRef : joinedEvents) {
                                 if (eventRef == null) {
                                     loadedFromJoined[0]++;
@@ -386,7 +393,7 @@ public class MyEventsFragment extends Fragment {
                                     }
                                     continue;
                                 }
-                                
+
                                 eventRef.get()
                                         .addOnSuccessListener(eventDoc -> {
                                             loadEvent.accept(eventDoc);
@@ -410,7 +417,7 @@ public class MyEventsFragment extends Fragment {
                             completedQueries[0]++;
                             checkAllDone.accept(null);
                         }
-                        
+
                         // Also query events where user is in waitlist arrays (to catch cases where JoinedEvents is out of sync)
                         // Query for events where user is in waitingListEntrantIds
                         db.collection("Events")
@@ -430,7 +437,7 @@ public class MyEventsFragment extends Fragment {
                                     completedQueries[0]++;
                                     checkAllDone.accept(null);
                                 });
-                        
+
                         // Query for events where user is in selectedEntrantIds
                         db.collection("Events")
                                 .whereArrayContains("selectedEntrantIds", userId)
@@ -449,7 +456,7 @@ public class MyEventsFragment extends Fragment {
                                     completedQueries[0]++;
                                     checkAllDone.accept(null);
                                 });
-                        
+
                         // Query for events where user is in cancelledEntrantIds
                         db.collection("Events")
                                 .whereArrayContains("cancelledEntrantIds", userId)
@@ -468,7 +475,7 @@ public class MyEventsFragment extends Fragment {
                                     completedQueries[0]++;
                                     checkAllDone.accept(null);
                                 });
-                        
+
                         // Removed old Waitlist query - using only waitingListEntrantIds now
 
                     } else {
@@ -492,7 +499,7 @@ public class MyEventsFragment extends Fragment {
                                     completedQueries[0]++;
                                     checkAllDone.accept(null);
                                 });
-                        
+
                         // Query for events where user is in selectedEntrantIds
                         db.collection("Events")
                                 .whereArrayContains("selectedEntrantIds", userId)
@@ -511,7 +518,7 @@ public class MyEventsFragment extends Fragment {
                                     completedQueries[0]++;
                                     checkAllDone.accept(null);
                                 });
-                        
+
                         // Query for events where user is in cancelledEntrantIds
                         db.collection("Events")
                                 .whereArrayContains("cancelledEntrantIds", userId)
@@ -530,15 +537,15 @@ public class MyEventsFragment extends Fragment {
                                     completedQueries[0]++;
                                     checkAllDone.accept(null);
                                 });
-                        
+
                         // Removed old Waitlist query - using only waitingListEntrantIds now
-                        
+
                         // Mark JoinedEvents query as done (since doc doesn't exist)
                         completedQueries[0]++;
                         checkAllDone.accept(null);
                     }
                 });
-        
+
         // Also try a one-time get() as a fallback to ensure we catch the data
         Log.d("MyEventsFragment", "Also doing one-time get() as fallback...");
         db.collection("users").document(userId)
@@ -576,20 +583,20 @@ public class MyEventsFragment extends Fragment {
         List<String> selectedEntrants = (List<String>) eventDoc.get("selectedEntrantIds");
         List<String> cancelledEntrants = (List<String>) eventDoc.get("cancelledEntrantIds");
         List<String> waitingListEntrants = (List<String>) eventDoc.get("waitingListEntrantIds");
-        
+
         // Check which array contains the userId
         if (selectedEntrants != null && selectedEntrants.contains(userId)) {
             return MyEventItem.Status.SELECTED;
         }
-        
+
         if (cancelledEntrants != null && cancelledEntrants.contains(userId)) {
             return MyEventItem.Status.NOT_SELECTED;
         }
-        
+
         if (waitingListEntrants != null && waitingListEntrants.contains(userId)) {
             return MyEventItem.Status.PENDING;
         }
-        
+
         return MyEventItem.Status.UNKNOWN;
     }
     private void checkFinished(int[] loadedCount, int total, List<MyEventItem> eventList,
@@ -614,4 +621,93 @@ public class MyEventsFragment extends Fragment {
             emptyStateContainer.setVisibility(View.GONE);
         }
     }
+    private void setupFilterButtons(View view) {
+        MaterialButton selectFilter = view.findViewById(R.id.selected_filter);
+        MaterialButton pendingFilter = view.findViewById(R.id.pending_filter);
+        MaterialButton notSelectedFilter = view.findViewById(R.id.not_selected_filter);
+
+
+        selectFilter.setOnClickListener(v -> {
+            if (currentFilter == MyEventItem.Status.SELECTED) {
+                // Deselect - show all events
+                currentFilter = null;
+                updateFilterButtonStyle(selectFilter, false);
+            } else {
+                // Select this filter
+                currentFilter = MyEventItem.Status.SELECTED;
+                updateFilterButtonStyle(selectFilter, true);
+                updateFilterButtonStyle(pendingFilter, false);
+                updateFilterButtonStyle(notSelectedFilter, false);
+            }
+            applyFilter(currentFilter);
+        });
+
+        pendingFilter.setOnClickListener(v -> {
+            if (currentFilter == MyEventItem.Status.PENDING) {
+                // Deselect - show all events
+                currentFilter = null;
+                updateFilterButtonStyle(pendingFilter, false);
+            } else {
+                // Select this filter
+                currentFilter = MyEventItem.Status.PENDING;
+                updateFilterButtonStyle(selectFilter, false);
+                updateFilterButtonStyle(pendingFilter, true);
+                updateFilterButtonStyle(notSelectedFilter, false);
+            }
+            applyFilter(currentFilter);
+        });
+
+        notSelectedFilter.setOnClickListener(v -> {
+            if (currentFilter == MyEventItem.Status.NOT_SELECTED) {
+                // Deselect - show all events
+                currentFilter = null;
+                updateFilterButtonStyle(notSelectedFilter, false);
+            } else {
+                // Select this filter
+                currentFilter = MyEventItem.Status.NOT_SELECTED;
+                updateFilterButtonStyle(selectFilter, false);
+                updateFilterButtonStyle(pendingFilter, false);
+                updateFilterButtonStyle(notSelectedFilter, true);
+            }
+            applyFilter(currentFilter);
+        });
+
+    }
+    private void updateFilterButtonStyle(MaterialButton button, boolean isSelected) {
+        if (isSelected) {
+            button.setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.selected_tab_color)));
+            button.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
+            button.setStrokeWidth(0);
+        } else {
+            button.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
+            button.setTextColor(ContextCompat.getColor(requireContext(), R.color.black));
+            button.setStrokeWidth((int) TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
+        }
+    }
+    private void applyFilter(MyEventItem.Status filterStatus) {
+        eventList.clear();
+        if (fullEventList == null) {
+            fullEventList = eventList;
+        }
+
+        if (filterStatus == null) {
+            // Show all events
+            eventList.addAll(fullEventList);
+        } else {
+            // Filter by status
+            for (MyEventItem event : fullEventList) {
+                if (event.getStatus() == filterStatus) {
+                    eventList.add(event);
+                }
+            }
+        }
+
+        if (adapter != null) {
+            adapter.updateList(eventList);
+        }
+        updateEmptyState(eventList, recyclerView, emptyStateContainer);
+    }
+
 }

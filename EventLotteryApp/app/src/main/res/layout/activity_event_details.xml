@@ -15,9 +15,7 @@
         android:layout_height="wrap_content"
         android:minHeight="56dp"
         android:background="@color/white"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="@dimen/status_bar_padding"
-        android:paddingBottom="12dp"
+        android:padding="16dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
