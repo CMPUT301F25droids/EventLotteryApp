@@ -15,16 +15,28 @@ public class Event {
     private int maxParticipants;
     private String organizerId;
 
+    // Firestore field
+    private String Image;
+
     public Event() { }
 
-    public String getTitle() { return title != null ? title : ""; }
-    public String getDescription() { return description != null ? description : ""; }
-    public String getLocation() { return location != null ? location : ""; }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public String getLocation() { return location; }
     public double getPrice() { return price; }
     public Date getEventStartDate() { return eventStartDate; }
     public Date getEventEndDate() { return eventEndDate; }
     public Date getRegistrationOpenDate() { return registrationOpenDate; }
     public Date getRegistrationCloseDate() { return registrationCloseDate; }
     public int getMaxParticipants() { return maxParticipants; }
-    public String getOrganizerId() { return organizerId != null ? organizerId : ""; }
+    public String getOrganizerId() { return organizerId; }
+
+    public String getImage() {
+        return Image;
+    }
+
+
+    public void setImage(String image) {
+        this.Image = image;
+    }
 }

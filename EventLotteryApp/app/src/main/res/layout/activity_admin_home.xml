@@ -39,10 +39,17 @@
         android:layout_marginBottom="20dp" />
 
     <Button
+        android:id="@+id/adminBrowseImagesButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Browse Images" />
+
+    <Button
         android:id="@+id/adminLogoutButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Logout"
-        android:padding="12dp" />
+        android:layout_marginTop="24dp"/>
+
 
 </LinearLayout>

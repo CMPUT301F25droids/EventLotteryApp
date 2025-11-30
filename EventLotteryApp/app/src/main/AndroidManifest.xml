@@ -76,6 +76,8 @@
         <activity
             android:name=".Admin.AdminBrowseProfilesActivity"
             android:exported="false" />
+        <activity android:name=".Admin.AdminBrowseImagesActivity" />
+        <activity android:name=".Admin.AdminViewImageActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

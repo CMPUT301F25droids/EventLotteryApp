@@ -18,18 +18,22 @@ public class AdminHomeActivity extends AppCompatActivity {
 
         Button browseEventsButton = findViewById(R.id.adminBrowseEventsButton);
         Button browseProfilesButton = findViewById(R.id.adminBrowseProfilesButton);
+        Button browseImagesButton = findViewById(R.id.adminBrowseImagesButton);  // ✅ NEW
         Button logoutButton = findViewById(R.id.adminLogoutButton);
 
         // Browse Events
         browseEventsButton.setOnClickListener(v -> {
-            Intent intent = new Intent(AdminHomeActivity.this, AdminBrowseEventsActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(AdminHomeActivity.this, AdminBrowseEventsActivity.class));
         });
 
         // Browse Profiles
         browseProfilesButton.setOnClickListener(v -> {
-            Intent intent = new Intent(AdminHomeActivity.this, AdminBrowseProfilesActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(AdminHomeActivity.this, AdminBrowseProfilesActivity.class));
+        });
+
+        // Browse Images (NEW)
+        browseImagesButton.setOnClickListener(v -> {
+            startActivity(new Intent(AdminHomeActivity.this, AdminBrowseImagesActivity.class));
         });
 
         // Logout
