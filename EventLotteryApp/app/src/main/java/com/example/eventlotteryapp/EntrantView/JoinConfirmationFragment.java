@@ -190,19 +190,12 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
         DocumentReference user_ref = db.collection("users").document(userId);
         DocumentReference event_ref = db.collection("Events").document(eventId);
         
-        // Update old system waitlist
-        event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayUnion(user_ref))
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "User added to waitlist");
-                })
-                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
-        
-        // Update new system waiting list
+        // Add user to waiting list
         event_ref.update("waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayUnion(userId))
                 .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "User added to new waiting list");
+                    Log.d("Firestore", "User added to waiting list");
                 })
-                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to new waiting list", e));
+                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waiting list", e));
         
         // Update user's joined events
         user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))

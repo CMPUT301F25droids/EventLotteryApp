@@ -73,23 +73,31 @@ public class LeaveConfirmationFragment extends BottomSheetDialogFragment {
             String userId = auth.getCurrentUser().getUid();
             DocumentReference user_ref = db.collection("users").document(userId);
             DocumentReference event_ref = db.collection("Events").document(eventId);
-            event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayRemove(user_ref))
+            
+            // Remove user from waiting list
+            event_ref.update("waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayRemove(userId))
                     .addOnSuccessListener(aVoid -> {
-                        Log.d("Firestore", "User removed from event waitlist");
+                        Log.d("Firestore", "User removed from waiting list");
                     })
-                    .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+                    .addOnFailureListener(e -> Log.e("Firestore", "Error removing user from waiting list", e));
+            
+            // Remove from user's JoinedEvents (if user document exists)
             user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayRemove(event_ref))
                     .addOnSuccessListener(aVoid -> {
-                        Log.d("Firestore", "Events removed from user's joined events");
+                        Log.d("Firestore", "Event removed from user's JoinedEvents");
                     })
-                    .addOnFailureListener(e -> Log.e("Firestore", "Error removing user to waitlist", e));
+                    .addOnFailureListener(e -> {
+                        // It's okay if user document doesn't exist - that's expected for some users
+                        Log.d("Firestore", "Could not remove from JoinedEvents (user doc may not exist): " + e.getMessage());
+                    });
 
-            // Handle join action
-            Intent intent = new Intent(getContext(), EntrantHomePageActivity.class);
-            intent.putExtra("open_tab", 1); // e.g. 0 = Home, 1 = MyEvents, 2 = Notifications
-            startActivity(intent);
-
+            Toast.makeText(requireContext(), "Left waiting list", Toast.LENGTH_SHORT).show();
             dismiss(); // close modal
+            
+            // Navigate back and refresh - the snapshot listener will pick up the changes
+            if (getActivity() != null) {
+                getActivity().finish();
+            }
         });
 
         cancelButton.setOnClickListener(v -> dismiss());

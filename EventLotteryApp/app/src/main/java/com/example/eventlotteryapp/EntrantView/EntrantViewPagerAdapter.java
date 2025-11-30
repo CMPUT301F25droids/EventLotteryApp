@@ -18,6 +18,8 @@ public class EntrantViewPagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         switch (position) {
+            case 0:
+                return new EventsListFragment();
             case 1:
                 return new MyEventsFragment();
             case 2:
@@ -26,7 +28,6 @@ public class EntrantViewPagerAdapter extends FragmentStateAdapter {
                 return new ProfileFragment();
             default:
                 return new EventsListFragment();
-
         }
     }
 

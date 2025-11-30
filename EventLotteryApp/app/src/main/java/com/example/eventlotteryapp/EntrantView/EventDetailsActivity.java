@@ -125,20 +125,31 @@ public class EventDetailsActivity extends AppCompatActivity {
             return;
         }
         String userId = auth.getCurrentUser().getUid();
-        DocumentReference user_ref = db.collection("users").document(userId);
         Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + userId);
 
         db.collection("Events").document(eventId)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        // Safely retrieve the array field
-                        List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
+                        // Check waiting list and other status arrays
+                        List<String> waitingListEntrantIds = (List<String>) documentSnapshot.get("waitingListEntrantIds");
+                        List<String> selectedEntrantIds = (List<String>) documentSnapshot.get("selectedEntrantIds");
+                        List<String> cancelledEntrantIds = (List<String>) documentSnapshot.get("cancelledEntrantIds");
+                        
                         Button join_button = findViewById(R.id.join_waitlist_button);
                         Button leave_button = findViewById(R.id.leave_waitlist_button);
-                        Log.d("Firestore", "Waitlist from DB: " + waitlist);
+                        
+                        // User is enrolled if they're in any of these arrays
+                        boolean isEnrolled = (waitingListEntrantIds != null && waitingListEntrantIds.contains(userId)) ||
+                                            (selectedEntrantIds != null && selectedEntrantIds.contains(userId)) ||
+                                            (cancelledEntrantIds != null && cancelledEntrantIds.contains(userId));
+                        
+                        Log.d("Firestore", "Waitlist check - waitingList: " + (waitingListEntrantIds != null && waitingListEntrantIds.contains(userId)) +
+                                ", selected: " + (selectedEntrantIds != null && selectedEntrantIds.contains(userId)) +
+                                ", cancelled: " + (cancelledEntrantIds != null && cancelledEntrantIds.contains(userId)) +
+                                ", enrolled: " + isEnrolled);
 
-                        if (waitlist != null && waitlist.contains(user_ref)) {
+                        if (isEnrolled) {
                             join_button.setEnabled(false);
                             leave_button.setEnabled(true);
                             join_button.setVisibility(Button.GONE);
@@ -152,7 +163,6 @@ public class EventDetailsActivity extends AppCompatActivity {
                             leave_button.setVisibility(Button.GONE);
                             join_button.setAlpha(1f);
                             leave_button.setAlpha(0.5f);
-
                         }
                     }
                 })

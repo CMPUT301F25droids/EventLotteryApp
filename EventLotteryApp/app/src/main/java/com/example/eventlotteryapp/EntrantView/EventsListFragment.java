@@ -86,6 +86,13 @@ public class EventsListFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.events_list);
         EditText searchBar = view.findViewById(R.id.search_bar);
         ProgressBar progressBar = view.findViewById(R.id.loading_indicator);
+        
+        // Setup Scan QR button
+        android.widget.ImageButton scanQrButton = view.findViewById(R.id.scan_qr_button);
+        scanQrButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), ScanQrCodeActivity.class);
+            startActivity(intent);
+        });
 
         // Initialize adapter with empty list and assign to fragment field
         List<EventItem> eventList = new ArrayList<>();

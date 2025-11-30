@@ -169,7 +169,15 @@ public class ProfileFragment extends Fragment {
 //                            binding.roleToggleGroup.check(R.id.entrant_button);
 //                        }
                     } else {
-                        Toast.makeText(getContext(), "User data not found", Toast.LENGTH_SHORT).show();
+                        // User document doesn't exist - redirect to signup
+                        Toast.makeText(getContext(), "Account not found. Please sign up first.", Toast.LENGTH_LONG).show();
+                        auth.signOut();
+                        Intent intent = new Intent(requireActivity(), AuthActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        if (getActivity() != null) {
+                            getActivity().finish();
+                        }
                     }
                 })
                 .addOnFailureListener(e -> {

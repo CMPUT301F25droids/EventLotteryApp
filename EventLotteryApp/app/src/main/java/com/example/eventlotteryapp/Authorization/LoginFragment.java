@@ -41,8 +41,11 @@ public class LoginFragment extends Fragment {
 
         auth = FirebaseAuth.getInstance();
 
-        if (auth.getCurrentUser() != null) {
-            fetchRoleAndRedirect(auth.getCurrentUser());
+        // Check if user is already logged in - auto-redirect immediately
+        FirebaseUser currentUser = auth.getCurrentUser();
+        if (currentUser != null) {
+            // Fetch role and redirect in one call
+            fetchRoleAndRedirect(currentUser);
         }
 
         emailEditText = view.findViewById(R.id.editTextTextEmailAddress2);
@@ -54,10 +57,11 @@ public class LoginFragment extends Fragment {
             String password = passwordEditText.getText().toString();
 
             if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
-                signInAnonymously();
-            } else {
-                signInWithEmailPassword(email, password);
+                Toast.makeText(getContext(), "Please enter your email and password", Toast.LENGTH_SHORT).show();
+                return;
             }
+            
+            signInWithEmailPassword(email, password);
         });
 
         TextView forgotPassword = view.findViewById(R.id.forgot_password);
@@ -97,21 +101,6 @@ public class LoginFragment extends Fragment {
         builder.show();
     }
 
-    private void signInAnonymously() {
-        auth.signInAnonymously()
-                .addOnCompleteListener(requireActivity(), task -> {
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = auth.getCurrentUser();
-                        if (user != null) {
-                            Toast.makeText(getContext(), "Signed in anonymously for testing", Toast.LENGTH_SHORT).show();
-                            redirectUser("entrant");
-                        }
-                    } else {
-                        Toast.makeText(getContext(), "Authentication failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
     private void signInWithEmailPassword(String email, String password) {
         auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(requireActivity(), task -> {
@@ -130,16 +119,52 @@ public class LoginFragment extends Fragment {
     private void fetchRoleAndRedirect(FirebaseUser user) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+        // Try cache first for faster response, then fallback to server
         db.collection("users")
                 .document(user.getUid())
-                .get()
+                .get(com.google.firebase.firestore.Source.CACHE)
                 .addOnSuccessListener(doc -> {
-                    String role = doc.getString("role");
-                    redirectUser(role);
+                    handleUserDocument(doc, true);
                 })
-                .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Failed to load role", Toast.LENGTH_SHORT).show()
-                );
+                .addOnFailureListener(e -> {
+                    // Cache miss or error - try server
+                    db.collection("users")
+                            .document(user.getUid())
+                            .get(com.google.firebase.firestore.Source.SERVER)
+                            .addOnSuccessListener(doc -> {
+                                handleUserDocument(doc, false);
+                            })
+                            .addOnFailureListener(e2 -> {
+                                // Server also failed - sign out
+                                if (getContext() != null) {
+                                    Toast.makeText(getContext(), "Failed to load user data: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                                auth.signOut();
+                            });
+                });
+    }
+    
+    private void handleUserDocument(com.google.firebase.firestore.DocumentSnapshot doc, boolean fromCache) {
+        if (!doc.exists()) {
+            // User document doesn't exist - they need to create an account first
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "Account not found. Please sign up first.", Toast.LENGTH_LONG).show();
+            }
+            auth.signOut();
+            
+            // Switch to signup tab/fragment
+            if (getActivity() instanceof AuthActivity) {
+                ((AuthActivity) getActivity()).switchToSignUp();
+            }
+            return;
+        }
+        
+        String role = doc.getString("role");
+        if (role == null || role.isEmpty()) {
+            // Role not set - default to entrant
+            role = "entrant";
+        }
+        redirectUser(role);
     }
 
     private void redirectUser(String role) {

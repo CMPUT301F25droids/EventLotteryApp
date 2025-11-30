@@ -46,4 +46,17 @@ public class AuthActivity extends AppCompatActivity {
             }
         });
     }
+    
+    /**
+     * Switch to the Sign Up tab (typically position 1)
+     */
+    public void switchToSignUp() {
+        if (viewPager2 != null && viewPager2.getAdapter() != null) {
+            // Assuming Sign Up is at position 1 (index 1)
+            int signUpPosition = 1;
+            if (signUpPosition < viewPager2.getAdapter().getItemCount()) {
+                viewPager2.setCurrentItem(signUpPosition, true);
+            }
+        }
+    }
 }
