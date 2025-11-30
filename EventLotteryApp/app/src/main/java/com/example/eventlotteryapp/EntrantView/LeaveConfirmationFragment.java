@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.eventlotteryapp.R;
@@ -58,7 +59,27 @@ public class LeaveConfirmationFragment extends BottomSheetDialogFragment {
         super.onViewCreated(view, savedInstanceState);
         Button leaveButton = view.findViewById(R.id.confirm_join_button);
         Button cancelButton = view.findViewById(R.id.cancel_join_button);
+        TextView messageView = view.findViewById(R.id.join_confirm_message);
 
+        // Fetch event name and update message dynamically
+        if (eventId != null) {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("Events").document(eventId)
+                .get()
+                .addOnSuccessListener(eventDoc -> {
+                    if (eventDoc.exists()) {
+                        String eventName = eventDoc.getString("Name");
+                        if (eventName != null && !eventName.isEmpty()) {
+                            String message = "You're about to leave the waiting list for " + eventName + ".\n\n" +
+                                    "Once you leave, your waitlist spot may be taken by others.";
+                            messageView.setText(message);
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error fetching event name", e);
+                });
+        }
 
         leaveButton.setOnClickListener(v -> {
             // Check if user is authenticated
