@@ -26,6 +26,7 @@ public class AdminBrowseProfilesActivity extends AppCompatActivity {
     private TextView emptyView;
 
     private AdminProfileAdapter adapter;
+
     private final FirebaseFirestore firestore = FirebaseFirestore.getInstance();
     private final CollectionReference usersRef = firestore.collection("users");
 
@@ -39,11 +40,14 @@ public class AdminBrowseProfilesActivity extends AppCompatActivity {
         emptyView = findViewById(R.id.adminProfilesEmpty);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new AdminProfileAdapter(new ArrayList<>());
-        recyclerView.setAdapter(adapter);
 
-        // NEW: tap entire profile row to delete
-        adapter.setOnProfileClickListener(this::showDeleteDialog);
+        adapter = new AdminProfileAdapter(
+                new ArrayList<>(),
+                this::showDeleteDialog,
+                this::showBanDialog
+        );
+
+        recyclerView.setAdapter(adapter);
 
         loadProfiles();
     }
@@ -52,24 +56,27 @@ public class AdminBrowseProfilesActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         emptyView.setVisibility(View.GONE);
 
-        usersRef.get()
-                .addOnSuccessListener(querySnapshot -> {
+        usersRef.get().addOnSuccessListener(query -> {
 
                     List<AdminProfileAdapter.UserProfile> profiles = new ArrayList<>();
 
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                    for (QueryDocumentSnapshot doc : query) {
                         String id = doc.getId();
                         String name = doc.getString("name");
                         String email = doc.getString("email");
                         String role = doc.getString("role");
                         String phone = doc.getString("phone");
+                        Boolean banned = doc.getBoolean("organizerModeBanned");
+
+                        if (banned == null) banned = false;
 
                         profiles.add(new AdminProfileAdapter.UserProfile(
                                 id,
                                 name != null ? name : "(no name)",
                                 email != null ? email : "(no email)",
                                 role != null ? role : "entrant",
-                                phone != null ? phone : ""
+                                phone != null ? phone : "",
+                                banned
                         ));
                     }
 
@@ -90,17 +97,15 @@ public class AdminBrowseProfilesActivity extends AppCompatActivity {
                 });
     }
 
-    // Ask admin before deleting
-    private void showDeleteDialog(AdminProfileAdapter.UserProfile profile) {
+    private void showDeleteDialog(AdminProfileAdapter.UserProfile user) {
         new AlertDialog.Builder(this)
                 .setTitle("Delete Profile")
-                .setMessage("Are you sure you want to delete \"" + profile.name + "\"?")
-                .setPositiveButton("Delete", (dialog, which) -> deleteUser(profile.id))
+                .setMessage("Delete \"" + user.name + "\"?")
+                .setPositiveButton("Delete", (d, w) -> deleteUser(user.id))
                 .setNegativeButton("Cancel", null)
                 .show();
     }
 
-    // Delete from Firestore and refresh list
     private void deleteUser(String userId) {
         usersRef.document(userId)
                 .delete()
@@ -112,4 +117,30 @@ public class AdminBrowseProfilesActivity extends AppCompatActivity {
                         Toast.makeText(this, "Failed to delete", Toast.LENGTH_SHORT).show()
                 );
     }
+
+    private void showBanDialog(AdminProfileAdapter.UserProfile user) {
+        new AlertDialog.Builder(this)
+                .setTitle("Organizer Mode Control")
+                .setMessage("Ban or unban organizer mode?")
+                .setPositiveButton("Ban", (d, w) -> setOrganizerBan(user.id, true))
+                .setNegativeButton("Unban", (d, w) -> setOrganizerBan(user.id, false))
+                .setNeutralButton("Cancel", null)
+                .show();
+    }
+
+    private void setOrganizerBan(String userId, boolean banned) {
+        firestore.collection("users")
+                .document(userId)
+                .update("organizerModeBanned", banned)
+                .addOnSuccessListener(a -> {
+                    Toast.makeText(this,
+                            banned ? "Organizer mode banned" : "Organizer mode unbanned",
+                            Toast.LENGTH_SHORT).show();
+                    loadProfiles();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+    }
+
 }
