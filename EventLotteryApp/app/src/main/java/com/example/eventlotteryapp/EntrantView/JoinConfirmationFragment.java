@@ -191,11 +191,11 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
         DocumentReference event_ref = db.collection("Events").document(eventId);
         
         // Update old system waitlist
-                    event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayUnion(user_ref))
-                            .addOnSuccessListener(aVoid -> {
-                                Log.d("Firestore", "User added to waitlist");
-                            })
-                            .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+        event_ref.update("Waitlist", com.google.firebase.firestore.FieldValue.arrayUnion(user_ref))
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "User added to waitlist");
+                })
+                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
         
         // Update new system waiting list
         event_ref.update("waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayUnion(userId))
@@ -205,11 +205,11 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
                 .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to new waiting list", e));
         
         // Update user's joined events
-                    user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))
-                            .addOnSuccessListener(aVoid -> {
-                                Log.d("Firestore", "Events added to users joined events");
-                            })
-                            .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+        user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "Events added to users joined events");
+                })
+                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
 
         // Store location if available
         if (latitude != null && longitude != null) {
