@@ -151,7 +151,6 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
     }
     public void applyCategoryFilter(String filterType) {
         filteredList.clear();
-
         for (EventItem item : originalList) {
             String title = item.getName().toLowerCase();
             String description = "";

@@ -237,15 +237,16 @@ public class ProfileFragment extends Fragment {
         }
 
         String uid = auth.getCurrentUser().getUid();
-        String collection = isOrganizer ? "organizers" : "entrants";
-        
-        firestore.collection(collection).document(uid).delete()
+
+        firestore.collection("users").document(uid).delete()
             .addOnSuccessListener(aVoid -> {
                 auth.getCurrentUser().delete()
                     .addOnSuccessListener(aVoid1 -> {
                         Toast.makeText(getContext(), "Account deleted", Toast.LENGTH_SHORT).show();
                         // Navigate to login
-                        requireActivity().finish();
+                        Intent intent = new Intent(requireActivity(), AuthActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(getContext(), "Error deleting account: " + e.getMessage(), Toast.LENGTH_SHORT).show();

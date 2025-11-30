@@ -69,6 +69,17 @@
         <activity
             android:name=".organizer.FinalizedListActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".EntrantView.ScanQrCodeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EntrantView.QrCaptureActivity"
+            android:exported="false"
+            android:stateNotNeeded="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/zxing_capture" />
+
         <activity
             android:name=".Admin.AdminBrowseEventsActivity"
             android:exported="true" />
