@@ -155,7 +155,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                             // Handle leave button click
                             LeaveConfirmationFragment confirmation = new LeaveConfirmationFragment().newInstance(eventId);
                             confirmation.show(getSupportFragmentManager(), confirmation.getTag());
-                            userInWaitlist();
+                            // Note: userInWaitlist() will be called after the fragment successfully removes the user
                             // Notify organizer about the user leaving
                             notificationController.sendToCancelledEntrants(eventId,
                                     "Entrant Left",
@@ -225,6 +225,13 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> Log.e("EventDetails", "Error sending notifications", e));
     }
 
+    /**
+     * Public method to refresh the waiting list status - can be called from fragments
+     */
+    public void refreshWaitingListStatus() {
+        userInWaitlist();
+    }
+    
     protected void userInWaitlist() {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() == null) {

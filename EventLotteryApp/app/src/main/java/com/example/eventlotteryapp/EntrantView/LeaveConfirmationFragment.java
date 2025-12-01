@@ -135,9 +135,13 @@ public class LeaveConfirmationFragment extends BottomSheetDialogFragment {
                             Toast.makeText(requireContext(), "Left waiting list", Toast.LENGTH_SHORT).show();
                             dismiss(); // close modal
                             
-                            // Navigate back and refresh - the snapshot listener will pick up the changes
-                            if (getActivity() != null) {
-                                getActivity().finish();
+                            // Refresh the parent activity UI instead of finishing it
+                            if (getActivity() != null && getActivity() instanceof EventDetailsActivity) {
+                                EventDetailsActivity activity = (EventDetailsActivity) getActivity();
+                                // Refresh the UI after a short delay to ensure Firestore update is complete
+                                activity.getWindow().getDecorView().postDelayed(() -> {
+                                    activity.refreshWaitingListStatus();
+                                }, 500);
                             }
                         }
                     })
