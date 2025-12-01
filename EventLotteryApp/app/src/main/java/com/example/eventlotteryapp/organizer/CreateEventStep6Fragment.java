@@ -1,8 +1,11 @@
 package com.example.eventlotteryapp.organizer;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +19,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.eventlotteryapp.databinding.FragmentCreateEventStep6Binding;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -53,7 +58,10 @@ public class CreateEventStep6Fragment extends Fragment {
             uri -> {
                 if (uri != null) {
                     binding.posterImageView.setImageURI(uri);
-                    // TODO: Store the image URI in ViewModel
+                    // Store the image URI in ViewModel
+                    viewModel.posterImageUri.setValue(uri);
+                    // Convert to base64 and store
+                    convertImageToBase64(uri);
                 }
             }
         );
@@ -61,6 +69,9 @@ public class CreateEventStep6Fragment extends Fragment {
         binding.editPosterButton.setOnClickListener(v -> {
             imagePickerLauncher.launch("image/*");
         });
+        
+        // Load existing image if available
+        loadPosterImage();
 
         // Publish Event button - calls the activity's saveEvent method
         binding.publishEventButton.setOnClickListener(v -> {
@@ -142,6 +153,10 @@ public class CreateEventStep6Fragment extends Fragment {
         // Event Dates
         if (eventStartDate != null && eventEndDate != null) {
             binding.eventDatesText.setText(dateFormat.format(eventStartDate) + " – " + dateFormatWithYear.format(eventEndDate));
+        } else if (eventStartDate != null) {
+            binding.eventDatesText.setText(dateFormatWithYear.format(eventStartDate));
+        } else if (eventEndDate != null) {
+            binding.eventDatesText.setText(dateFormatWithYear.format(eventEndDate));
         } else {
             binding.eventDatesText.setText("No dates set");
         }
@@ -151,6 +166,10 @@ public class CreateEventStep6Fragment extends Fragment {
         Date regCloseDate = viewModel.registrationCloseDate.getValue();
         if (regOpenDate != null && regCloseDate != null) {
             binding.registrationPeriodText.setText(dateFormat.format(regOpenDate) + " – " + dateFormatWithYear.format(regCloseDate));
+        } else if (regOpenDate != null) {
+            binding.registrationPeriodText.setText("Opens: " + dateFormatWithYear.format(regOpenDate));
+        } else if (regCloseDate != null) {
+            binding.registrationPeriodText.setText("Closes: " + dateFormatWithYear.format(regCloseDate));
         } else {
             binding.registrationPeriodText.setText("No registration period set");
         }
@@ -190,6 +209,68 @@ public class CreateEventStep6Fragment extends Fragment {
             // Optionally change alpha to show disabled state
             binding.publishEventButton.setAlpha(enabled ? 1.0f : 0.5f);
             binding.generateQrButton.setAlpha(enabled ? 1.0f : 0.5f);
+        }
+    }
+
+    private void loadPosterImage() {
+        // Load existing image if available
+        Uri existingUri = viewModel.posterImageUri.getValue();
+        if (existingUri != null) {
+            binding.posterImageView.setImageURI(existingUri);
+        } else {
+            // Try to load from base64 (for edit mode)
+            String base64Image = viewModel.posterImageBase64.getValue();
+            if (base64Image != null && !base64Image.isEmpty()) {
+                loadImageFromBase64(base64Image);
+            }
+        }
+        
+        // Observe base64 image changes (for edit mode)
+        viewModel.posterImageBase64.observe(getViewLifecycleOwner(), base64Image -> {
+            if (base64Image != null && !base64Image.isEmpty() && viewModel.posterImageUri.getValue() == null) {
+                loadImageFromBase64(base64Image);
+            }
+        });
+    }
+    
+    private void loadImageFromBase64(String base64Image) {
+        try {
+            // Remove the "data:image/jpeg;base64," or similar prefix
+            String base64Data = base64Image;
+            if (base64Image.startsWith("data:image")) {
+                base64Data = base64Image.substring(base64Image.indexOf(",") + 1);
+            }
+            
+            byte[] decodedBytes = Base64.decode(base64Data, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+            
+            if (bitmap != null) {
+                binding.posterImageView.setImageBitmap(bitmap);
+            }
+        } catch (Exception e) {
+            android.util.Log.e("CreateEventStep6Fragment", "Error loading image from base64", e);
+        }
+    }
+    
+    private void convertImageToBase64(Uri imageUri) {
+        try {
+            InputStream inputStream = requireContext().getContentResolver().openInputStream(imageUri);
+            if (inputStream != null) {
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                inputStream.close();
+                
+                // Compress and convert to base64
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.WEBP, 80, outputStream);
+                byte[] imageBytes = outputStream.toByteArray();
+                String base64String = Base64.encodeToString(imageBytes, Base64.NO_WRAP);
+                
+                // Store in ViewModel with data URI prefix
+                String dataUri = "data:image/webp;base64," + base64String;
+                viewModel.posterImageBase64.setValue(dataUri);
+            }
+        } catch (Exception e) {
+            android.util.Log.e("CreateEventStep6Fragment", "Error converting image to base64", e);
         }
     }
 
