@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.services)
+
 }
 
 android {
@@ -65,7 +66,6 @@ dependencies {
 
     // Google Play Services Location (for getting user location)
     implementation("com.google.android.gms:play-services-location:21.0.1")
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

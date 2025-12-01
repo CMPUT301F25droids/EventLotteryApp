@@ -1,0 +1,12 @@
+com.example.eventlotteryapp
+com.example.eventlotteryapp.Admin
+com.example.eventlotteryapp.Authorization
+com.example.eventlotteryapp.Controllers
+com.example.eventlotteryapp.data
+com.example.eventlotteryapp.EntrantView
+com.example.eventlotteryapp.EntrantView.placeholder
+com.example.eventlotteryapp.Helpers
+com.example.eventlotteryapp.models
+com.example.eventlotteryapp.Notifications
+com.example.eventlotteryapp.organizer
+com.example.eventlotteryapp.ui.profile
