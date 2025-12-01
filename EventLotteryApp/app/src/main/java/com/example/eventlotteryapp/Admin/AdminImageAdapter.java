@@ -55,11 +55,18 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Vi
     }
 
     /**
+     * Wrapper around notifyDataSetChanged() so unit tests can override it.
+     */
+    protected void safeNotifyDataSetChanged() {
+        notifyDataSetChanged();
+    }
+
+    /**
      * Updates the list of images displayed.
      */
     public void updateImages(List<ImageItem> newImages) {
         this.images = new ArrayList<>(newImages);
-        notifyDataSetChanged();
+        safeNotifyDataSetChanged();
     }
 
     @NonNull

@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * RecyclerView adapter for displaying all user profiles in the admin panel.
- * Supports two admin actions: delete profile & ban organizer mode.
+ * Supports deleting a profile and banning/unbanning organizer mode.
  */
 public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapter.ProfileViewHolder> {
 
@@ -41,23 +41,19 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
         }
     }
 
-    /**
-     * Listener for deleting a profile when the row is tapped.
-     */
+    /** Listener for deleting a profile. */
     public interface OnDeleteClickListener {
         void onDelete(UserProfile profile);
     }
 
-    /**
-     * Listener for banning/unbanning organizer mode.
-     */
+    /** Listener for banning/unbanning organizer mode. */
     public interface OnBanClickListener {
         void onBan(UserProfile profile);
     }
 
     private final List<UserProfile> profiles = new ArrayList<>();
-    private OnDeleteClickListener deleteListener;
-    private OnBanClickListener banListener;
+    private final OnDeleteClickListener deleteListener;
+    private final OnBanClickListener banListener;
 
     /**
      * Creates an adapter with initial list of profiles.
@@ -71,12 +67,19 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
     }
 
     /**
+     * Wrapper method so tests can override notifyDataSetChanged().
+     */
+    protected void safeNotifyDataSetChanged() {
+        notifyDataSetChanged();
+    }
+
+    /**
      * Updates displayed profiles.
      */
     public void updateProfiles(List<UserProfile> newProfiles) {
         profiles.clear();
         if (newProfiles != null) profiles.addAll(newProfiles);
-        notifyDataSetChanged();
+        safeNotifyDataSetChanged();  // prevents test crashes
     }
 
     @NonNull
@@ -109,7 +112,7 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
             if (deleteListener != null) deleteListener.onDelete(user);
         });
 
-        // Tap "Ban/Unban" button
+        // Ban/unban button
         holder.banButton.setText(user.organizerBanned ? "Unban Organizer" : "Ban Organizer");
         holder.banButton.setOnClickListener(v -> {
             if (banListener != null) banListener.onBan(user);
@@ -130,7 +133,6 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
 
         public ProfileViewHolder(@NonNull View itemView) {
             super(itemView);
-
             name = itemView.findViewById(R.id.adminProfileName);
             email = itemView.findViewById(R.id.adminProfileEmail);
             role = itemView.findViewById(R.id.adminProfileRole);
