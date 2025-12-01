@@ -17,11 +17,27 @@ import com.example.eventlotteryapp.databinding.FragmentCreateEventStep4Binding;
 import com.example.eventlotteryapp.databinding.NumberStepperBinding;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
+/**
+ * Fourth step in the event creation process, collecting participant limits and event settings.
+ * This fragment allows the organizer to set maximum participants, waiting list size,
+ * geolocation requirements, and waiting list limits using number steppers and toggle switches.
+ * Data is automatically saved to the shared ViewModel as the user makes changes.
+ *
+ * @author Droids Team
+ */
 public class CreateEventStep4Fragment extends Fragment {
 
     private FragmentCreateEventStep4Binding binding;
     private CreateEventViewModel viewModel;
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment.
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state.
+     * @return The View for the fragment's UI, or null.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -47,6 +63,10 @@ public class CreateEventStep4Fragment extends Fragment {
         setupWaitingListToggle();
     }
 
+    /**
+     * Sets up the maximum participants number stepper with increment/decrement buttons
+     * and direct text input support. Updates the ViewModel when values change.
+     */
     private void setupMaxParticipantsStepper() {
         NumberStepperBinding stepperBinding = binding.maxParticipantsStepper;
         stepperBinding.labelText.setText("Maximum Participants");
@@ -104,6 +124,10 @@ public class CreateEventStep4Fragment extends Fragment {
         });
     }
 
+    /**
+     * Sets up the waiting list size number stepper with increment/decrement buttons
+     * and direct text input support. Updates the ViewModel when values change.
+     */
     private void setupWaitingListStepper() {
         NumberStepperBinding stepperBinding = binding.waitingListStepper;
         stepperBinding.labelText.setText("Waiting List Size");
@@ -161,6 +185,10 @@ public class CreateEventStep4Fragment extends Fragment {
         });
     }
 
+    /**
+     * Sets up the geolocation requirement toggle switch.
+     * Updates the ViewModel when the switch state changes.
+     */
     private void setupGeolocationToggle() {
         SwitchMaterial geolocationSwitch = binding.geolocationSwitch;
         
@@ -180,6 +208,10 @@ public class CreateEventStep4Fragment extends Fragment {
         });
     }
 
+    /**
+     * Sets up the waiting list limit toggle switch.
+     * When enabled, shows the waiting list size stepper. Updates the ViewModel when the switch state changes.
+     */
     private void setupWaitingListToggle() {
         SwitchMaterial waitingListSwitch = binding.waitingListSwitch;
         

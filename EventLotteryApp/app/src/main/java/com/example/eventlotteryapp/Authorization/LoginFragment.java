@@ -25,11 +25,25 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+/**
+ * Fragment for user login functionality.
+ * Handles user authentication via Firebase Auth and redirects users to the appropriate
+ * home page based on their role (entrant, organizer, or admin).
+ * 
+ * @author Droids Team
+ */
 public class LoginFragment extends Fragment {
 
+    /** EditText field for entering email address. */
     private EditText emailEditText;
+    
+    /** EditText field for entering password. */
     private EditText passwordEditText;
+    
+    /** Button to trigger the login process. */
     private Button loginButton;
+    
+    /** Firebase Authentication instance. */
     private FirebaseAuth auth;
 
     @Nullable

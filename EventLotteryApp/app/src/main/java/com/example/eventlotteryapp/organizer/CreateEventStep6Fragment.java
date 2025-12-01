@@ -20,6 +20,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+/**
+ * Sixth and final step in the event creation process, displaying a summary of all entered event details.
+ * This fragment shows a preview of the event information and provides buttons to publish the event
+ * or generate a QR code. The event is saved to Firestore when either button is clicked.
+ *
+ * @author Droids Team
+ */
 public class CreateEventStep6Fragment extends Fragment {
 
     private FragmentCreateEventStep6Binding binding;
@@ -28,6 +35,14 @@ public class CreateEventStep6Fragment extends Fragment {
     private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d", Locale.getDefault());
     private SimpleDateFormat dateFormatWithYear = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment.
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state.
+     * @return The View for the fragment's UI, or null.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -91,6 +106,11 @@ public class CreateEventStep6Fragment extends Fragment {
         updateUI();
     }
 
+    /**
+     * Updates all UI elements with data from the ViewModel.
+     * Displays event title, dates, location, price, description, registration period,
+     * maximum participants, waiting list settings, and geolocation requirements.
+     */
     private void updateUI() {
         // Title
         String title = viewModel.title.getValue();
@@ -180,8 +200,11 @@ public class CreateEventStep6Fragment extends Fragment {
     }
 
     /**
-     * Enable or disable the publish buttons
-     * Called by CreateEventActivity to prevent multiple clicks while saving
+     * Enables or disables the publish buttons to prevent multiple clicks while saving.
+     * Also updates the button alpha to visually indicate the disabled state.
+     * Called by CreateEventActivity during the save operation.
+     *
+     * @param enabled True to enable the buttons, false to disable them.
      */
     public void setPublishButtonsEnabled(boolean enabled) {
         if (binding != null) {

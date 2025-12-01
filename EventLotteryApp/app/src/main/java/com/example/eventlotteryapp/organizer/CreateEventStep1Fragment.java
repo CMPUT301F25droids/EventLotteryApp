@@ -12,9 +12,19 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.eventlotteryapp.databinding.FragmentCreateEventStep1Binding;
 
+/**
+ * First step fragment in the event creation process.
+ * Collects basic event information: title, description, location, and price.
+ * Data is automatically saved to the shared ViewModel as the user types.
+ * 
+ * @author Droids Team
+ */
 public class CreateEventStep1Fragment extends Fragment {
 
+    /** View binding for this fragment's layout. */
     private FragmentCreateEventStep1Binding binding;
+    
+    /** Shared ViewModel for storing event data across all creation steps. */
     private CreateEventViewModel viewModel;
 
     @Nullable

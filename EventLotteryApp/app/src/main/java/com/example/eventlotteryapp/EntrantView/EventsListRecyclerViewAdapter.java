@@ -19,13 +19,34 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+/**
+ * RecyclerView adapter for displaying a list of events in the EventsListFragment.
+ * Supports filtering by search query, category, and date. Maintains separate lists
+ * for original events and filtered events. Handles asynchronous loading of organizer
+ * names and event images from Firestore.
+ * 
+ * @author Droids Team
+ */
 public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsListRecyclerViewAdapter.ViewHolder> {
+    /**
+     * Interface for handling clicks on event items.
+     */
     public interface onEventClickListener {
+        /**
+         * Called when an event item is clicked.
+         * 
+         * @param position the position of the clicked item in the filtered list
+         */
         void onItemClick(int position);
     }
 
-    protected final List<EventItem> originalList;  // all events
-    private final List<EventItem> filteredList;  // currently displayed events
+    /** The complete list of all events (unfiltered). */
+    protected final List<EventItem> originalList;
+    
+    /** The filtered list of events currently displayed. */
+    private final List<EventItem> filteredList;
+    
+    /** Click listener for handling event item clicks. */
     private final onEventClickListener listener;
 
     public EventsListRecyclerViewAdapter(List<EventItem> eventList,
@@ -110,7 +131,13 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
         return filteredList.size();
     }
 
-    /** Filter events by query with title priority */
+    /**
+     * Filters events by search query with title priority.
+     * Events matching the query in the title appear first, followed by
+     * events matching in the description.
+     * 
+     * @param query the search query string (case-insensitive)
+     */
     public void filter(String query) {
         query = query.toLowerCase();
         filteredList.clear();
@@ -138,6 +165,12 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
 
         notifyDataSetChanged();
     }
+    /**
+     * Updates the adapter with a new list of events.
+     * Replaces both the original and filtered lists with the new data.
+     * 
+     * @param newList the new list of events to display
+     */
     public void updateList(List<? extends EventItem> newList) {
         originalList.clear();
         originalList.addAll(newList);
@@ -146,9 +179,22 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
         notifyDataSetChanged();
     }
 
+    /**
+     * Gets the current filtered list of events.
+     * 
+     * @return the filtered list of events
+     */
     public List<EventItem> getFilteredList() {
         return filteredList;
     }
+    
+    /**
+     * Applies a category filter to the event list.
+     * Filters events based on keywords in title and description matching the category.
+     * 
+     * @param filterType the category to filter by: "sports", "music", "workshops",
+     *                   "free", "community", or "all" (case-sensitive)
+     */
     public void applyCategoryFilter(String filterType) {
         filteredList.clear();
         for (EventItem item : originalList) {
@@ -205,6 +251,14 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
 
         notifyDataSetChanged();
     }
+    /**
+     * Applies a date filter to show only events on or after the specified date.
+     * Events without a start date are excluded from the filtered results.
+     * 
+     * @param year the year to filter by
+     * @param month the month to filter by (0-11, where 0 is January)
+     * @param day the day of the month to filter by
+     */
     public void applyDateFilter(int year, int month, int day) {
 
         Calendar selected = Calendar.getInstance();
@@ -234,12 +288,28 @@ public class EventsListRecyclerViewAdapter extends RecyclerView.Adapter<EventsLi
     }
 
 
+    /**
+     * ViewHolder for event items in the RecyclerView.
+     * Holds references to all views that need to be updated for each event.
+     */
     public class ViewHolder extends RecyclerView.ViewHolder {
+        /** Text view displaying the event name. */
         public final TextView nameView;
+        
+        /** Text view displaying the organizer name. */
         public final TextView organizerView;
+        
+        /** Text view displaying the event cost. */
         public final TextView costView;
+        
+        /** Image view displaying the event poster. */
         public final ImageView imageView;
 
+        /**
+         * Constructs a new ViewHolder.
+         * 
+         * @param view the root view of the event item layout
+         */
         public ViewHolder(View view) {
             super(view);
             nameView = view.findViewById(R.id.event_name);

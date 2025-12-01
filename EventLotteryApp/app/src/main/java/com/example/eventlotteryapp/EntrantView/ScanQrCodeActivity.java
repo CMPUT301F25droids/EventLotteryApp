@@ -7,10 +7,27 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 
+/**
+ * Activity for scanning QR codes to navigate to event details.
+ * Uses the ZXing barcode scanner library to scan QR codes containing event IDs.
+ * Upon successful scan, navigates to EventDetailsActivity with the scanned event ID.
+ * 
+ * @author Droids Team
+ */
 public class ScanQrCodeActivity extends AppCompatActivity {
     
+    /** Activity result launcher for the QR code scanner. */
     private ActivityResultLauncher<ScanOptions> scanLauncher;
     
+    /**
+     * Called when the activity is first created.
+     * Registers the QR scanner activity result launcher and immediately launches
+     * the scanner. The activity finishes after scanning (success or cancellation).
+     * 
+     * @param savedInstanceState If the activity is being re-initialized after previously
+     *                           being shut down, this Bundle contains the data it most
+     *                           recently supplied in onSaveInstanceState(Bundle).
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

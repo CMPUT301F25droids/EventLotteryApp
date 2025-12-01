@@ -13,11 +13,26 @@ import com.example.eventlotteryapp.databinding.FragmentCreateEventStep2Binding;
 import java.util.Calendar;
 import java.util.Date;
 
+/**
+ * Second step in the event creation process, collecting event date information.
+ * This fragment allows the organizer to set the event start and end dates using DatePickers.
+ * Data is automatically saved to the shared ViewModel as the user selects dates.
+ *
+ * @author Droids Team
+ */
 public class CreateEventStep2Fragment extends Fragment {
 
     private FragmentCreateEventStep2Binding binding;
     private CreateEventViewModel viewModel;
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment.
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state.
+     * @return The View for the fragment's UI, or null.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -56,12 +71,24 @@ public class CreateEventStep2Fragment extends Fragment {
         });
     }
 
+    /**
+     * Converts a DatePicker's selected date into a Date object.
+     *
+     * @param datePicker The DatePicker to extract the date from.
+     * @return A Date object representing the selected date.
+     */
     private Date getDateFromDatePicker(DatePicker datePicker) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDayOfMonth());
         return calendar.getTime();
     }
 
+    /**
+     * Updates a DatePicker to display the specified date.
+     *
+     * @param datePicker The DatePicker to update.
+     * @param date The date to display in the DatePicker, or null to leave unchanged.
+     */
     private void updateDatePicker(DatePicker datePicker, Date date) {
         if (date != null) {
             Calendar calendar = Calendar.getInstance();

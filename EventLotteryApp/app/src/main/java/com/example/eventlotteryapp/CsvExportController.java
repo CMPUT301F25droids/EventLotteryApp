@@ -12,11 +12,23 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Controller class for exporting event entrant lists to CSV format.
+ * Handles file creation, writing, and saving to the device's Downloads folder.
+ * The exported CSV file contains entrant names and email addresses.
+ * 
+ * @author Droids Team
+ */
 public class CsvExportController {
 
     /**
      * Exports final enrolled entrants to CSV format.
-     * Saves the file to the Downloads folder.
+     * Saves the file to the Downloads folder with the format: "EventName_final_list.csv".
+     * 
+     * @param context the Android context used for displaying toast messages
+     * @param eventName the name of the event (used in the filename)
+     * @param entrants the list of entrants to export
+     * @return the created CSV file, or null if the export failed
      */
     public File exportFinalListToCSV(Context context, String eventName, List<Entrant> entrants) {
         // Get the Downloads directory

@@ -7,11 +7,30 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.example.eventlotteryapp.R;
 
+/**
+ * Activity for managing user settings and preferences.
+ * Allows users to toggle notification preferences which are stored in Firestore.
+ * The notification preference is saved to the user's document in the "entrants" collection.
+ * 
+ * @author Droids Team
+ */
 public class SettingsActivity extends AppCompatActivity {
 
+    /** Firestore database instance for saving user preferences. */
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    
+    /** Switch widget for toggling notification preferences. */
     private Switch notificationSwitch;
 
+    /**
+     * Called when the activity is first created.
+     * Initializes the layout, loads the current notification preference from Firestore,
+     * and sets up the switch change listener to save preferences.
+     * 
+     * @param savedInstanceState If the activity is being re-initialized after previously
+     *                           being shut down, this Bundle contains the data it most
+     *                           recently supplied in onSaveInstanceState(Bundle).
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

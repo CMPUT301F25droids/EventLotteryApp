@@ -7,16 +7,39 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+/**
+ * Custom capture activity for QR code scanning.
+ * Extends the ZXing CaptureActivity and adds a custom back button overlay
+ * for better user experience. The back button is added programmatically
+ * to the decor view with high elevation to ensure visibility.
+ * 
+ * @author Droids Team
+ */
 public class QrCaptureActivity extends com.journeyapps.barcodescanner.CaptureActivity {
     
+    /** Tag for logging purposes. */
     private static final String TAG = "QrCaptureActivity";
+    
+    /** The back button overlay added to the scanner view. */
     private ImageView backButton;
     
+    /**
+     * Called when the activity is first created.
+     * 
+     * @param savedInstanceState If the activity is being re-initialized after previously
+     *                           being shut down, this Bundle contains the data it most
+     *                           recently supplied in onSaveInstanceState(Bundle).
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
     
+    /**
+     * Called when the activity is resumed.
+     * Adds a custom back button overlay to the scanner view after a short delay
+     * to ensure the layout is complete.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -30,6 +53,11 @@ public class QrCaptureActivity extends com.journeyapps.barcodescanner.CaptureAct
         });
     }
     
+    /**
+     * Adds a custom back button overlay to the scanner view.
+     * Creates a circular black button with a white arrow icon positioned
+     * at the top-left corner of the screen with high elevation for visibility.
+     */
     private void addBackButtonOverlay() {
         try {
             // Remove existing button if any
@@ -88,6 +116,10 @@ public class QrCaptureActivity extends com.journeyapps.barcodescanner.CaptureAct
         }
     }
     
+    /**
+     * Called when the back button is pressed.
+     * Finishes the activity to return to the previous screen.
+     */
     @Override
     public void onBackPressed() {
         super.onBackPressed();

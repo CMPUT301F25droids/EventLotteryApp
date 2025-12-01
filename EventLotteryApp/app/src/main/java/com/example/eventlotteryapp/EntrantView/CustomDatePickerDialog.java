@@ -16,15 +16,45 @@ import com.example.eventlotteryapp.R;
 
 import java.util.Calendar;
 
+/**
+ * Custom date picker dialog for selecting dates in the Event Lottery application.
+ * Provides a styled dialog with a DatePicker widget, minimum date restrictions,
+ * and custom styling. The dialog is centered on screen and sized to 90% of screen width.
+ * 
+ * @author Droids Team
+ */
 public class CustomDatePickerDialog extends Dialog {
+    /** The DatePicker widget for selecting dates. */
     private DatePicker datePicker;
+    
+    /** Listener to be notified when a date is selected. */
     private OnDateSetListener listener;
+    
+    /** The minimum selectable date (past dates will be disabled). */
     private Calendar minDate;
 
+    /**
+     * Interface for receiving callbacks when a date is selected in the dialog.
+     */
     public interface OnDateSetListener {
+        /**
+         * Called when the user confirms a date selection.
+         * 
+         * @param year the selected year
+         * @param month the selected month (0-11, where 0 is January)
+         * @param dayOfMonth the selected day of the month (1-31)
+         */
         void onDateSet(int year, int month, int dayOfMonth);
     }
 
+    /**
+     * Constructs a new CustomDatePickerDialog.
+     * 
+     * @param context the Android context for creating the dialog
+     * @param listener the listener to be notified when a date is selected
+     * @param initialDate the initial date to display in the picker (null to use today's date)
+     * @param minDate the minimum selectable date (null to allow all past dates)
+     */
     public CustomDatePickerDialog(@NonNull Context context, OnDateSetListener listener, Calendar initialDate, Calendar minDate) {
         super(context, R.style.CustomDatePickerDialog);
         this.listener = listener;
@@ -36,6 +66,15 @@ public class CustomDatePickerDialog extends Dialog {
         }
     }
 
+    /**
+     * Called when the dialog is created.
+     * Initializes the dialog layout, configures the DatePicker widget,
+     * sets up minimum date restrictions, and configures button click listeners.
+     * 
+     * @param savedInstanceState If the dialog is being re-initialized after previously
+     *                           being shut down, this Bundle contains the data it most
+     *                           recently supplied.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,6 +125,12 @@ public class CustomDatePickerDialog extends Dialog {
         });
     }
 
+    /**
+     * Applies custom styling to the DatePicker widget.
+     * Attempts to style the internal CalendarView component, though styling options
+     * are limited due to variations in DatePicker's internal structure across Android versions.
+     * If styling fails, the dialog continues with the default appearance.
+     */
     private void styleDatePicker() {
         // Find the CalendarView inside DatePicker and style it
         // This is a workaround since DatePicker's internal structure varies by Android version

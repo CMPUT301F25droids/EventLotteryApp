@@ -9,14 +9,39 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Represents a notification in the Event Lottery application.
+ * Contains notification information including type, message, timestamp, and associated event.
+ * Implements Comparable to allow sorting by timestamp (newest first).
+ * 
+ * @author Droids Team
+ */
 public class Notification implements Comparable<Notification>{
+    /** The type of notification (e.g., "lottery", "invitation_accepted", "MESSAGE"). */
     private final String type;
+    
+    /** The timestamp when the notification was created. */
     private final Date timeStamp;
+    
+    /** The notification message content. */
     private final String message;
+    
+    /** The name of the event this notification is related to. */
     private String eventName;
+    
+    /** The unique identifier of the event this notification is related to. */
     private String eventId;
+    
+    /** The Firestore document ID of this notification (used for deletion). */
     private String documentId;
 
+    /**
+     * Constructs a new Notification with the specified information.
+     * 
+     * @param timeStamp the timestamp when the notification was created
+     * @param type the type of notification
+     * @param message the notification message content
+     */
     public Notification(Date timeStamp, String type, String message){
         this.timeStamp = timeStamp;
         this.type = type;
@@ -26,10 +51,25 @@ public class Notification implements Comparable<Notification>{
         this.documentId = null;
     }
 
+    /**
+     * Callback interface for asynchronous notification loading from Firestore.
+     */
     public interface NotificationLoadCallback {
+        /**
+         * Called when a notification has been successfully loaded from a Firestore document.
+         * 
+         * @param notification the loaded notification object
+         */
         void onNotificationLoaded(Notification notification);
     }
 
+    /**
+     * Creates a Notification object from a Firestore document snapshot.
+     * Asynchronously loads the associated event name if an event reference exists.
+     * 
+     * @param doc the Firestore document snapshot containing notification data
+     * @param callback the callback to invoke when the notification is fully loaded
+     */
     public static void fromDocument(DocumentSnapshot doc, NotificationLoadCallback callback) {
         String message = doc.getString("Message");
         String type = doc.getString("Type");

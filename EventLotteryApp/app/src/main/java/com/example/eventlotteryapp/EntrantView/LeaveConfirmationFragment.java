@@ -26,17 +26,27 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * <p>A fragment that shows a list of items as a modal bottom sheet.</p>
+ * Bottom sheet dialog fragment for confirming leaving an event's waiting list.
+ * Displays a confirmation message with the event name and handles removing the user
+ * from the waiting list. Prevents leaving if the lottery has run and the user was selected.
+ * Updates both the event's waiting list and the user's JoinedEvents array.
+ * 
  * <p>You can show this modal bottom sheet from your activity like this:</p>
  * <pre>
  *     LeaveConfirmationFragment.newInstance(30).show(getSupportFragmentManager(), "dialog");
  * </pre>
+ * 
+ * @author Droids Team
  */
 public class LeaveConfirmationFragment extends BottomSheetDialogFragment {
 
     // TODO: Customize parameter argument names
     private static final String ARG_EVENT_ID = "event_id";
+    
+    /** The unique identifier of the event to leave. */
     private String eventId;
+    
+    /** View binding for this fragment's layout. */
     private FragmentJoinConfirmationListDialogBinding binding;
 
     // TODO: Customize parameters

@@ -26,11 +26,26 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+/**
+ * Fragment for managing user profile settings and information.
+ * Allows users to view and edit their profile information, change notification preferences,
+ * switch between entrant and organizer roles, and delete their account.
+ * Handles comprehensive account deletion including cleanup of all related data.
+ * 
+ * @author Droids Team
+ */
 public class ProfileFragment extends Fragment {
 
+    /** View binding for this fragment's layout. */
     private FragmentProfileBinding binding;
+    
+    /** Firestore database instance for saving profile changes. */
     private FirebaseFirestore firestore;
+    
+    /** Firebase Authentication instance for managing user session. */
     private FirebaseAuth auth;
+    
+    /** Flag indicating whether the current user is an organizer. */
     private boolean isOrganizer;
 
     @Nullable

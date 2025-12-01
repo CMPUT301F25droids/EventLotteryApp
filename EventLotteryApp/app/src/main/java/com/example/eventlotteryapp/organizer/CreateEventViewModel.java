@@ -5,6 +5,13 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import java.util.Date;
 
+/**
+ * ViewModel for the event creation process.
+ * Stores all event data entered by the organizer across multiple steps using LiveData.
+ * This allows data to persist across configuration changes and be shared between fragments.
+ * 
+ * @author Droids Team
+ */
 public class CreateEventViewModel extends ViewModel {
     public final MutableLiveData<String> title = new MutableLiveData<>();
     public final MutableLiveData<String> description = new MutableLiveData<>();

@@ -21,20 +21,50 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * RecyclerView adapter for displaying event cards in the organizer's event list.
+ * Handles rendering event information including title, date, location, status, and images.
+ * Supports click listeners for navigating to event details.
+ * 
+ * @author Droids Team
+ */
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHolder> {
 
+    /** List of events with their IDs to display. */
     private List<MyEventsFragment.EventWithId> events;
+    
+    /** Date formatter for displaying event dates. */
     private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+    
+    /** Click listener for handling event item clicks. */
     private OnItemClickListener clickListener;
 
+    /**
+     * Interface for handling clicks on event items.
+     */
     public interface OnItemClickListener {
+        /**
+         * Called when an event item is clicked.
+         * 
+         * @param eventId the unique identifier of the clicked event
+         */
         void onItemClick(String eventId);
     }
 
+    /**
+     * Constructs a new EventAdapter with the specified list of events.
+     * 
+     * @param events the list of events to display
+     */
     public EventAdapter(List<MyEventsFragment.EventWithId> events) {
         this.events = new ArrayList<>(events);
     }
 
+    /**
+     * Sets the click listener for event items.
+     * 
+     * @param listener the OnItemClickListener to set
+     */
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.clickListener = listener;
     }
@@ -107,11 +137,22 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         return events.size();
     }
 
+    /**
+     * Updates the list of events and notifies the adapter of the change.
+     * 
+     * @param newEvents the new list of events to display
+     */
     public void updateEvents(List<MyEventsFragment.EventWithId> newEvents) {
         this.events = new ArrayList<>(newEvents);
         notifyDataSetChanged();
     }
 
+    /**
+     * Decodes a base64-encoded string into a Bitmap image.
+     * 
+     * @param base64Str the base64-encoded image string
+     * @return the decoded Bitmap, or null if decoding fails
+     */
     private Bitmap decodeBase64(String base64Str) {
         try {
             // Removes prefix if present
@@ -125,11 +166,25 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         }
     }
 
+    /**
+     * ViewHolder for event card items in the RecyclerView.
+     * Holds references to all views that need to be updated for each event.
+     */
     static class EventViewHolder extends RecyclerView.ViewHolder {
+        /** Text view displaying the event title. */
         TextView titleText, dateText, locationText, statusText;
+        
+        /** View displaying the status indicator (colored dot). */
         View statusIndicator;
+        
+        /** Image view displaying the event poster image. */
         ImageView eventImage;
 
+        /**
+         * Constructs a new EventViewHolder.
+         * 
+         * @param itemView the root view of the event card layout
+         */
         EventViewHolder(@NonNull View itemView) {
             super(itemView);
 

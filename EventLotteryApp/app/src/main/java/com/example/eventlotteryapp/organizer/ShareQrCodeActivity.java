@@ -21,11 +21,27 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+/**
+ * Activity for generating and sharing QR codes for events.
+ * Creates a QR code containing the event ID that can be scanned by entrants to quickly access event details.
+ * Provides functionality to share the QR code image via Android's share intent.
+ *
+ * @author Droids Team
+ */
 public class ShareQrCodeActivity extends AppCompatActivity {
 
+    /** Intent extra key for passing the event ID. */
     public static final String EXTRA_EVENT_ID = "extra_event_id";
     private Bitmap qrCodeBitmap;
 
+    /**
+     * Called when the activity is first created.
+     * Generates a QR code from the event ID and displays it.
+     * Sets up the share button and navigation back to dashboard.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down,
+     *                          this contains the data it most recently supplied in onSaveInstanceState.
+     */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +87,10 @@ public class ShareQrCodeActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Shares the QR code image via Android's share intent.
+     * Saves the QR code bitmap to a temporary file and creates a share intent with the image URI.
+     */
     private void shareQrCode() {
         if (qrCodeBitmap == null) {
             Toast.makeText(this, "QR code not available", Toast.LENGTH_SHORT).show();
@@ -109,6 +129,10 @@ public class ShareQrCodeActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Navigates back to the OrganizerHomePage dashboard.
+     * Clears the activity stack to ensure a clean navigation state.
+     */
     private void navigateToDashboard() {
         Intent intent = new Intent(this, OrganizerHomePage.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);

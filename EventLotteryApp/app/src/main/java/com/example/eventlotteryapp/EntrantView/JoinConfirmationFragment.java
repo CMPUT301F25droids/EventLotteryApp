@@ -34,19 +34,33 @@ import java.util.Map;
 import java.util.Date;
 
 /**
- * <p>A fragment that shows a list of items as a modal bottom sheet.</p>
+ * Bottom sheet dialog fragment for confirming event waitlist join.
+ * Displays a confirmation message with the event name and handles joining
+ * the waiting list. Supports optional or required geolocation capture based
+ * on event settings. Stores join location in Firestore if available.
+ * 
  * <p>You can show this modal bottom sheet from your activity like this:</p>
  * <pre>
  *     JoinConfirmationFragment.newInstance(30).show(getSupportFragmentManager(), "dialog");
  * </pre>
+ * 
+ * @author Droids Team
  */
 public class JoinConfirmationFragment extends BottomSheetDialogFragment {
 
     // TODO: Customize parameter argument names
     private static final String ARG_EVENT_ID = "event_id";
+    
+    /** Request code for location permission. */
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
+    
+    /** The unique identifier of the event to join. */
     private String eventId;
+    
+    /** View binding for this fragment's layout. */
     private FragmentJoinConfirmationListDialogBinding binding;
+    
+    /** Client for accessing device location services. */
     private FusedLocationProviderClient fusedLocationClient;
 
     // TODO: Customize parameters
@@ -124,6 +138,10 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
         cancelButton.setOnClickListener(v -> dismiss());
     }
     
+    /**
+     * Requests location permission and joins the event with location.
+     * Used when geolocation is required for the event.
+     */
     private void requestLocationAndJoin() {
         // Check permissions
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) 
@@ -155,6 +173,11 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
         }
     }
     
+    /**
+     * Attempts to get location and join the event.
+     * Used when geolocation is optional for the event. If location cannot be obtained,
+     * the user can still join without location.
+     */
     private void tryToGetLocationAndJoin() {
         // Check permissions
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) 
@@ -201,6 +224,14 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
         }
     }
     
+    /**
+     * Adds the current user to the event's waiting list.
+     * Updates both the event's waitingListEntrantIds array and the user's JoinedEvents array.
+     * Optionally stores the user's join location if latitude and longitude are provided.
+     * 
+     * @param latitude the latitude of the user's location when joining (null if not available)
+     * @param longitude the longitude of the user's location when joining (null if not available)
+     */
     private void joinEvent(Double latitude, Double longitude) {
         // Check if user is authenticated
         FirebaseAuth auth = FirebaseAuth.getInstance();

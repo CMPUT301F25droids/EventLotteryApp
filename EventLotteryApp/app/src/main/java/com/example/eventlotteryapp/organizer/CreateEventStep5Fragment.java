@@ -18,12 +18,27 @@ import com.example.eventlotteryapp.databinding.FragmentCreateEventStep5Binding;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
+/**
+ * Fifth step in the event creation process, allowing the organizer to upload an event poster image.
+ * This fragment handles image selection from the device, converts it to Base64 format for storage,
+ * and displays a preview. The image is stored in the shared ViewModel.
+ *
+ * @author Droids Team
+ */
 public class CreateEventStep5Fragment extends Fragment {
 
     private FragmentCreateEventStep5Binding binding;
     private ActivityResultLauncher<String> imagePickerLauncher;
     private CreateEventViewModel viewModel;
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment.
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state.
+     * @return The View for the fragment's UI, or null.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -81,7 +96,13 @@ public class CreateEventStep5Fragment extends Fragment {
             }
         });
     }
-    
+
+    /**
+     * Loads and displays an image from a Base64 encoded string.
+     * Handles images with or without data URI prefixes.
+     *
+     * @param base64Image The Base64 encoded image string, optionally prefixed with "data:image/...;base64,".
+     */
     private void loadImageFromBase64(String base64Image) {
         try {
             // Remove the "data:image/jpeg;base64," or similar prefix
@@ -100,7 +121,13 @@ public class CreateEventStep5Fragment extends Fragment {
             android.util.Log.e("CreateEventStep5Fragment", "Error loading image from base64", e);
         }
     }
-    
+
+    /**
+     * Converts an image from a URI to Base64 format and stores it in the ViewModel.
+     * The image is compressed as WEBP format at 80% quality before encoding.
+     *
+     * @param imageUri The URI of the image to convert.
+     */
     private void convertImageToBase64(Uri imageUri) {
         try {
             InputStream inputStream = requireContext().getContentResolver().openInputStream(imageUri);

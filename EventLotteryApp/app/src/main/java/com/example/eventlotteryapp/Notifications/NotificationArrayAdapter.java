@@ -18,27 +18,64 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * ArrayAdapter for displaying notifications in a ListView.
+ * Supports multi-selection of notifications for bulk deletion operations.
+ * Displays notification icons, timestamps, messages, and event names.
+ * 
+ * @author Droids Team
+ */
 public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
 
+    /** Listener for selection change events. */
     private OnSelectionChangeListener selectionChangeListener;
+    
+    /** Set of currently selected notifications. */
     private Set<Notification> selectedNotifications = new HashSet<>();
 
+    /**
+     * Interface for listening to selection changes in the adapter.
+     */
     public interface OnSelectionChangeListener {
+        /**
+         * Called when the number of selected notifications changes.
+         * 
+         * @param selectedCount the new number of selected notifications
+         */
         void onSelectionChanged(int selectedCount);
     }
 
+    /**
+     * Constructs a new NotificationArrayAdapter.
+     * 
+     * @param context the Android context
+     * @param notifications the list of notifications to display
+     */
     public NotificationArrayAdapter(Context context, ArrayList<Notification> notifications) {
         super(context, 0, notifications);
     }
 
+    /**
+     * Sets the listener for selection change events.
+     * 
+     * @param listener the OnSelectionChangeListener to set
+     */
     public void setOnSelectionChangeListener(OnSelectionChangeListener listener) {
         this.selectionChangeListener = listener;
     }
 
+    /**
+     * Gets a copy of the set of currently selected notifications.
+     * 
+     * @return a new HashSet containing the selected notifications
+     */
     public Set<Notification> getSelectedNotifications() {
         return new HashSet<>(selectedNotifications);
     }
 
+    /**
+     * Clears all selected notifications and notifies the adapter and listener.
+     */
     public void clearSelection() {
         selectedNotifications.clear();
         notifyDataSetChanged();

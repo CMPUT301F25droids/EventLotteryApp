@@ -25,21 +25,56 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Fragment displaying a list of notifications for the current user.
+ * Supports loading notifications from Firestore, displaying them in a ListView,
+ * selecting multiple notifications for bulk deletion, and navigating to event details
+ * when a notification is clicked.
+ * Filters notifications by user role (entrant or organizer) for proper separation.
+ * 
+ * @author Droids Team
+ */
 public class NotificationsFragment extends Fragment {
 
+    /** ListView displaying the notifications. */
     private ListView notificationsList;
+    
+    /** Progress bar shown while loading notifications. */
     private ProgressBar progressBar;
+    
+    /** Button for deleting selected notifications. */
     private Button btnDeleteSelected;
+    
+    /** List of all notifications for the current user. */
     private ArrayList<Notification> notificationsArray;
+    
+    /** Adapter for displaying notifications in the ListView. */
     private NotificationArrayAdapter notificationAdapter;
+    
+    /** Firestore database instance for querying notifications. */
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    
+    /** Reference to the Notifications collection in Firestore. */
     private CollectionReference notificationsRef;
+    
+    /** Firebase Authentication instance for getting current user. */
     FirebaseAuth auth;
 
+    /**
+     * Default constructor for the fragment.
+     * Initializes an empty notifications list.
+     */
     public NotificationsFragment() {
         super(R.layout.fragment_notifications);
         notificationsArray = new ArrayList<>();
     }
+    
+    /**
+     * Creates a new instance of NotificationsFragment with a specific Firestore instance.
+     * 
+     * @param firestore the Firestore instance to use for queries
+     * @return a new NotificationsFragment instance
+     */
     public static NotificationsFragment newInstance(FirebaseFirestore firestore) {
         NotificationsFragment fragment = new NotificationsFragment();
         fragment.db = firestore;

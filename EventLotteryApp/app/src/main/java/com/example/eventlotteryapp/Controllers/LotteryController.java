@@ -23,6 +23,10 @@ public class LotteryController {
     private static final String TAG = "LotteryController";
     private final FirebaseFirestore db;
 
+    /**
+     * Constructs a new LotteryController instance.
+     * Initializes the Firestore database connection.
+     */
     public LotteryController() {
         this.db = FirebaseFirestore.getInstance();
     }

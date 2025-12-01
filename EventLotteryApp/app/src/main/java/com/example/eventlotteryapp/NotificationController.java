@@ -10,11 +10,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller for managing and sending notifications to users.
+ * Handles bulk notification sending to different groups of entrants
+ * (waiting list, selected, cancelled) while respecting user notification preferences.
+ * Notifications are saved to Firestore and can be sent via FCM (Firebase Cloud Messaging).
+ * 
+ * @author Droids Team
+ */
 public class NotificationController {
 
+    /** Firestore database instance for saving notifications and checking user preferences. */
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    /** Send notifications to all entrants in a list, respecting opt-out */
+    /**
+     * Sends notifications to all entrants in a list, respecting their opt-out preferences.
+     * Only sends notifications to users who have notifications enabled.
+     * 
+     * @param entrantIds the list of entrant user IDs to send notifications to
+     * @param title the notification title
+     * @param message the notification message body
+     * @param eventId the ID of the event this notification is related to
+     */
     private void sendBulkNotifications(List<String> entrantIds, String title, String message, String eventId) {
         if (entrantIds == null || entrantIds.isEmpty()) return;
 
@@ -29,7 +46,16 @@ public class NotificationController {
         }
     }
 
-    //** Actually sends a notification AND logs it in Firestore */
+    /**
+     * Actually sends a notification and logs it in Firestore.
+     * Creates a notification document in the "Notifications" collection and prepares
+     * an FCM payload for push notification delivery.
+     * 
+     * @param userDoc the Firestore document snapshot of the user
+     * @param title the notification title
+     * @param message the notification message body
+     * @param eventId the ID of the event this notification is related to
+     */
     private void sendNotificationToUser(DocumentSnapshot userDoc, String title, String message, String eventId) {
         System.out.println("Notification.....");
 
@@ -78,7 +104,13 @@ public class NotificationController {
         return;
     }
 
-    /** Public methods to send notifications to different event groups */
+    /**
+     * Sends notifications to all entrants currently on the waiting list for an event.
+     * 
+     * @param eventId the ID of the event
+     * @param title the notification title
+     * @param message the notification message body
+     */
     public void sendToWaitingList(String eventId, String title, String message) {
         db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
             List<String> waitingList = (List<String>) eventDoc.get("waitingListEntrantIds");
@@ -86,6 +118,13 @@ public class NotificationController {
         });
     }
 
+    /**
+     * Sends notifications to all entrants who were selected in the lottery.
+     * 
+     * @param eventId the ID of the event
+     * @param title the notification title
+     * @param message the notification message body
+     */
     public void sendToSelectedEntrants(String eventId, String title, String message) {
         db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
             List<String> selected = (List<String>) eventDoc.get("selectedEntrantIds");
@@ -93,6 +132,13 @@ public class NotificationController {
         });
     }
 
+    /**
+     * Sends notifications to all entrants who cancelled their registration.
+     * 
+     * @param eventId the ID of the event
+     * @param title the notification title
+     * @param message the notification message body
+     */
     public void sendToCancelledEntrants(String eventId, String title, String message) {
         db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
             List<String> cancelled = (List<String>) eventDoc.get("cancelledEntrantIds");

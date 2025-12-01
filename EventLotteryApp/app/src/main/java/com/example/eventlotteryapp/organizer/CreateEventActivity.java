@@ -24,15 +24,36 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Activity for creating or editing events.
+ * Manages a six-step event creation process using a ViewPager2 with fragments.
+ * Supports both creating new events and editing existing events.
+ * Data is stored in a shared ViewModel that persists across configuration changes.
+ * 
+ * @author Droids Team
+ */
 public class CreateEventActivity extends AppCompatActivity {
 
+    /** View binding for this activity's layout. */
     private ActivityCreateEventBinding binding;
+    
+    /** Firestore database instance for saving event data. */
     private FirebaseFirestore firestore;
+    
+    /** Firebase Authentication instance for getting current user. */
     private FirebaseAuth auth;
+    
+    /** ViewModel for storing event data across all creation steps. */
     private CreateEventViewModel viewModel;
+    
+    /** Adapter for managing the ViewPager2 fragments. */
     private CreateEventPagerAdapter pagerAdapter;
-    private String eventId; // null for create mode, non-null for edit mode
-    private boolean isSaving = false; // Flag to prevent multiple simultaneous save operations
+    
+    /** The event ID if editing an existing event, null if creating a new event. */
+    private String eventId;
+    
+    /** Flag to prevent multiple simultaneous save operations. */
+    private boolean isSaving = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -482,7 +503,15 @@ public class CreateEventActivity extends AppCompatActivity {
         return fragment;
     }
 
+    /**
+     * Interface for listening to event save completion events.
+     */
     public interface OnEventSavedListener {
+        /**
+         * Called when an event has been successfully saved to Firestore.
+         * 
+         * @param eventId the unique identifier of the saved event
+         */
         void onEventSaved(String eventId);
     }
 }

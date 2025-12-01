@@ -5,11 +5,23 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Controller for retrieving event statistics from Firestore.
+ * Provides methods to query and calculate various event metrics such as
+ * waiting list counts and participant statistics.
+ * 
+ * @author Droids Team
+ */
 public class EventStatsController {
+    /** Firestore database instance for querying event data. */
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     /**
-     * Returns the number of entrants currently on the waiting list.
+     * Returns the number of entrants currently on the waiting list for a given event.
+     * 
+     * @param eventId the unique identifier of the event
+     * @return a CompletableFuture that will complete with the waiting list count,
+     *         or complete exceptionally if an error occurs
      */
     public CompletableFuture<Integer> getWaitingListCount(String eventId) {
         CompletableFuture<Integer> future = new CompletableFuture<>();

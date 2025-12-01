@@ -27,14 +27,32 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Fragment displaying the organizer's events in a grid layout.
+ * Supports filtering events by status: all, active, upcoming, or closed.
+ * Events are loaded from Firestore based on the current organizer's user ID.
+ * 
+ * @author Droids Team
+ */
 public class MyEventsFragment extends Fragment {
 
+    /** View binding for this fragment's layout. */
     private FragmentMyEventsBinding binding;
+    
+    /** Firestore database instance for querying events. */
     private FirebaseFirestore firestore;
+    
+    /** Firebase Authentication instance for getting current user. */
     private FirebaseAuth auth;
+    
+    /** RecyclerView adapter for displaying events. */
     private EventAdapter eventAdapter;
+    
+    /** List of all events owned by the organizer. */
     private final List<EventWithId> allEvents = new ArrayList<>();
-    private String currentFilter = "all"; // all, active, upcoming, closed
+    
+    /** Current filter applied to events: "all", "active", "upcoming", or "closed". */
+    private String currentFilter = "all";
 
     @Nullable
     @Override
@@ -308,11 +326,23 @@ public class MyEventsFragment extends Fragment {
         binding = null;
     }
 
-    // Helper class to store event with its ID
+    /**
+     * Helper class to store an event along with its Firestore document ID.
+     * This is necessary because the Event model doesn't include the document ID.
+     */
     public static class EventWithId {
+        /** The Firestore document ID of the event. */
         public String id;
+        
+        /** The Event object containing event data. */
         public Event event;
 
+        /**
+         * Constructs a new EventWithId wrapper.
+         * 
+         * @param id the Firestore document ID
+         * @param event the Event object
+         */
         public EventWithId(String id, Event event) {
             this.id = id;
             this.event = event;

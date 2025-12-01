@@ -32,6 +32,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * Activity for displaying detailed information about an event from the organizer's perspective.
+ * Provides functionality to manage the waiting list, notify entrants, view finalized lists,
+ * export CSV files, edit events, cancel events, and share QR codes.
+ * Displays real-time statistics including entrants joined, slots available, and registration status.
+ *
+ * @author Droids Team
+ */
 public class OrganizerEventDetailsActivity extends AppCompatActivity {
 
     private static final String TAG = "OrganizerEventDetails";
@@ -62,6 +70,13 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
     private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d", Locale.getDefault());
     private SimpleDateFormat dateFormatWithYear = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
 
+    /**
+     * Called when the activity is first created.
+     * Initializes views, sets up click listeners, and loads event data from Firestore.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down,
+     *                          this contains the data it most recently supplied in onSaveInstanceState.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,7 +99,10 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
         setupClickListeners();
         loadEventData();
     }
-    
+
+    /**
+     * Initializes all UI components and sets up navigation buttons.
+     */
     private void initializeViews() {
         eventImage = findViewById(R.id.event_image);
         eventTitle = findViewById(R.id.event_title);
@@ -110,7 +128,10 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
         ImageView menuButton = findViewById(R.id.menu_button);
         menuButton.setOnClickListener(v -> showMenu(v));
     }
-    
+
+    /**
+     * Sets up click listeners for action buttons (Manage Waiting List, Notify Entrants, Finalized List).
+     */
     private void setupClickListeners() {
         manageWaitingListButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, EntrantListActivity.class);
@@ -130,7 +151,12 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
     }
-    
+
+    /**
+     * Displays a popup menu with options to edit, cancel, or share the event.
+     *
+     * @param anchor The view to anchor the popup menu to.
+     */
     private void showMenu(View anchor) {
         PopupMenu popupMenu = new PopupMenu(this, anchor);
         popupMenu.getMenuInflater().inflate(R.menu.event_details_menu, popupMenu.getMenu());
@@ -156,7 +182,11 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
         
         popupMenu.show();
     }
-    
+
+    /**
+     * Loads event data from Firestore and populates the UI.
+     * Also triggers statistics update after loading.
+     */
     private void loadEventData() {
         firestore.collection("Events").document(eventId)
             .get()
@@ -175,7 +205,12 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 Toast.makeText(this, "Error loading event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
     }
-    
+
+    /**
+     * Populates UI elements with event data from a Firestore document.
+     *
+     * @param document The Firestore DocumentSnapshot containing event data.
+     */
     private void populateUI(DocumentSnapshot document) {
         // Title
         String title = document.getString("title");
@@ -234,7 +269,13 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
             populateImage(imageBase64, eventImage);
         }
     }
-    
+
+    /**
+     * Decodes a Base64 image string and displays it in an ImageView.
+     *
+     * @param base64Image The Base64 encoded image string, optionally prefixed with "data:image/...;base64,".
+     * @param imageView The ImageView to display the image in.
+     */
     private void populateImage(String base64Image, ImageView imageView) {
         try {
             // Remove the "data:image/jpeg;base64," or similar prefix
@@ -252,7 +293,11 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
             Log.e(TAG, "Failed to decode image", e);
         }
     }
-    
+
+    /**
+     * Updates event statistics displayed in the UI, including entrants joined, slots available,
+     * days left in registration, lottery draw date, and event status tag.
+     */
     private void updateStatistics() {
         firestore.collection("Events").document(eventId)
             .get()
@@ -339,7 +384,10 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 Log.e(TAG, "Error updating statistics", e);
             });
     }
-    
+
+    /**
+     * Navigates to the RunLotteryActivity to perform a lottery draw for the event.
+     */
     private void runLottery() {
         Intent intent = new Intent(this, RunLotteryActivity.class);
         intent.putExtra("eventId", eventId);
@@ -365,8 +413,11 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
             .setNegativeButton("Cancel", null)
             .show();
     }
-    
-    
+
+    /**
+     * Exports the finalized list of entrants (accepted and selected) to a CSV file.
+     * Loads entrant details from Firestore and uses CsvExportController to create the file.
+     */
     private void exportCsv() {
         firestore.collection("Events").document(eventId)
             .get()
@@ -429,7 +480,11 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 Toast.makeText(this, "Error loading event", Toast.LENGTH_SHORT).show();
             });
     }
-    
+
+    /**
+     * Displays a confirmation dialog for cancelling the event.
+     * If confirmed, marks the event as cancelled in Firestore.
+     */
     private void showCancelEventDialog() {
         new AlertDialog.Builder(this)
             .setTitle("Cancel Event")

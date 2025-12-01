@@ -15,11 +15,33 @@ import com.example.eventlotteryapp.ui.profile.ProfileFragment;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+/**
+ * Main home page activity for organizers.
+ * Provides a tabbed interface for managing events, creating new events,
+ * viewing notifications, and accessing profile settings.
+ * Automatically shows the My Events fragment when the Dashboard tab is selected.
+ * 
+ * @author Droids Team
+ */
 public class OrganizerHomePage extends AppCompatActivity {
+    /** Firestore database instance for data operations. */
     private FirebaseFirestore db;
+    
+    /** Fragment displaying the organizer's events. */
     private MyEventsFragment myEventsFragment;
+    
+    /** Tab layout for navigation between different sections. */
     private TabLayout tabLayout;
 
+    /**
+     * Called when the activity is first created.
+     * Sets up edge-to-edge display, initializes the layout, configures tab navigation,
+     * and displays the My Events fragment by default.
+     * 
+     * @param savedInstanceState If the activity is being re-initialized after previously
+     *                           being shut down, this Bundle contains the data it most
+     *                           recently supplied in onSaveInstanceState(Bundle).
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +68,11 @@ public class OrganizerHomePage extends AppCompatActivity {
         }
     }
 
+    /**
+     * Called when the activity is resumed.
+     * Reloads events when returning to this activity (e.g., from CreateEventActivity)
+     * and fixes tab selection state if needed.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -73,6 +100,12 @@ public class OrganizerHomePage extends AppCompatActivity {
         }
     }
 
+    /**
+     * Sets up the tab selection listener to switch between different sections.
+     * Handles navigation to Dashboard (My Events), Create Event, Notifications, and Profile.
+     * 
+     * @param tab the TabLayout to configure with selection listeners
+     */
     private void setOnTabSelectedListener(TabLayout tab) {
         tab.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -102,6 +135,11 @@ public class OrganizerHomePage extends AppCompatActivity {
         });
     }
 
+    /**
+     * Replaces the current fragment in the fragment container with the specified fragment.
+     * 
+     * @param fragment the fragment to display in the container
+     */
     private void selectFragment(Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, fragment)

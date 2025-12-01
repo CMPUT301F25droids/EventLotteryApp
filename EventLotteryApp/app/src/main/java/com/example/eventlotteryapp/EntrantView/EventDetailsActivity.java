@@ -37,19 +37,43 @@ import java.util.Locale;
 import com.example.eventlotteryapp.Controllers.LotteryController;
 import android.widget.Toast;
 
+/**
+ * Activity displaying detailed information about an event for entrants.
+ * Shows event details, allows joining/leaving the waiting list, and handles
+ * accepting/declining lottery invitations. Manages complex state logic for
+ * different entrant statuses (waiting list, selected, accepted, declined, cancelled).
+ * 
+ * @author EventLotteryApp Team
+ */
 public class EventDetailsActivity extends AppCompatActivity {
+    /** The unique identifier of the event being displayed. */
     private String eventId;
+    
+    /** Firestore database instance for querying event data. */
     private FirebaseFirestore db;
 
+    /** TextView displaying lottery selection criteria information. */
     private TextView tvLotteryInfo;
+    
+    /** TextView displaying the current waiting list count. */
     private TextView tvWaitlistCount;
+    
+    /** TextView displaying status messages to the user. */
     private TextView tvStatusMessage;
+    
+    /** TextView displaying "You've Been Selected!" message when applicable. */
     private TextView tvSelectedStatus;
 
+    /** Controller for sending notifications. */
     private NotificationController notificationController;
 
+    /** Button for accepting a lottery invitation. */
     private Button acceptInvitationButton;
+    
+    /** Button for declining a lottery invitation. */
     private Button declineInvitationButton;
+    
+    /** Controller for managing lottery invitation acceptance/decline operations. */
     private LotteryController lotteryController;
 
     @Override
