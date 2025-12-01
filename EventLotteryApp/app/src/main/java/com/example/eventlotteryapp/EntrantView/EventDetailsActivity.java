@@ -65,24 +65,78 @@ public class EventDetailsActivity extends AppCompatActivity {
         // Join button click
         Button join_button = findViewById(R.id.join_waitlist_button);
         join_button.setOnClickListener(v -> {
-            JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
-            confirmation.show(getSupportFragmentManager(), confirmation.getTag());
-            // Send notification to organizer about the new entrant
-            notificationController.sendToSelectedEntrants(eventId,
-                    "New Entrant",
-                    "A user has joined the waiting list for your event.");
+            // Check if event is closed before showing join dialog
+            db.collection("Events").document(eventId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            Date registrationCloseDate = documentSnapshot.getDate("registrationCloseDate");
+                            Date now = new Date();
+                            boolean isEventClosed = (registrationCloseDate != null && now.after(registrationCloseDate));
+                            
+                            if (isEventClosed) {
+                                Toast.makeText(this, "Registration for this event is closed.", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                            
+                            JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
+                            confirmation.show(getSupportFragmentManager(), confirmation.getTag());
+                            // Send notification to organizer about the new entrant
+                            notificationController.sendToSelectedEntrants(eventId,
+                                    "New Entrant",
+                                    "A user has joined the waiting list for your event.");
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("EventDetails", "Error checking event status", e);
+                        // Still show dialog if check fails (fail open)
+                        JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
+                        confirmation.show(getSupportFragmentManager(), confirmation.getTag());
+                    });
         });
 
         Button leave_button = findViewById(R.id.leave_waitlist_button);
         leave_button.setOnClickListener(v -> {
-            // Handle leave button click
-            LeaveConfirmationFragment confirmation = new LeaveConfirmationFragment().newInstance(eventId);
-            confirmation.show(getSupportFragmentManager(), confirmation.getTag());
-            userInWaitlist();
-            // Notify organizer about the user leaving
-            notificationController.sendToCancelledEntrants(eventId,
-                    "Entrant Left",
-                    "A user has left the waiting list for your event.");
+            // Check if lottery has run and user was selected before allowing leave
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            if (auth.getCurrentUser() == null) {
+                return;
+            }
+            String userId = auth.getCurrentUser().getUid();
+            
+            db.collection("Events").document(eventId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            Date registrationCloseDate = documentSnapshot.getDate("registrationCloseDate");
+                            Date now = new Date();
+                            boolean isEventClosed = (registrationCloseDate != null && now.after(registrationCloseDate));
+                            
+                            List<String> selectedEntrantIds = (List<String>) documentSnapshot.get("selectedEntrantIds");
+                            boolean isSelected = (selectedEntrantIds != null && selectedEntrantIds.contains(userId));
+                            
+                            // Block leave if lottery has run and user was selected
+                            if (isEventClosed && isSelected) {
+                                Toast.makeText(this, "Cannot leave waitlist. The lottery has run and you were selected.", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                            
+                            // Handle leave button click
+                            LeaveConfirmationFragment confirmation = new LeaveConfirmationFragment().newInstance(eventId);
+                            confirmation.show(getSupportFragmentManager(), confirmation.getTag());
+                            userInWaitlist();
+                            // Notify organizer about the user leaving
+                            notificationController.sendToCancelledEntrants(eventId,
+                                    "Entrant Left",
+                                    "A user has left the waiting list for your event.");
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("EventDetails", "Error checking event status", e);
+                        // Still show dialog if check fails (fail open)
+                        LeaveConfirmationFragment confirmation = new LeaveConfirmationFragment().newInstance(eventId);
+                        confirmation.show(getSupportFragmentManager(), confirmation.getTag());
+                    });
         });
 
         acceptInvitationButton = findViewById(R.id.accept_invitation_button);
@@ -157,6 +211,11 @@ public class EventDetailsActivity extends AppCompatActivity {
                         List<String> cancelledEntrantIds = (List<String>) documentSnapshot.get("cancelledEntrantIds");
                         List<String> declinedEntrantIds = (List<String>) documentSnapshot.get("declinedEntrantIds");
 
+                        // Check if event is closed (registrationCloseDate has passed)
+                        Date registrationCloseDate = documentSnapshot.getDate("registrationCloseDate");
+                        Date now = new Date();
+                        boolean isEventClosed = (registrationCloseDate != null && now.after(registrationCloseDate));
+
                         Button join_button = findViewById(R.id.join_waitlist_button);
                         Button leave_button = findViewById(R.id.leave_waitlist_button);
 
@@ -167,11 +226,16 @@ public class EventDetailsActivity extends AppCompatActivity {
                         boolean isCancelled = (cancelledEntrantIds != null && cancelledEntrantIds.contains(userId));
                         boolean isDeclined = (declinedEntrantIds != null && declinedEntrantIds.contains(userId));
 
+                        // Check if lottery has run and user was selected (cannot leave waitlist)
+                        boolean lotteryRanAndUserSelected = isEventClosed && isSelected;
+
                         Log.d("Firestore", "Status check - waiting: " + isInWaitingList +
                                 ", selected: " + isSelected +
                                 ", accepted: " + isAccepted +
                                 ", cancelled: " + isCancelled +
-                                ", declined: " + isDeclined);
+                                ", declined: " + isDeclined +
+                                ", eventClosed: " + isEventClosed +
+                                ", lotteryRanAndUserSelected: " + lotteryRanAndUserSelected);
 
                         // Show appropriate buttons based on status
                         if (isSelected) {
@@ -188,20 +252,33 @@ public class EventDetailsActivity extends AppCompatActivity {
                             declineInvitationButton.setVisibility(Button.GONE);
                             // Optionally show a "You're registered!" message
                         } else if (isDeclined) {
-                            // User has DECLINED - show Leave button to rejoin waiting list
+                            // User has DECLINED - show Leave button to rejoin waiting list (only if event not closed)
                             join_button.setVisibility(Button.GONE);
-                            leave_button.setVisibility(Button.VISIBLE);
+                            if (isEventClosed) {
+                                leave_button.setVisibility(Button.GONE);
+                            } else {
+                                leave_button.setVisibility(Button.VISIBLE);
+                            }
                             acceptInvitationButton.setVisibility(Button.GONE);
                             declineInvitationButton.setVisibility(Button.GONE);
                         } else if (isInWaitingList || isCancelled) {
-                            // User is in waiting list - show Leave button
+                            // User is in waiting list - show Leave button (only if lottery hasn't run or user wasn't selected)
                             join_button.setVisibility(Button.GONE);
-                            leave_button.setVisibility(Button.VISIBLE);
+                            if (lotteryRanAndUserSelected) {
+                                // Cannot leave if lottery ran and user was selected
+                                leave_button.setVisibility(Button.GONE);
+                            } else {
+                                leave_button.setVisibility(Button.VISIBLE);
+                            }
                             acceptInvitationButton.setVisibility(Button.GONE);
                             declineInvitationButton.setVisibility(Button.GONE);
                         } else {
-                            // User is NOT enrolled - show Join button
-                            join_button.setVisibility(Button.VISIBLE);
+                            // User is NOT enrolled - show Join button (only if event is not closed)
+                            if (isEventClosed) {
+                                join_button.setVisibility(Button.GONE);
+                            } else {
+                                join_button.setVisibility(Button.VISIBLE);
+                            }
                             leave_button.setVisibility(Button.GONE);
                             acceptInvitationButton.setVisibility(Button.GONE);
                             declineInvitationButton.setVisibility(Button.GONE);

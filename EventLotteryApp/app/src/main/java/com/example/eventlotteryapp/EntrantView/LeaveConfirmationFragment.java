@@ -21,6 +21,8 @@ import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.databinding.FragmentJoinConfirmationListDialogBinding;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import java.util.Date;
+import java.util.List;
 
 /**
  * <p>A fragment that shows a list of items as a modal bottom sheet.</p>
@@ -95,30 +97,55 @@ public class LeaveConfirmationFragment extends BottomSheetDialogFragment {
             DocumentReference user_ref = db.collection("users").document(userId);
             DocumentReference event_ref = db.collection("Events").document(eventId);
             
-            // Remove user from waiting list
-            event_ref.update("waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayRemove(userId))
-                    .addOnSuccessListener(aVoid -> {
-                        Log.d("Firestore", "User removed from waiting list");
-                    })
-                    .addOnFailureListener(e -> Log.e("Firestore", "Error removing user from waiting list", e));
-            
-            // Remove from user's JoinedEvents (if user document exists)
-            user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayRemove(event_ref))
-                    .addOnSuccessListener(aVoid -> {
-                        Log.d("Firestore", "Event removed from user's JoinedEvents");
+            // Check if lottery has run and user was selected before allowing leave
+            event_ref.get()
+                    .addOnSuccessListener(eventDoc -> {
+                        if (eventDoc.exists()) {
+                            Date registrationCloseDate = eventDoc.getDate("registrationCloseDate");
+                            Date now = new Date();
+                            boolean isEventClosed = (registrationCloseDate != null && now.after(registrationCloseDate));
+                            
+                            List<String> selectedEntrantIds = (List<String>) eventDoc.get("selectedEntrantIds");
+                            boolean isSelected = (selectedEntrantIds != null && selectedEntrantIds.contains(userId));
+                            
+                            // Block leave if lottery has run and user was selected
+                            if (isEventClosed && isSelected) {
+                                Toast.makeText(requireContext(), "Cannot leave waitlist. The lottery has run and you were selected.", Toast.LENGTH_SHORT).show();
+                                dismiss();
+                                return;
+                            }
+                            
+                            // Remove user from waiting list
+                            event_ref.update("waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayRemove(userId))
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d("Firestore", "User removed from waiting list");
+                                    })
+                                    .addOnFailureListener(e -> Log.e("Firestore", "Error removing user from waiting list", e));
+                            
+                            // Remove from user's JoinedEvents (if user document exists)
+                            user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayRemove(event_ref))
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d("Firestore", "Event removed from user's JoinedEvents");
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        // It's okay if user document doesn't exist - that's expected for some users
+                                        Log.d("Firestore", "Could not remove from JoinedEvents (user doc may not exist): " + e.getMessage());
+                                    });
+
+                            Toast.makeText(requireContext(), "Left waiting list", Toast.LENGTH_SHORT).show();
+                            dismiss(); // close modal
+                            
+                            // Navigate back and refresh - the snapshot listener will pick up the changes
+                            if (getActivity() != null) {
+                                getActivity().finish();
+                            }
+                        }
                     })
                     .addOnFailureListener(e -> {
-                        // It's okay if user document doesn't exist - that's expected for some users
-                        Log.d("Firestore", "Could not remove from JoinedEvents (user doc may not exist): " + e.getMessage());
+                        Log.e("Firestore", "Error checking event status", e);
+                        Toast.makeText(requireContext(), "Error checking event status. Please try again.", Toast.LENGTH_SHORT).show();
+                        dismiss();
                     });
-
-            Toast.makeText(requireContext(), "Left waiting list", Toast.LENGTH_SHORT).show();
-            dismiss(); // close modal
-            
-            // Navigate back and refresh - the snapshot listener will pick up the changes
-            if (getActivity() != null) {
-                getActivity().finish();
-            }
         });
 
         cancelButton.setOnClickListener(v -> dismiss());

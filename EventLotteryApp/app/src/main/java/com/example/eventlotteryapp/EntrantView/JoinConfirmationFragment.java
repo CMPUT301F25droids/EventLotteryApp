@@ -30,6 +30,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Date;
 
 /**
  * <p>A fragment that shows a list of items as a modal bottom sheet.</p>
@@ -213,44 +214,65 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
         DocumentReference user_ref = db.collection("users").document(userId);
         DocumentReference event_ref = db.collection("Events").document(eventId);
         
-        // Add user to waiting list
-        event_ref.update("waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayUnion(userId))
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "User added to waiting list");
-                })
-                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waiting list", e));
-        
-        // Update user's joined events
-        user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "Events added to users joined events");
-                })
-                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+        // Check if event is closed before allowing join
+        event_ref.get()
+                .addOnSuccessListener(eventDoc -> {
+                    if (eventDoc.exists()) {
+                        Date registrationCloseDate = eventDoc.getDate("registrationCloseDate");
+                        Date now = new Date();
+                        boolean isEventClosed = (registrationCloseDate != null && now.after(registrationCloseDate));
+                        
+                        if (isEventClosed) {
+                            Toast.makeText(requireContext(), "Registration for this event is closed.", Toast.LENGTH_SHORT).show();
+                            dismiss();
+                            return;
+                        }
+                        
+                        // Add user to waiting list
+                        event_ref.update("waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayUnion(userId))
+                                .addOnSuccessListener(aVoid -> {
+                                    Log.d("Firestore", "User added to waiting list");
+                                })
+                                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waiting list", e));
+                        
+                        // Update user's joined events
+                        user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))
+                                .addOnSuccessListener(aVoid -> {
+                                    Log.d("Firestore", "Events added to users joined events");
+                                })
+                                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
 
-        // Store location if available
-        if (latitude != null && longitude != null) {
-            Map<String, Object> locationData = new HashMap<>();
-            locationData.put("latitude", latitude);
-            locationData.put("longitude", longitude);
-            locationData.put("timestamp", com.google.firebase.firestore.FieldValue.serverTimestamp());
-            
-            db.collection("Events").document(eventId)
-                .collection("joinLocations").document(userId)
-                .set(locationData)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "Location saved for user");
+                        // Store location if available
+                        if (latitude != null && longitude != null) {
+                            Map<String, Object> locationData = new HashMap<>();
+                            locationData.put("latitude", latitude);
+                            locationData.put("longitude", longitude);
+                            locationData.put("timestamp", com.google.firebase.firestore.FieldValue.serverTimestamp());
+                            
+                            db.collection("Events").document(eventId)
+                                .collection("joinLocations").document(userId)
+                                .set(locationData)
+                                .addOnSuccessListener(aVoid -> {
+                                    Log.d("Firestore", "Location saved for user");
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("Firestore", "Error saving location", e);
+                                });
+                        }
+
+                        // Handle join action
+                        Intent intent = new Intent(getContext(), EntrantHomePageActivity.class);
+                        intent.putExtra("open_tab", 1); // e.g. 0 = Home, 1 = MyEvents, 2 = Notifications
+                        startActivity(intent);
+
+                        dismiss(); // close modal
+                    }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("Firestore", "Error saving location", e);
+                    Log.e("Firestore", "Error checking event status", e);
+                    Toast.makeText(requireContext(), "Error checking event status. Please try again.", Toast.LENGTH_SHORT).show();
+                    dismiss();
                 });
-        }
-
-            // Handle join action
-            Intent intent = new Intent(getContext(), EntrantHomePageActivity.class);
-            intent.putExtra("open_tab", 1); // e.g. 0 = Home, 1 = MyEvents, 2 = Notifications
-            startActivity(intent);
-
-            dismiss(); // close modal
     }
 
 
