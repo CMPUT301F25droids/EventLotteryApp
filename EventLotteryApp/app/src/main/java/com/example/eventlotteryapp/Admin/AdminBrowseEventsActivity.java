@@ -26,6 +26,10 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Activity that allows the administrator to view all events
+ * and delete them if necessary.
+ */
 public class AdminBrowseEventsActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
@@ -36,6 +40,9 @@ public class AdminBrowseEventsActivity extends AppCompatActivity {
     private final FirebaseFirestore firestore = FirebaseFirestore.getInstance();
     private final CollectionReference eventsRef = firestore.collection("Events");
 
+    /**
+     * Sets up UI, recycler view, and loads events from Firestore.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,27 +56,29 @@ public class AdminBrowseEventsActivity extends AppCompatActivity {
         eventAdapter = new EventAdapter(new ArrayList<>());
         recyclerView.setAdapter(eventAdapter);
 
-        //When admin taps an event card, ask to delete it
         eventAdapter.setOnItemClickListener(this::showDeleteDialog);
 
         Button logoutBtn = findViewById(R.id.adminLogoutButton);
         logoutBtn.setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();
-            startActivity(new Intent(AdminBrowseEventsActivity.this, AuthActivity.class));
+            startActivity(new Intent(this, AuthActivity.class));
             finish();
         });
 
         loadAllEvents();
     }
 
+    /**
+     * Fetches all events ordered by creation date and displays them.
+     */
     private void loadAllEvents() {
         progressBar.setVisibility(View.VISIBLE);
         emptyView.setVisibility(View.GONE);
 
-        eventsRef
-                .orderBy("createdAt")
+        eventsRef.orderBy("createdAt")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
+
                     List<MyEventsFragment.EventWithId> events = new ArrayList<>();
 
                     for (QueryDocumentSnapshot doc : querySnapshot) {
@@ -86,7 +95,6 @@ public class AdminBrowseEventsActivity extends AppCompatActivity {
                         emptyView.setVisibility(View.VISIBLE);
                     } else {
                         emptyView.setVisibility(View.GONE);
-                        // just update existing adapter
                         eventAdapter.updateEvents(events);
                     }
                 })
@@ -97,7 +105,9 @@ public class AdminBrowseEventsActivity extends AppCompatActivity {
                 });
     }
 
-    // Ask admin to confirm deletion, then delete from Firestore
+    /**
+     * Shows a confirmation dialog before deleting an event.
+     */
     private void showDeleteDialog(String eventId) {
         new AlertDialog.Builder(this)
                 .setTitle("Remove event")
@@ -107,6 +117,9 @@ public class AdminBrowseEventsActivity extends AppCompatActivity {
                 .show();
     }
 
+    /**
+     * Deletes an event document from Firestore and refreshes the list.
+     */
     private void deleteEvent(String eventId) {
         progressBar.setVisibility(View.VISIBLE);
 
@@ -114,7 +127,7 @@ public class AdminBrowseEventsActivity extends AppCompatActivity {
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "Event removed", Toast.LENGTH_SHORT).show();
-                    loadAllEvents();   // refresh list
+                    loadAllEvents();
                 })
                 .addOnFailureListener(e -> {
                     progressBar.setVisibility(View.GONE);

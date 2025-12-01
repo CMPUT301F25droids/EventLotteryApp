@@ -17,12 +17,22 @@ import com.example.eventlotteryapp.R;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * RecyclerView adapter for displaying event images in the admin panel.
+ * Each card shows a thumbnail of an event image and a delete button.
+ */
 public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.ViewHolder> {
 
+    /**
+     * Callback interface used to notify when an image entry is clicked.
+     */
     public interface OnImageClick {
         void onClick(String eventId, String base64);
     }
 
+    /**
+     * Model class representing an event image stored in Firestore.
+     */
     public static class ImageItem {
         public String eventId;
         public String base64Image;
@@ -36,14 +46,27 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Vi
     private List<ImageItem> images = new ArrayList<>();
     private final OnImageClick clickListener;
 
+    /**
+     * Creates an adapter with the given image list and click callback.
+     */
     public AdminImageAdapter(List<ImageItem> images, OnImageClick listener) {
         this.images = new ArrayList<>(images);
         this.clickListener = listener;
     }
 
+    /**
+     * Wrapper around notifyDataSetChanged() so unit tests can override it.
+     */
+    protected void safeNotifyDataSetChanged() {
+        notifyDataSetChanged();
+    }
+
+    /**
+     * Updates the list of images displayed.
+     */
     public void updateImages(List<ImageItem> newImages) {
         this.images = new ArrayList<>(newImages);
-        notifyDataSetChanged();
+        safeNotifyDataSetChanged();
     }
 
     @NonNull
@@ -59,6 +82,7 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Vi
         ImageItem item = images.get(position);
 
         Bitmap bitmap = decodeBase64(item.base64Image);
+
         if (bitmap != null) {
             holder.image.setImageBitmap(bitmap);
         } else {
@@ -66,23 +90,24 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Vi
         }
 
         holder.deleteButton.setOnClickListener(v -> {
-            if (clickListener != null) {
-                clickListener.onClick(item.eventId, item.base64Image);
-            }
+            v.setPressed(false); // fixes ripple glitch
+            clickListener.onClick(item.eventId, item.base64Image);
         });
     }
-
-
 
     @Override
     public int getItemCount() {
         return images.size();
     }
 
+    /**
+     * Converts a Base64 string into a Bitmap for display.
+     */
     private Bitmap decodeBase64(String base64) {
         try {
             if (base64 == null || base64.trim().isEmpty()) return null;
 
+            // Remove prefix data:image/... if present
             if (base64.startsWith("data")) {
                 int commaIndex = base64.indexOf(",");
                 if (commaIndex != -1) {
@@ -99,6 +124,9 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Vi
         }
     }
 
+    /**
+     * ViewHolder representing one image entry in the list.
+     */
     static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView image;
         Button deleteButton;
@@ -110,3 +138,4 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Vi
         }
     }
 }
+

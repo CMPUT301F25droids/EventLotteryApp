@@ -19,6 +19,11 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Activity that allows administrators to browse, delete, and manage user profiles.
+ * This screen displays all users in a RecyclerView and provides options to delete
+ * profiles or ban users from organizer mode.
+ */
 public class AdminBrowseProfilesActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
@@ -26,9 +31,16 @@ public class AdminBrowseProfilesActivity extends AppCompatActivity {
     private TextView emptyView;
 
     private AdminProfileAdapter adapter;
+
     private final FirebaseFirestore firestore = FirebaseFirestore.getInstance();
     private final CollectionReference usersRef = firestore.collection("users");
 
+    /**
+     * Initializes UI components, sets up the RecyclerView adapter,
+     * and loads all profiles from Firestore.
+     *
+     * @param savedInstanceState Previous activity state, if any.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,37 +51,47 @@ public class AdminBrowseProfilesActivity extends AppCompatActivity {
         emptyView = findViewById(R.id.adminProfilesEmpty);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new AdminProfileAdapter(new ArrayList<>());
-        recyclerView.setAdapter(adapter);
 
-        // NEW: tap entire profile row to delete
-        adapter.setOnProfileClickListener(this::showDeleteDialog);
+        adapter = new AdminProfileAdapter(
+                new ArrayList<>(),
+                this::showDeleteDialog,
+                this::showBanDialog
+        );
+
+        recyclerView.setAdapter(adapter);
 
         loadProfiles();
     }
 
+    /**
+     * Loads all user profiles from Firestore and updates the RecyclerView.
+     * Displays a loading indicator while the data is being fetched.
+     */
     private void loadProfiles() {
         progressBar.setVisibility(View.VISIBLE);
         emptyView.setVisibility(View.GONE);
 
-        usersRef.get()
-                .addOnSuccessListener(querySnapshot -> {
+        usersRef.get().addOnSuccessListener(query -> {
 
                     List<AdminProfileAdapter.UserProfile> profiles = new ArrayList<>();
 
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                    for (QueryDocumentSnapshot doc : query) {
                         String id = doc.getId();
                         String name = doc.getString("name");
                         String email = doc.getString("email");
                         String role = doc.getString("role");
                         String phone = doc.getString("phone");
+                        Boolean banned = doc.getBoolean("organizerModeBanned");
+
+                        if (banned == null) banned = false;
 
                         profiles.add(new AdminProfileAdapter.UserProfile(
                                 id,
                                 name != null ? name : "(no name)",
                                 email != null ? email : "(no email)",
                                 role != null ? role : "entrant",
-                                phone != null ? phone : ""
+                                phone != null ? phone : "",
+                                banned
                         ));
                     }
 
@@ -90,17 +112,25 @@ public class AdminBrowseProfilesActivity extends AppCompatActivity {
                 });
     }
 
-    // Ask admin before deleting
-    private void showDeleteDialog(AdminProfileAdapter.UserProfile profile) {
+    /**
+     * Displays a confirmation dialog for deleting a user profile.
+     *
+     * @param user The user whose profile may be deleted.
+     */
+    private void showDeleteDialog(AdminProfileAdapter.UserProfile user) {
         new AlertDialog.Builder(this)
                 .setTitle("Delete Profile")
-                .setMessage("Are you sure you want to delete \"" + profile.name + "\"?")
-                .setPositiveButton("Delete", (dialog, which) -> deleteUser(profile.id))
+                .setMessage("Delete \"" + user.name + "\"?")
+                .setPositiveButton("Delete", (d, w) -> deleteUser(user.id))
                 .setNegativeButton("Cancel", null)
                 .show();
     }
 
-    // Delete from Firestore and refresh list
+    /**
+     * Deletes a user profile from Firestore.
+     *
+     * @param userId The ID of the user to delete.
+     */
     private void deleteUser(String userId) {
         usersRef.document(userId)
                 .delete()
@@ -112,4 +142,41 @@ public class AdminBrowseProfilesActivity extends AppCompatActivity {
                         Toast.makeText(this, "Failed to delete", Toast.LENGTH_SHORT).show()
                 );
     }
+
+    /**
+     * Shows a dialog allowing the admin to ban or unban organizer mode for the selected user.
+     *
+     * @param user The user whose organizer privileges may be changed.
+     */
+    private void showBanDialog(AdminProfileAdapter.UserProfile user) {
+        new AlertDialog.Builder(this)
+                .setTitle("Organizer Mode Control")
+                .setMessage("Ban or unban organizer mode?")
+                .setPositiveButton("Ban", (d, w) -> setOrganizerBan(user.id, true))
+                .setNegativeButton("Unban", (d, w) -> setOrganizerBan(user.id, false))
+                .setNeutralButton("Cancel", null)
+                .show();
+    }
+
+    /**
+     * Updates the user's organizer mode ban status in Firestore.
+     *
+     * @param userId The ID of the user.
+     * @param banned Whether organizer mode should be banned.
+     */
+    private void setOrganizerBan(String userId, boolean banned) {
+        firestore.collection("users")
+                .document(userId)
+                .update("organizerModeBanned", banned)
+                .addOnSuccessListener(a -> {
+                    Toast.makeText(this,
+                            banned ? "Organizer mode banned" : "Organizer mode unbanned",
+                            Toast.LENGTH_SHORT).show();
+                    loadProfiles();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+    }
+
 }

@@ -6,7 +6,6 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,6 +18,10 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Activity that lets the admin browse all event images
+ * and open a selected image for full view or deletion.
+ */
 public class AdminBrowseImagesActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
@@ -28,6 +31,9 @@ public class AdminBrowseImagesActivity extends AppCompatActivity {
     private final FirebaseFirestore firestore = FirebaseFirestore.getInstance();
     private final CollectionReference eventsRef = firestore.collection("Events");
 
+    /**
+     * Initializes UI components and loads all images from Firestore.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,6 +49,9 @@ public class AdminBrowseImagesActivity extends AppCompatActivity {
         loadImages();
     }
 
+    /**
+     * Retrieves all images from event documents and displays them.
+     */
     private void loadImages() {
         progressBar.setVisibility(View.VISIBLE);
 
@@ -67,18 +76,25 @@ public class AdminBrowseImagesActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Opens a single image in a dedicated screen for deletion.
+     */
     private void openImage(String eventId, String base64) {
         Intent intent = new Intent(this, AdminViewImageActivity.class);
         intent.putExtra("eventId", eventId);
         intent.putExtra("imageBase64", base64);
         startActivityForResult(intent, 10);
     }
+
+    /**
+     * Refreshes the list after an image is deleted.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == 10 && resultCode == RESULT_OK) {
-            loadImages(); // refresh list after deletion
+            loadImages();
         }
     }
 }

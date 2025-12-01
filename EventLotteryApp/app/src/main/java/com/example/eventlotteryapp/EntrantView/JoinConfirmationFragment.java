@@ -22,6 +22,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.databinding.FragmentJoinConfirmationListDialogBinding;
@@ -69,8 +70,30 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
         super.onViewCreated(view, savedInstanceState);
         Button joinButton = view.findViewById(R.id.confirm_join_button);
         Button cancelButton = view.findViewById(R.id.cancel_join_button);
+        TextView messageView = view.findViewById(R.id.join_confirm_message);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
+
+        // Fetch event name and update message dynamically
+        if (eventId != null) {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("Events").document(eventId)
+                .get()
+                .addOnSuccessListener(eventDoc -> {
+                    if (eventDoc.exists()) {
+                        String eventName = eventDoc.getString("Name");
+                        if (eventName != null && !eventName.isEmpty()) {
+                            String message = "You're about to join the waiting list for " + eventName + ". " +
+                                    "You'll be notified if you're selected in the lottery.\n\n" +
+                                    "You can leave the waiting list anytime before registration closes.";
+                            messageView.setText(message);
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error fetching event name", e);
+                });
+        }
 
         joinButton.setOnClickListener(v -> {
             // Check if event requires geolocation
