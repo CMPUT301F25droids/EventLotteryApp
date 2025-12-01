@@ -350,23 +350,27 @@ public class EntrantListActivity extends AppCompatActivity {
     }
     
     private void updateStatistics(DocumentSnapshot document) {
-        // Total Entrants (all entrants: waiting + selected + declined)
+        // Total Entrants (all entrants: waiting + selected + accepted + declined + cancelled)
         List<String> waitingList = (List<String>) document.get("waitingListEntrantIds");
         List<String> selectedList = (List<String>) document.get("selectedEntrantIds");
+        List<String> acceptedList = (List<String>) document.get("acceptedEntrantIds");
         List<String> cancelledList = (List<String>) document.get("cancelledEntrantIds");
+        List<String> declinedList = (List<String>) document.get("declinedEntrantIds");
         
         int waitingCount = (waitingList != null) ? waitingList.size() : 0;
         int selectedCount = (selectedList != null) ? selectedList.size() : 0;
+        int acceptedCount = (acceptedList != null) ? acceptedList.size() : 0;
         int cancelledCount = (cancelledList != null) ? cancelledList.size() : 0;
-        int totalEntrants = waitingCount + selectedCount + cancelledCount;
+        int declinedCount = (declinedList != null) ? declinedList.size() : 0;
+        int totalEntrants = waitingCount + selectedCount + acceptedCount + cancelledCount + declinedCount;
         
         totalEntrantsText.setText("Total Entrants: " + totalEntrants);
         
-        // Slots Available
+        // Slots Available - use acceptedEntrantIds as finalized count
         Long maxParticipantsLong = document.getLong("maxParticipants");
         int maxParticipants = (maxParticipantsLong != null) ? maxParticipantsLong.intValue() : 0;
         
-        int slotsAvailable = Math.max(0, maxParticipants - selectedCount);
+        int slotsAvailable = Math.max(0, maxParticipants - acceptedCount);
         slotsAvailableText.setText("Slots Available: " + slotsAvailable);
     }
     
@@ -376,7 +380,9 @@ public class EntrantListActivity extends AppCompatActivity {
             .addOnSuccessListener(document -> {
                 List<String> waitingListIds = (List<String>) document.get("waitingListEntrantIds");
                 List<String> selectedIds = (List<String>) document.get("selectedEntrantIds");
+                List<String> acceptedIds = (List<String>) document.get("acceptedEntrantIds");
                 List<String> cancelledIds = (List<String>) document.get("cancelledEntrantIds");
+                List<String> declinedIds = (List<String>) document.get("declinedEntrantIds");
                 
                 allEntrants.clear();
                 filteredEntrants.clear();
@@ -392,9 +398,17 @@ public class EntrantListActivity extends AppCompatActivity {
                     Log.d(TAG, "Selected list size: " + selectedIds.size());
                     allIdsSet.addAll(selectedIds);
                 }
+                if (acceptedIds != null) {
+                    Log.d(TAG, "Accepted list size: " + acceptedIds.size());
+                    allIdsSet.addAll(acceptedIds);
+                }
                 if (cancelledIds != null) {
                     Log.d(TAG, "Cancelled list size: " + cancelledIds.size());
                     allIdsSet.addAll(cancelledIds);
+                }
+                if (declinedIds != null) {
+                    Log.d(TAG, "Declined list size: " + declinedIds.size());
+                    allIdsSet.addAll(declinedIds);
                 }
                 
                 Log.d(TAG, "Total unique IDs after deduplication: " + allIdsSet.size());
@@ -419,12 +433,16 @@ public class EntrantListActivity extends AppCompatActivity {
                         continue;
                     }
                     
-                    // Determine status
+                    // Determine status - check accepted first, then selected, then others
                     String status = "pending";
-                    if (selectedIds != null && selectedIds.contains(entrantId)) {
+                    if (acceptedIds != null && acceptedIds.contains(entrantId)) {
+                        status = "selected"; // Accepted users show as "selected" in the waiting list view
+                    } else if (selectedIds != null && selectedIds.contains(entrantId)) {
                         status = "selected";
-                    } else if (cancelledIds != null && cancelledIds.contains(entrantId)) {
+                    } else if (declinedIds != null && declinedIds.contains(entrantId)) {
                         status = "declined";
+                    } else if (cancelledIds != null && cancelledIds.contains(entrantId)) {
+                        status = "declined"; // Cancelled also shows as declined
                     }
                     
                     final String finalStatus = status;

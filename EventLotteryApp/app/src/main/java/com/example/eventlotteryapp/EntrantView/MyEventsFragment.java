@@ -386,7 +386,7 @@ public class MyEventsFragment extends Fragment {
 
         Log.d(TAG, "Lists cleared. Starting queries...");
 
-        final int totalQueries = 4; // JoinedEvents + 3 waitlist queries
+        final int totalQueries = 6; // JoinedEvents + 5 waitlist queries (waitingList, selected, accepted, declined, cancelled)
 
         // Helper to check if all queries and status loads are done
         java.util.function.Consumer<Void> checkAllDone = (v) -> {
@@ -530,6 +530,12 @@ public class MyEventsFragment extends Fragment {
         // Query for events where user is in selectedEntrantIds
         queryEventsWhere("selectedEntrantIds", loadEvent, checkAllDone);
 
+        // Query for events where user is in acceptedEntrantIds (accepted invitations)
+        queryEventsWhere("acceptedEntrantIds", loadEvent, checkAllDone);
+
+        // Query for events where user is in declinedEntrantIds (declined invitations)
+        queryEventsWhere("declinedEntrantIds", loadEvent, checkAllDone);
+
         // Query for events where user is in cancelledEntrantIds
         queryEventsWhere("cancelledEntrantIds", loadEvent, checkAllDone);
     }
@@ -627,25 +633,42 @@ public class MyEventsFragment extends Fragment {
      */
     private static MyEventItem.Status determineStatus(DocumentSnapshot eventDoc, String userId) {
         List<String> selectedEntrants = (List<String>) eventDoc.get("selectedEntrantIds");
+        List<String> acceptedEntrants = (List<String>) eventDoc.get("acceptedEntrantIds");
+        List<String> declinedEntrants = (List<String>) eventDoc.get("declinedEntrantIds");
         List<String> cancelledEntrants = (List<String>) eventDoc.get("cancelledEntrantIds");
         List<String> waitingListEntrants = (List<String>) eventDoc.get("waitingListEntrantIds");
 
+        // Check accepted first - user has accepted invitation (should show as SELECTED/Accepted)
+        if (acceptedEntrants != null && acceptedEntrants.contains(userId)) {
+            return MyEventItem.Status.SELECTED;
+        }
+
+        // Check selected - user is selected but hasn't responded yet
         if (selectedEntrants != null && selectedEntrants.contains(userId)) {
             return MyEventItem.Status.SELECTED;
         }
 
+        // Check declined - user has declined invitation (should show as NOT_SELECTED)
+        if (declinedEntrants != null && declinedEntrants.contains(userId)) {
+            return MyEventItem.Status.NOT_SELECTED;
+        }
+
+        // Check cancelled - user cancelled their registration
         if (cancelledEntrants != null && cancelledEntrants.contains(userId)) {
             return MyEventItem.Status.NOT_SELECTED;
         }
 
+        // Check waiting list
         if (waitingListEntrants != null && waitingListEntrants.contains(userId)) {
-            // Check if lottery has run (registration closed) and user was not selected
+            // Check if lottery has run (registration closed) and user was not selected/accepted
             java.util.Date registrationCloseDate = eventDoc.getDate("registrationCloseDate");
             java.util.Date now = new java.util.Date();
             boolean lotteryHasRun = (registrationCloseDate != null && now.after(registrationCloseDate));
             
-            // If lottery has run and user is still in waiting list but not selected, they were rejected
-            if (lotteryHasRun && (selectedEntrants == null || !selectedEntrants.contains(userId))) {
+            // If lottery has run and user is still in waiting list but not selected/accepted, they were rejected
+            if (lotteryHasRun && 
+                (selectedEntrants == null || !selectedEntrants.contains(userId)) &&
+                (acceptedEntrants == null || !acceptedEntrants.contains(userId))) {
                 return MyEventItem.Status.NOT_SELECTED;
             }
             

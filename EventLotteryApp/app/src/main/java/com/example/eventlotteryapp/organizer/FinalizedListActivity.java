@@ -244,19 +244,25 @@ public class FinalizedListActivity extends AppCompatActivity {
     }
 
     private void loadParticipants(DocumentSnapshot document) {
+        // Get acceptedEntrantIds (users who accepted invitation) - this is the finalized list
+        List<String> acceptedIds = (List<String>) document.get("acceptedEntrantIds");
+        // Also check selectedEntrantIds for users who were selected but haven't responded yet
         List<String> selectedIds = (List<String>) document.get("selectedEntrantIds");
         List<String> cancelledIds = (List<String>) document.get("cancelledEntrantIds");
         List<String> declinedIds = (List<String>) document.get("declinedEntrantIds");
 
+        if (acceptedIds == null) acceptedIds = new ArrayList<>();
         if (selectedIds == null) selectedIds = new ArrayList<>();
         if (cancelledIds == null) cancelledIds = new ArrayList<>();
         if (declinedIds == null) declinedIds = new ArrayList<>();
 
         // Remove duplicates from each list while preserving order
+        Set<String> acceptedSet = new LinkedHashSet<>(acceptedIds);
         Set<String> selectedSet = new LinkedHashSet<>(selectedIds);
         Set<String> cancelledSet = new LinkedHashSet<>(cancelledIds);
         Set<String> declinedSet = new LinkedHashSet<>(declinedIds);
         
+        acceptedIds = new ArrayList<>(acceptedSet);
         selectedIds = new ArrayList<>(selectedSet);
         cancelledIds = new ArrayList<>(cancelledSet);
         declinedIds = new ArrayList<>(declinedSet);
@@ -264,19 +270,20 @@ public class FinalizedListActivity extends AppCompatActivity {
         allParticipants.clear();
 
         // Count totals (using deduplicated lists)
-        int totalSelected = selectedIds.size();
+        // Accepted users are the finalized attendees
+        int totalAccepted = acceptedIds.size();
         int totalCancelled = cancelledIds.size();
         int totalDeclined = declinedIds.size();
         Long maxParticipants = document.getLong("maxParticipants");
         int max = (maxParticipants != null) ? maxParticipants.intValue() : 0;
 
-        totalAttendeesText.setText("Total Attendees: " + totalSelected + "/" + max);
+        totalAttendeesText.setText("Total Attendees: " + totalAccepted + "/" + max);
         cancelledCountText.setText("Cancelled: " + totalCancelled);
         declinedCountText.setText("Declined: " + totalDeclined);
 
         // Load all participants
         final int[] loaded = {0};
-        final int total = selectedIds.size() + cancelledIds.size() + declinedIds.size();
+        final int total = acceptedIds.size() + selectedIds.size() + cancelledIds.size() + declinedIds.size();
 
         if (total == 0) {
             adapter.notifyDataSetChanged();
@@ -286,7 +293,16 @@ public class FinalizedListActivity extends AppCompatActivity {
         // Track loaded entrant IDs to prevent duplicates across different statuses
         Set<String> loadedEntrantIds = new LinkedHashSet<>();
 
-        // Load selected (accepted) participants
+        // Load accepted participants (users who accepted invitation) - these are the finalized attendees
+        for (String entrantId : acceptedIds) {
+            if (!loadedEntrantIds.contains(entrantId)) {
+                loadedEntrantIds.add(entrantId);
+                loadParticipant(entrantId, "accepted", loaded, total);
+            }
+        }
+
+        // Load selected participants (users who were selected but haven't responded yet)
+        // These should also show as "accepted" in the UI since they're pending acceptance
         for (String entrantId : selectedIds) {
             if (!loadedEntrantIds.contains(entrantId)) {
                 loadedEntrantIds.add(entrantId);
@@ -438,8 +454,20 @@ public class FinalizedListActivity extends AppCompatActivity {
         firestore.collection("Events").document(eventId)
                 .get()
                 .addOnSuccessListener(document -> {
+                    // Export accepted entrants (finalized list) and selected entrants (pending acceptance)
+                    List<String> acceptedIds = (List<String>) document.get("acceptedEntrantIds");
                     List<String> selectedIds = (List<String>) document.get("selectedEntrantIds");
-                    if (selectedIds == null || selectedIds.isEmpty()) {
+                    
+                    if (acceptedIds == null) acceptedIds = new ArrayList<>();
+                    if (selectedIds == null) selectedIds = new ArrayList<>();
+                    
+                    // Combine accepted and selected (remove duplicates)
+                    Set<String> allFinalizedIds = new LinkedHashSet<>();
+                    allFinalizedIds.addAll(acceptedIds);
+                    allFinalizedIds.addAll(selectedIds);
+                    List<String> finalizedIds = new ArrayList<>(allFinalizedIds);
+                    
+                    if (finalizedIds.isEmpty()) {
                         Toast.makeText(this, "No finalized entrants to export", Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -453,7 +481,7 @@ public class FinalizedListActivity extends AppCompatActivity {
                     List<Entrant> entrants = new ArrayList<>();
                     final int[] loaded = {0};
 
-                    for (String entrantId : selectedIds) {
+                    for (String entrantId : finalizedIds) {
                         firestore.collection("users").document(entrantId)
                                 .get()
                                 .addOnSuccessListener(userDoc -> {
@@ -465,14 +493,14 @@ public class FinalizedListActivity extends AppCompatActivity {
                                     }
 
                                     loaded[0]++;
-                                    if (loaded[0] == selectedIds.size()) {
+                                    if (loaded[0] == finalizedIds.size()) {
                                         csvExportController.exportFinalListToCSV(this, eventTitle, entrants);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
                                     Log.e(TAG, "Error loading entrant: " + entrantId, e);
                                     loaded[0]++;
-                                    if (loaded[0] == selectedIds.size()) {
+                                    if (loaded[0] == finalizedIds.size()) {
                                         csvExportController.exportFinalListToCSV(this, eventTitle, entrants);
                                     }
                                 });
