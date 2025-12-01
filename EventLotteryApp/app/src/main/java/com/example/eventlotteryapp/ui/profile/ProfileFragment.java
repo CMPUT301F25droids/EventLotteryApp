@@ -21,6 +21,9 @@ import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.databinding.FragmentProfileBinding;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class ProfileFragment extends Fragment {
@@ -269,6 +272,9 @@ public class ProfileFragment extends Fragment {
             .addOnSuccessListener(aVoid -> {
                 auth.getCurrentUser().delete()
                     .addOnSuccessListener(aVoid1 -> {
+                        deleteEventsOwnedByOrganizer(uid);
+                        cleanEntrantFromAllEvents(uid);
+
                         Toast.makeText(getContext(), "Account deleted", Toast.LENGTH_SHORT).show();
                         // Navigate to login
                         Intent intent = new Intent(requireActivity(), AuthActivity.class);
@@ -282,6 +288,7 @@ public class ProfileFragment extends Fragment {
             .addOnFailureListener(e -> {
                 Toast.makeText(getContext(), "Error deleting account: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
+
     }
 
     private boolean validateName(String name) {
@@ -316,5 +323,31 @@ public class ProfileFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
+    private void cleanEntrantFromAllEvents(String uid) {
+        firestore.collection("Events").get()
+                .addOnSuccessListener(query -> {
+                    for (DocumentSnapshot event : query.getDocuments()) {
+                        event.getReference().update(
+                                "waitingListEntrantIds", FieldValue.arrayRemove(uid),
+                                "selectedEntrantIds", FieldValue.arrayRemove(uid),
+                                "cancelledEntrantIds", FieldValue.arrayRemove(uid)
+                        );
+                    }
+                });
+    }
+    private void deleteEventsOwnedByOrganizer(String organizerUid) {
+        DocumentReference organizerRef = firestore.collection("users").document(organizerUid);
+
+        firestore.collection("Events")
+                .whereEqualTo("Organizer", organizerRef)
+                .get()
+                .addOnSuccessListener(query -> {
+                    for (DocumentSnapshot event : query.getDocuments()) {
+                        event.getReference().delete();
+                    }
+                });
+    }
+
+
 
 }
