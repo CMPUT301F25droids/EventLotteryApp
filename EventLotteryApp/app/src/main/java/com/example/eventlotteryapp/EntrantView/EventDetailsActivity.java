@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.example.eventlotteryapp.Controllers.LotteryController;
 import com.example.eventlotteryapp.R;
@@ -341,6 +342,18 @@ public class EventDetailsActivity extends AppCompatActivity {
                                     join_button.setVisibility(Button.VISIBLE);
                                     // Disable button if registration hasn't opened yet
                                     join_button.setEnabled(isRegistrationOpen);
+                                    // Update button text and background color based on registration status
+                                    if (!isRegistrationOpen) {
+                                        join_button.setText("Registration is not open");
+                                        // Set button background to grey when registration is not open
+                                        join_button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                                                ContextCompat.getColor(this, R.color.medium_grey)));
+                                    } else {
+                                        join_button.setText("Join Waiting List");
+                                        // Set button background to purple when registration is open
+                                        join_button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                                                ContextCompat.getColor(this, R.color.selected_tab_color)));
+                                    }
                                 }
                             }
                             leave_button.setVisibility(Button.GONE);
@@ -544,7 +557,10 @@ public class EventDetailsActivity extends AppCompatActivity {
         } else {
             // User not in waiting list - show normal registration info
             if (registrationOpenDate != null && now.before(registrationOpenDate)) {
-                registrationInfo.setText("Registration is not open");
+                // Show days until registration opens
+                long diffInMillis = registrationOpenDate.getTime() - now.getTime();
+                long daysRemaining = diffInMillis / (1000 * 60 * 60 * 24);
+                registrationInfo.setText(daysRemaining + " day" + (daysRemaining != 1 ? "s" : "") + " until registration opens");
             } else if (registrationCloseDate != null) {
                 registrationInfo.setText("Registration closes " + dateFormat.format(registrationCloseDate));
             } else {
