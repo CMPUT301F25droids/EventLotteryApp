@@ -1,0 +1,747 @@
+Index: app/src/main/java/com/example/eventlotteryapp/Admin/AdminBrowseEventsActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.eventlotteryapp.Admin;\n\nimport android.app.AlertDialog;\nimport android.content.Intent;\nimport android.os.Bundle;\nimport android.view.View;\nimport android.widget.Button;\nimport android.widget.ProgressBar;\nimport android.widget.TextView;\nimport android.widget.Toast;\n\nimport androidx.appcompat.app.AppCompatActivity;\nimport androidx.recyclerview.widget.LinearLayoutManager;\nimport androidx.recyclerview.widget.RecyclerView;\n\nimport com.example.eventlotteryapp.Authorization.AuthActivity;\nimport com.example.eventlotteryapp.R;\nimport com.example.eventlotteryapp.data.Event;\nimport com.example.eventlotteryapp.organizer.EventAdapter;\nimport com.example.eventlotteryapp.organizer.MyEventsFragment;\nimport com.google.firebase.auth.FirebaseAuth;\nimport com.google.firebase.firestore.CollectionReference;\nimport com.google.firebase.firestore.FirebaseFirestore;\nimport com.google.firebase.firestore.QueryDocumentSnapshot;\n\nimport java.util.ArrayList;\nimport java.util.List;\n\npublic class AdminBrowseEventsActivity extends AppCompatActivity {\n\n    private RecyclerView recyclerView;\n    private ProgressBar progressBar;\n    private TextView emptyView;\n\n    private EventAdapter eventAdapter;\n    private final FirebaseFirestore firestore = FirebaseFirestore.getInstance();\n    private final CollectionReference eventsRef = firestore.collection(\"Events\");\n\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        setContentView(R.layout.activity_admin_browse_events);\n\n        recyclerView = findViewById(R.id.recyclerAdminEvents);\n        progressBar = findViewById(R.id.adminEventsProgress);\n        emptyView = findViewById(R.id.adminEventsEmpty);\n\n        recyclerView.setLayoutManager(new LinearLayoutManager(this));\n        eventAdapter = new EventAdapter(new ArrayList<>());\n        recyclerView.setAdapter(eventAdapter);\n\n        // \uD83D\uDD39 When admin taps an event card, ask to delete it\n        eventAdapter.setOnItemClickListener(this::showDeleteDialog);\n\n        Button logoutBtn = findViewById(R.id.adminLogoutButton);\n        logoutBtn.setOnClickListener(v -> {\n            FirebaseAuth.getInstance().signOut();\n            startActivity(new Intent(AdminBrowseEventsActivity.this, AuthActivity.class));\n            finish();\n        });\n\n        loadAllEvents();\n    }\n\n    private void loadAllEvents() {\n        progressBar.setVisibility(View.VISIBLE);\n        emptyView.setVisibility(View.GONE);\n\n        eventsRef\n                .orderBy(\"createdAt\")\n                .get()\n                .addOnSuccessListener(querySnapshot -> {\n                    List<MyEventsFragment.EventWithId> events = new ArrayList<>();\n\n                    for (QueryDocumentSnapshot doc : querySnapshot) {\n                        // Manually deserialize Event from document snapshot\n                        // (Java records don't work with Firestore's toObject())\n                        String title = doc.getString(\"title\");\n                        if (title == null) {\n                            title = doc.getString(\"Name\"); // Fallback to old field name\n                        }\n                        String description = doc.getString(\"description\");\n                        String location = doc.getString(\"location\");\n                        Double price = doc.getDouble(\"price\");\n                        if (price == null) {\n                            String costStr = doc.getString(\"Cost\");\n                            if (costStr != null && costStr.startsWith(\"$\")) {\n                                try {\n                                    price = Double.parseDouble(costStr.substring(1));\n                                } catch (NumberFormatException e) {\n                                    price = 0.0;\n                                }\n                            } else {\n                                price = 0.0;\n                            }\n                        }\n                        java.util.Date eventStartDate = doc.getDate(\"eventStartDate\");\n                        java.util.Date eventEndDate = doc.getDate(\"eventEndDate\");\n                        java.util.Date registrationOpenDate = doc.getDate(\"registrationOpenDate\");\n                        java.util.Date registrationCloseDate = doc.getDate(\"registrationCloseDate\");\n                        Long maxParticipantsLong = doc.getLong(\"maxParticipants\");\n                        int maxParticipants = maxParticipantsLong != null ? maxParticipantsLong.intValue() : 0;\n                        String organizerId = doc.getString(\"organizerId\");\n                        if (organizerId == null) {\n                            com.google.firebase.firestore.DocumentReference organizerRef = doc.getDocumentReference(\"Organizer\");\n                            if (organizerRef != null) {\n                                organizerId = organizerRef.getId();\n                            }\n                        }\n                        java.util.Date createdAt = doc.getDate(\"createdAt\");\n                        \n                        // Create Event object manually\n                        Event event = new Event(\n                            title != null ? title : \"\",\n                            description != null ? description : \"\",\n                            location != null ? location : \"\",\n                            price != null ? price : 0.0,\n                            eventStartDate,\n                            eventEndDate,\n                            registrationOpenDate,\n                            registrationCloseDate,\n                            maxParticipants,\n                            organizerId != null ? organizerId : \"\",\n                            createdAt\n                        );\n                        \n                        events.add(new MyEventsFragment.EventWithId(doc.getId(), event));\n                    }\n\n                    progressBar.setVisibility(View.GONE);\n\n                    if (events.isEmpty()) {\n                        emptyView.setText(\"No events found\");\n                        emptyView.setVisibility(View.VISIBLE);\n                    } else {\n                        emptyView.setVisibility(View.GONE);\n                        // just update existing adapter\n                        eventAdapter.updateEvents(events);\n                    }\n                })\n                .addOnFailureListener(e -> {\n                    progressBar.setVisibility(View.GONE);\n                    emptyView.setText(\"Error loading events\");\n                    emptyView.setVisibility(View.VISIBLE);\n                });\n    }\n\n    // \uD83D\uDD39 Ask admin to confirm deletion, then delete from Firestore\n    private void showDeleteDialog(String eventId) {\n        new AlertDialog.Builder(this)\n                .setTitle(\"Remove event\")\n                .setMessage(\"Are you sure you want to permanently delete this event?\")\n                .setPositiveButton(\"Delete\", (dialog, which) -> deleteEvent(eventId))\n                .setNegativeButton(\"Cancel\", null)\n                .show();\n    }\n\n    private void deleteEvent(String eventId) {\n        progressBar.setVisibility(View.VISIBLE);\n\n        eventsRef.document(eventId)\n                .delete()\n                .addOnSuccessListener(aVoid -> {\n                    Toast.makeText(this, \"Event removed\", Toast.LENGTH_SHORT).show();\n                    loadAllEvents();   // refresh list\n                })\n                .addOnFailureListener(e -> {\n                    progressBar.setVisibility(View.GONE);\n                    Toast.makeText(this, \"Failed to remove event: \" + e.getMessage(),\n                            Toast.LENGTH_LONG).show();\n                });\n    }\n}
+===================================================================
+diff --git a/app/src/main/java/com/example/eventlotteryapp/Admin/AdminBrowseEventsActivity.java b/app/src/main/java/com/example/eventlotteryapp/Admin/AdminBrowseEventsActivity.java
+--- a/app/src/main/java/com/example/eventlotteryapp/Admin/AdminBrowseEventsActivity.java	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/java/com/example/eventlotteryapp/Admin/AdminBrowseEventsActivity.java	(date 1764397461632)
+@@ -73,58 +73,10 @@
+                     List<MyEventsFragment.EventWithId> events = new ArrayList<>();
+ 
+                     for (QueryDocumentSnapshot doc : querySnapshot) {
+-                        // Manually deserialize Event from document snapshot
+-                        // (Java records don't work with Firestore's toObject())
+-                        String title = doc.getString("title");
+-                        if (title == null) {
+-                            title = doc.getString("Name"); // Fallback to old field name
+-                        }
+-                        String description = doc.getString("description");
+-                        String location = doc.getString("location");
+-                        Double price = doc.getDouble("price");
+-                        if (price == null) {
+-                            String costStr = doc.getString("Cost");
+-                            if (costStr != null && costStr.startsWith("$")) {
+-                                try {
+-                                    price = Double.parseDouble(costStr.substring(1));
+-                                } catch (NumberFormatException e) {
+-                                    price = 0.0;
+-                                }
+-                            } else {
+-                                price = 0.0;
+-                            }
+-                        }
+-                        java.util.Date eventStartDate = doc.getDate("eventStartDate");
+-                        java.util.Date eventEndDate = doc.getDate("eventEndDate");
+-                        java.util.Date registrationOpenDate = doc.getDate("registrationOpenDate");
+-                        java.util.Date registrationCloseDate = doc.getDate("registrationCloseDate");
+-                        Long maxParticipantsLong = doc.getLong("maxParticipants");
+-                        int maxParticipants = maxParticipantsLong != null ? maxParticipantsLong.intValue() : 0;
+-                        String organizerId = doc.getString("organizerId");
+-                        if (organizerId == null) {
+-                            com.google.firebase.firestore.DocumentReference organizerRef = doc.getDocumentReference("Organizer");
+-                            if (organizerRef != null) {
+-                                organizerId = organizerRef.getId();
+-                            }
+-                        }
+-                        java.util.Date createdAt = doc.getDate("createdAt");
+-                        
+-                        // Create Event object manually
+-                        Event event = new Event(
+-                            title != null ? title : "",
+-                            description != null ? description : "",
+-                            location != null ? location : "",
+-                            price != null ? price : 0.0,
+-                            eventStartDate,
+-                            eventEndDate,
+-                            registrationOpenDate,
+-                            registrationCloseDate,
+-                            maxParticipants,
+-                            organizerId != null ? organizerId : "",
+-                            createdAt
+-                        );
+-                        
+-                        events.add(new MyEventsFragment.EventWithId(doc.getId(), event));
++                        Event event = doc.toObject(Event.class);
++                        if (event != null) {
++                            events.add(new MyEventsFragment.EventWithId(doc.getId(), event));
++                        }
+                     }
+ 
+                     progressBar.setVisibility(View.GONE);
+Index: app/src/main/res/layout/activity_admin_browse_events.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<androidx.constraintlayout.widget.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:background=\"@color/white\">\n\n    <!-- Logout Button -->\n    <Button\n        android:id=\"@+id/adminLogoutButton\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"Logout\"\n        android:layout_margin=\"16dp\"\n        app:layout_constraintTop_toTopOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\" />\n\n    <!-- Progress Bar -->\n    <ProgressBar\n        android:id=\"@+id/adminEventsProgress\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:visibility=\"gone\"\n        app:layout_constraintTop_toTopOf=\"parent\"\n        app:layout_constraintBottom_toBottomOf=\"parent\"\n        app:layout_constraintStart_toStartOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\" />\n\n    <!-- Empty View -->\n    <TextView\n        android:id=\"@+id/adminEventsEmpty\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"No events found\"\n        android:visibility=\"gone\"\n        android:textSize=\"16sp\"\n        android:textColor=\"@color/black\"\n        app:layout_constraintTop_toTopOf=\"parent\"\n        app:layout_constraintBottom_toBottomOf=\"parent\"\n        app:layout_constraintStart_toStartOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\" />\n\n    <!-- RecyclerView -->\n    <androidx.recyclerview.widget.RecyclerView\n        android:id=\"@+id/recyclerAdminEvents\"\n        android:layout_width=\"0dp\"\n        android:layout_height=\"0dp\"\n        android:padding=\"8dp\"\n        app:layout_constraintTop_toBottomOf=\"@id/adminLogoutButton\"\n        app:layout_constraintBottom_toBottomOf=\"parent\"\n        app:layout_constraintStart_toStartOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\" />\n\n</androidx.constraintlayout.widget.ConstraintLayout>\n
+===================================================================
+diff --git a/app/src/main/res/layout/activity_admin_browse_events.xml b/app/src/main/res/layout/activity_admin_browse_events.xml
+--- a/app/src/main/res/layout/activity_admin_browse_events.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/res/layout/activity_admin_browse_events.xml	(date 1764462481171)
+@@ -1,54 +1,52 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
+     android:layout_width="match_parent"
+     android:layout_height="match_parent"
+-    android:background="@color/white">
++    android:padding="16dp">
+ 
+-    <!-- Logout Button -->
+     <Button
+         android:id="@+id/adminLogoutButton"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="Logout"
+-        android:layout_margin="16dp"
+-        app:layout_constraintTop_toTopOf="parent"
+-        app:layout_constraintEnd_toEndOf="parent" />
++        android:layout_marginEnd="16dp"
++        android:layout_marginTop="16dp"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintTop_toTopOf="parent" />
+ 
+-    <!-- Progress Bar -->
++    <androidx.recyclerview.widget.RecyclerView
++        android:id="@+id/recyclerAdminEvents"
++        android:layout_width="0dp"
++        android:layout_height="0dp"
++        android:layout_marginTop="16dp"
++        app:layout_constraintBottom_toBottomOf="parent"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toBottomOf="@id/adminLogoutButton"
++        tools:listitem="@layout/item_event_card" />
++
+     <ProgressBar
+         android:id="@+id/adminEventsProgress"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:visibility="gone"
+-        app:layout_constraintTop_toTopOf="parent"
+         app:layout_constraintBottom_toBottomOf="parent"
++        app:layout_constraintEnd_toEndOf="parent"
+         app:layout_constraintStart_toStartOf="parent"
+-        app:layout_constraintEnd_toEndOf="parent" />
++        app:layout_constraintTop_toTopOf="parent" />
+ 
+-    <!-- Empty View -->
+     <TextView
+         android:id="@+id/adminEventsEmpty"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:text="No events found"
+-        android:visibility="gone"
+         android:textSize="16sp"
+-        android:textColor="@color/black"
+-        app:layout_constraintTop_toTopOf="parent"
+-        app:layout_constraintBottom_toBottomOf="parent"
+-        app:layout_constraintStart_toStartOf="parent"
+-        app:layout_constraintEnd_toEndOf="parent" />
+-
+-    <!-- RecyclerView -->
+-    <androidx.recyclerview.widget.RecyclerView
+-        android:id="@+id/recyclerAdminEvents"
+-        android:layout_width="0dp"
+-        android:layout_height="0dp"
+-        android:padding="8dp"
+-        app:layout_constraintTop_toBottomOf="@id/adminLogoutButton"
++        android:visibility="gone"
+         app:layout_constraintBottom_toBottomOf="parent"
++        app:layout_constraintEnd_toEndOf="parent"
+         app:layout_constraintStart_toStartOf="parent"
+-        app:layout_constraintEnd_toEndOf="parent" />
++        app:layout_constraintTop_toTopOf="parent" />
+ 
+ </androidx.constraintlayout.widget.ConstraintLayout>
+Index: app/src/main/res/layout/myevent_item.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<androidx.cardview.widget.CardView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n    xmlns:tools=\"http://schemas.android.com/tools\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:layout_marginStart=\"16dp\"\n    android:layout_marginEnd=\"16dp\"\n    android:layout_marginTop=\"8dp\"\n    android:layout_marginBottom=\"8dp\"\n    android:clickable=\"true\"\n    android:focusable=\"true\"\n    android:foreground=\"?attr/selectableItemBackground\"\n    app:cardCornerRadius=\"0dp\"\n    app:cardElevation=\"0dp\"\n    app:cardBackgroundColor=\"@color/white\">\n\n    <androidx.constraintlayout.widget.ConstraintLayout\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\">\n\n        <!-- Event Image Container with rounded corners -->\n        <androidx.cardview.widget.CardView\n            android:id=\"@+id/image_container\"\n            android:layout_width=\"0dp\"\n            android:layout_height=\"0dp\"\n            app:cardCornerRadius=\"12dp\"\n            app:cardElevation=\"0dp\"\n            app:layout_constraintDimensionRatio=\"1:1\"\n            app:layout_constraintTop_toTopOf=\"parent\"\n            app:layout_constraintStart_toStartOf=\"parent\"\n            app:layout_constraintEnd_toEndOf=\"parent\">\n\n            <ImageView\n                android:id=\"@+id/event_poster\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"match_parent\"\n                android:scaleType=\"centerCrop\"\n                tools:srcCompat=\"@tools:sample/avatars\" />\n        </androidx.cardview.widget.CardView>\n\n        <!-- Top gradient overlay for status tag -->\n        <View\n            android:id=\"@+id/top_gradient\"\n            android:layout_width=\"0dp\"\n            android:layout_height=\"88dp\"\n            android:background=\"@drawable/gradient_top_overlay_rounded\"\n            app:layout_constraintTop_toTopOf=\"@+id/image_container\"\n            app:layout_constraintStart_toStartOf=\"@+id/image_container\"\n            app:layout_constraintEnd_toEndOf=\"@+id/image_container\" />\n\n        <!-- Status Tag -->\n        <TextView\n            android:id=\"@+id/event_status\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"28dp\"\n            android:layout_marginStart=\"16dp\"\n            android:layout_marginTop=\"16dp\"\n            android:background=\"@drawable/status_tag_background\"\n            android:backgroundTint=\"@color/selected_tab_color\"\n            android:paddingStart=\"12dp\"\n            android:paddingEnd=\"12dp\"\n            android:gravity=\"center_vertical\"\n            android:text=\"\uD83D\uDFE2 Accepted\"\n            android:textColor=\"@color/white\"\n            android:textSize=\"13sp\"\n            android:textStyle=\"bold\"\n            android:fontFamily=\"sans-serif-medium\"\n            app:layout_constraintTop_toTopOf=\"@+id/image_container\"\n            app:layout_constraintStart_toStartOf=\"@+id/image_container\" />\n\n        <!-- Bottom gradient overlay for page indicators -->\n        <View\n            android:id=\"@+id/bottom_gradient\"\n            android:layout_width=\"0dp\"\n            android:layout_height=\"56dp\"\n            android:background=\"@drawable/gradient_bottom_overlay\"\n            app:layout_constraintBottom_toBottomOf=\"@+id/image_container\"\n            app:layout_constraintStart_toStartOf=\"@+id/image_container\"\n            app:layout_constraintEnd_toEndOf=\"@+id/image_container\" />\n\n        <!-- Page Indicators (dots) -->\n        <LinearLayout\n            android:id=\"@+id/page_indicators\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:gravity=\"center\"\n            android:layout_marginEnd=\"16dp\"\n            android:layout_marginBottom=\"16dp\"\n            app:layout_constraintBottom_toBottomOf=\"@+id/image_container\"\n            app:layout_constraintEnd_toEndOf=\"@+id/image_container\" />\n\n        <!-- Information Section -->\n        <LinearLayout\n            android:id=\"@+id/information_section\"\n            android:layout_width=\"0dp\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"vertical\"\n            android:paddingStart=\"0dp\"\n            android:paddingEnd=\"0dp\"\n            android:paddingTop=\"16dp\"\n            android:paddingBottom=\"16dp\"\n            app:layout_constraintTop_toBottomOf=\"@+id/image_container\"\n            app:layout_constraintStart_toStartOf=\"parent\"\n            app:layout_constraintEnd_toEndOf=\"parent\"\n            app:layout_constraintBottom_toBottomOf=\"parent\">\n\n            <!-- Event Name -->\n            <TextView\n                android:id=\"@+id/event_name\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"wrap_content\"\n                android:text=\"Concert at Madison Square Garden\"\n                android:textColor=\"@color/black\"\n                android:textSize=\"15sp\"\n                android:textStyle=\"bold\"\n                android:fontFamily=\"sans-serif-medium\"\n                android:lineSpacingExtra=\"2dp\" />\n\n            <!-- Details Row (Date • Location) -->\n            <LinearLayout\n                android:id=\"@+id/details_row\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:orientation=\"horizontal\"\n                android:layout_marginTop=\"4dp\">\n\n                <TextView\n                    android:id=\"@+id/event_date\"\n                    android:layout_width=\"wrap_content\"\n                    android:layout_height=\"wrap_content\"\n                    android:text=\"April 20, 2023\"\n                    android:textColor=\"@color/calendar_weekday_text\"\n                    android:textSize=\"13sp\"\n                    android:fontFamily=\"sans-serif\" />\n\n                <TextView\n                    android:layout_width=\"wrap_content\"\n                    android:layout_height=\"wrap_content\"\n                    android:text=\" • \"\n                    android:textColor=\"@color/calendar_weekday_text\"\n                    android:textSize=\"13sp\"\n                    android:layout_marginStart=\"4dp\"\n                    android:layout_marginEnd=\"4dp\" />\n\n                <TextView\n                    android:id=\"@+id/event_location\"\n                    android:layout_width=\"wrap_content\"\n                    android:layout_height=\"wrap_content\"\n                    android:text=\"New York, NY\"\n                    android:textColor=\"@color/calendar_weekday_text\"\n                    android:textSize=\"13sp\"\n                    android:fontFamily=\"sans-serif\" />\n            </LinearLayout>\n\n            <!-- Price -->\n            <TextView\n                android:id=\"@+id/event_cost\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginTop=\"4dp\"\n                android:text=\"$120\"\n                android:textColor=\"@color/calendar_weekday_text\"\n                android:textSize=\"13sp\"\n                android:fontFamily=\"sans-serif\" />\n\n        </LinearLayout>\n\n    </androidx.constraintlayout.widget.ConstraintLayout>\n</androidx.cardview.widget.CardView>\n
+===================================================================
+diff --git a/app/src/main/res/layout/myevent_item.xml b/app/src/main/res/layout/myevent_item.xml
+--- a/app/src/main/res/layout/myevent_item.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/res/layout/myevent_item.xml	(date 1764397461557)
+@@ -1,171 +1,102 @@
+ <?xml version="1.0" encoding="utf-8"?>
++
+ <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+-    xmlns:app="http://schemas.android.com/apk/res-auto"
+-    xmlns:tools="http://schemas.android.com/tools"
+-    android:layout_width="match_parent"
+-    android:layout_height="wrap_content"
+-    android:layout_marginStart="16dp"
+-    android:layout_marginEnd="16dp"
+-    android:layout_marginTop="8dp"
+-    android:layout_marginBottom="8dp"
+-    android:clickable="true"
+-    android:focusable="true"
+-    android:foreground="?attr/selectableItemBackground"
+-    app:cardCornerRadius="0dp"
+-    app:cardElevation="0dp"
+-    app:cardBackgroundColor="@color/white">
++xmlns:app="http://schemas.android.com/apk/res-auto"
++xmlns:tools="http://schemas.android.com/tools"
++android:layout_width="match_parent"
++android:layout_height="wrap_content"
++android:clickable="true"
++android:focusable="true"
++android:foreground="?attr/selectableItemBackground">
+ 
+-    <androidx.constraintlayout.widget.ConstraintLayout
+-        android:layout_width="match_parent"
+-        android:layout_height="wrap_content">
+-
+-        <!-- Event Image Container with rounded corners -->
+-        <androidx.cardview.widget.CardView
+-            android:id="@+id/image_container"
+-            android:layout_width="0dp"
+-            android:layout_height="0dp"
+-            app:cardCornerRadius="12dp"
+-            app:cardElevation="0dp"
+-            app:layout_constraintDimensionRatio="1:1"
+-            app:layout_constraintTop_toTopOf="parent"
+-            app:layout_constraintStart_toStartOf="parent"
+-            app:layout_constraintEnd_toEndOf="parent">
++<androidx.constraintlayout.widget.ConstraintLayout
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:padding="20dp"
++    app:layout_constraintBottom_toBottomOf="parent"
++    app:layout_constraintEnd_toEndOf="parent"
++    app:layout_constraintStart_toStartOf="parent"
++    app:layout_constraintTop_toTopOf="parent">
++
+ 
+-            <ImageView
+-                android:id="@+id/event_poster"
+-                android:layout_width="match_parent"
+-                android:layout_height="match_parent"
+-                android:scaleType="centerCrop"
+-                tools:srcCompat="@tools:sample/avatars" />
+-        </androidx.cardview.widget.CardView>
+-
+-        <!-- Top gradient overlay for status tag -->
+-        <View
+-            android:id="@+id/top_gradient"
+-            android:layout_width="0dp"
+-            android:layout_height="88dp"
+-            android:background="@drawable/gradient_top_overlay_rounded"
+-            app:layout_constraintTop_toTopOf="@+id/image_container"
+-            app:layout_constraintStart_toStartOf="@+id/image_container"
+-            app:layout_constraintEnd_toEndOf="@+id/image_container" />
+-
+-        <!-- Status Tag -->
+-        <TextView
+-            android:id="@+id/event_status"
+-            android:layout_width="wrap_content"
+-            android:layout_height="28dp"
+-            android:layout_marginStart="16dp"
+-            android:layout_marginTop="16dp"
+-            android:background="@drawable/status_tag_background"
+-            android:backgroundTint="@color/selected_tab_color"
+-            android:paddingStart="12dp"
+-            android:paddingEnd="12dp"
+-            android:gravity="center_vertical"
+-            android:text="🟢 Accepted"
+-            android:textColor="@color/white"
+-            android:textSize="13sp"
+-            android:textStyle="bold"
+-            android:fontFamily="sans-serif-medium"
+-            app:layout_constraintTop_toTopOf="@+id/image_container"
+-            app:layout_constraintStart_toStartOf="@+id/image_container" />
+-
+-        <!-- Bottom gradient overlay for page indicators -->
+-        <View
+-            android:id="@+id/bottom_gradient"
+-            android:layout_width="0dp"
+-            android:layout_height="56dp"
+-            android:background="@drawable/gradient_bottom_overlay"
+-            app:layout_constraintBottom_toBottomOf="@+id/image_container"
+-            app:layout_constraintStart_toStartOf="@+id/image_container"
+-            app:layout_constraintEnd_toEndOf="@+id/image_container" />
+-
+-        <!-- Page Indicators (dots) -->
+-        <LinearLayout
+-            android:id="@+id/page_indicators"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:orientation="horizontal"
+-            android:gravity="center"
+-            android:layout_marginEnd="16dp"
+-            android:layout_marginBottom="16dp"
+-            app:layout_constraintBottom_toBottomOf="@+id/image_container"
+-            app:layout_constraintEnd_toEndOf="@+id/image_container" />
+-
+-        <!-- Information Section -->
+-        <LinearLayout
+-            android:id="@+id/information_section"
+-            android:layout_width="0dp"
+-            android:layout_height="wrap_content"
+-            android:orientation="vertical"
+-            android:paddingStart="0dp"
+-            android:paddingEnd="0dp"
+-            android:paddingTop="16dp"
+-            android:paddingBottom="16dp"
+-            app:layout_constraintTop_toBottomOf="@+id/image_container"
+-            app:layout_constraintStart_toStartOf="parent"
+-            app:layout_constraintEnd_toEndOf="parent"
+-            app:layout_constraintBottom_toBottomOf="parent">
++    <ImageView
++        android:id="@+id/event_poster"
++        android:layout_width="0dp"
++        android:layout_height="0dp"
++        android:maxHeight="200dp"
++        android:paddingBottom="15dp"
++        android:scaleType="centerCrop"
++        android:layout_gravity="center"
++
++        app:layout_constraintDimensionRatio="1:1.5"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toTopOf="parent"
++        tools:srcCompat="@tools:sample/avatars" />
+ 
+-            <!-- Event Name -->
+-            <TextView
+-                android:id="@+id/event_name"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:text="Concert at Madison Square Garden"
+-                android:textColor="@color/black"
+-                android:textSize="15sp"
+-                android:textStyle="bold"
+-                android:fontFamily="sans-serif-medium"
+-                android:lineSpacingExtra="2dp" />
+-
+-            <!-- Details Row (Date • Location) -->
+-            <LinearLayout
+-                android:id="@+id/details_row"
+-                android:layout_width="wrap_content"
+-                android:layout_height="wrap_content"
+-                android:orientation="horizontal"
+-                android:layout_marginTop="4dp">
+-
+-                <TextView
+-                    android:id="@+id/event_date"
+-                    android:layout_width="wrap_content"
+-                    android:layout_height="wrap_content"
+-                    android:text="April 20, 2023"
+-                    android:textColor="@color/calendar_weekday_text"
+-                    android:textSize="13sp"
+-                    android:fontFamily="sans-serif" />
++    <TextView
++        android:id="@+id/event_name"
++        android:layout_width="match_parent"
++        android:layout_height="30dp"
++        android:text="Jazz Night Event"
++        android:textSize="15sp"
++        android:textStyle="bold"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintHorizontal_bias="0.0"
++        app:layout_constraintStart_toStartOf="@+id/event_poster"
++        app:layout_constraintTop_toBottomOf="@+id/event_poster" />
+ 
+-                <TextView
+-                    android:layout_width="wrap_content"
+-                    android:layout_height="wrap_content"
+-                    android:text=" • "
+-                    android:textColor="@color/calendar_weekday_text"
+-                    android:textSize="13sp"
+-                    android:layout_marginStart="4dp"
+-                    android:layout_marginEnd="4dp" />
++    <TextView
++        android:id="@+id/event_status"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_marginStart="8dp"
++        android:layout_marginTop="15dp"
++        android:background="@drawable/rounded_badge"
++        android:backgroundTint="@color/purple_500"
++        android:drawablePadding="8dp"
++        android:paddingStart="12dp"
++        android:paddingTop="6dp"
++        android:paddingEnd="12dp"
++        android:paddingBottom="6dp"
++        android:text=""
++        android:visibility="visible"
++        android:textColor="@android:color/white"
++        android:textSize="12sp"
++        android:textStyle="bold"
++        app:layout_constraintStart_toStartOf="@+id/event_poster"
++        app:layout_constraintTop_toTopOf="@+id/event_poster" />
++
+ 
+-                <TextView
+-                    android:id="@+id/event_location"
+-                    android:layout_width="wrap_content"
+-                    android:layout_height="wrap_content"
+-                    android:text="New York, NY"
+-                    android:textColor="@color/calendar_weekday_text"
+-                    android:textSize="13sp"
+-                    android:fontFamily="sans-serif" />
+-            </LinearLayout>
++    <TextView
++        android:id="@+id/event_organizer"
++        android:layout_width="match_parent"
++        android:layout_height="30dp"
++        android:paddingBottom="15dp"
++        android:text="Organized By: Melody Makers"
++
++        android:textColor="@color/opaque_black"
++        android:textSize="13sp"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintHorizontal_bias="0.0"
++        app:layout_constraintStart_toStartOf="@+id/event_name"
++        app:layout_constraintTop_toBottomOf="@+id/event_name" />
+ 
+-            <!-- Price -->
+-            <TextView
+-                android:id="@+id/event_cost"
+-                android:layout_width="wrap_content"
+-                android:layout_height="wrap_content"
+-                android:layout_marginTop="4dp"
+-                android:text="$120"
+-                android:textColor="@color/calendar_weekday_text"
+-                android:textSize="13sp"
+-                android:fontFamily="sans-serif" />
+-
+-        </LinearLayout>
++    <TextView
++        android:id="@+id/event_cost"
++        android:layout_width="match_parent"
++        android:layout_height="30dp"
++        android:paddingBottom="15dp"
++        android:text="Free"
++        android:textColor="@color/opaque_black"
++
++        android:textSize="13sp"
++        app:layout_constraintBottom_toBottomOf="parent"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintHorizontal_bias="0.0"
++        app:layout_constraintStart_toStartOf="@+id/event_organizer"
++        app:layout_constraintTop_toBottomOf="@+id/event_organizer"
++        app:layout_constraintVertical_bias="0.0" />
+ 
+-    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+ </androidx.cardview.widget.CardView>
+Index: app/src/main/java/com/example/eventlotteryapp/EntrantView/QrCaptureActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.eventlotteryapp.EntrantView;\n\nimport android.os.Bundle;\nimport android.util.Log;\nimport android.view.View;\nimport android.view.ViewGroup;\nimport android.widget.FrameLayout;\nimport android.widget.ImageView;\n\npublic class QrCaptureActivity extends com.journeyapps.barcodescanner.CaptureActivity {\n    \n    private static final String TAG = \"QrCaptureActivity\";\n    private ImageView backButton;\n    \n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n    }\n    \n    @Override\n    protected void onResume() {\n        super.onResume();\n        \n        // Add back button after layout is complete\n        View decorView = getWindow().getDecorView();\n        decorView.post(() -> {\n            decorView.postDelayed(() -> {\n                addBackButtonOverlay();\n            }, 500);\n        });\n    }\n    \n    private void addBackButtonOverlay() {\n        try {\n            // Remove existing button if any\n            if (backButton != null && backButton.getParent() != null) {\n                ((ViewGroup) backButton.getParent()).removeView(backButton);\n            }\n            \n            // Get the decor view - this is the absolute root\n            ViewGroup decorView = (ViewGroup) getWindow().getDecorView();\n            \n            // Create back button\n            backButton = new ImageView(this);\n            backButton.setImageResource(com.example.eventlotteryapp.R.drawable.ic_arrow_back);\n            backButton.setContentDescription(\"Back\");\n            backButton.setClickable(true);\n            backButton.setFocusable(true);\n            backButton.setPadding(16, 16, 16, 16);\n            \n            // Set white color for visibility\n            backButton.setColorFilter(android.graphics.Color.WHITE);\n            \n            // Create circular semi-transparent background\n            android.graphics.drawable.GradientDrawable background = new android.graphics.drawable.GradientDrawable();\n            background.setShape(android.graphics.drawable.GradientDrawable.OVAL);\n            background.setColor(0xFF000000); // Fully opaque black for maximum visibility\n            backButton.setBackground(background);\n            \n            backButton.setOnClickListener(v -> {\n                Log.d(TAG, \"Back button clicked\");\n                finish();\n            });\n            \n            // Add directly to decor view with absolute positioning\n            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(\n                72,\n                72\n            );\n            params.setMargins(32, 32, 0, 0);\n            params.gravity = android.view.Gravity.TOP | android.view.Gravity.START;\n            backButton.setLayoutParams(params);\n            \n            // Ensure it's on top with very high elevation\n            backButton.setElevation(1000f);\n            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {\n                backButton.setZ(1000f);\n            }\n            \n            // Add to decor view and bring to front\n            decorView.addView(backButton);\n            decorView.bringChildToFront(backButton);\n            backButton.bringToFront();\n            \n            Log.d(TAG, \"Back button added to decor view, elevation: \" + backButton.getElevation());\n        } catch (Exception e) {\n            Log.e(TAG, \"Error adding back button\", e);\n        }\n    }\n    \n    @Override\n    public void onBackPressed() {\n        super.onBackPressed();\n        finish();\n    }\n}\n\n
+===================================================================
+diff --git a/app/src/main/java/com/example/eventlotteryapp/EntrantView/QrCaptureActivity.java b/app/src/main/java/com/example/eventlotteryapp/EntrantView/QrCaptureActivity.java
+--- a/app/src/main/java/com/example/eventlotteryapp/EntrantView/QrCaptureActivity.java	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/java/com/example/eventlotteryapp/EntrantView/QrCaptureActivity.java	(date 1764397461558)
+@@ -1,97 +1,6 @@
+ package com.example.eventlotteryapp.EntrantView;
+ 
+-import android.os.Bundle;
+-import android.util.Log;
+-import android.view.View;
+-import android.view.ViewGroup;
+-import android.widget.FrameLayout;
+-import android.widget.ImageView;
+-
+ public class QrCaptureActivity extends com.journeyapps.barcodescanner.CaptureActivity {
+-    
+-    private static final String TAG = "QrCaptureActivity";
+-    private ImageView backButton;
+-    
+-    @Override
+-    protected void onCreate(Bundle savedInstanceState) {
+-        super.onCreate(savedInstanceState);
+-    }
+-    
+-    @Override
+-    protected void onResume() {
+-        super.onResume();
+-        
+-        // Add back button after layout is complete
+-        View decorView = getWindow().getDecorView();
+-        decorView.post(() -> {
+-            decorView.postDelayed(() -> {
+-                addBackButtonOverlay();
+-            }, 500);
+-        });
+-    }
+-    
+-    private void addBackButtonOverlay() {
+-        try {
+-            // Remove existing button if any
+-            if (backButton != null && backButton.getParent() != null) {
+-                ((ViewGroup) backButton.getParent()).removeView(backButton);
+-            }
+-            
+-            // Get the decor view - this is the absolute root
+-            ViewGroup decorView = (ViewGroup) getWindow().getDecorView();
+-            
+-            // Create back button
+-            backButton = new ImageView(this);
+-            backButton.setImageResource(com.example.eventlotteryapp.R.drawable.ic_arrow_back);
+-            backButton.setContentDescription("Back");
+-            backButton.setClickable(true);
+-            backButton.setFocusable(true);
+-            backButton.setPadding(16, 16, 16, 16);
+-            
+-            // Set white color for visibility
+-            backButton.setColorFilter(android.graphics.Color.WHITE);
+-            
+-            // Create circular semi-transparent background
+-            android.graphics.drawable.GradientDrawable background = new android.graphics.drawable.GradientDrawable();
+-            background.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+-            background.setColor(0xFF000000); // Fully opaque black for maximum visibility
+-            backButton.setBackground(background);
+-            
+-            backButton.setOnClickListener(v -> {
+-                Log.d(TAG, "Back button clicked");
+-                finish();
+-            });
+-            
+-            // Add directly to decor view with absolute positioning
+-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+-                72,
+-                72
+-            );
+-            params.setMargins(32, 32, 0, 0);
+-            params.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
+-            backButton.setLayoutParams(params);
+-            
+-            // Ensure it's on top with very high elevation
+-            backButton.setElevation(1000f);
+-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+-                backButton.setZ(1000f);
+-            }
+-            
+-            // Add to decor view and bring to front
+-            decorView.addView(backButton);
+-            decorView.bringChildToFront(backButton);
+-            backButton.bringToFront();
+-            
+-            Log.d(TAG, "Back button added to decor view, elevation: " + backButton.getElevation());
+-        } catch (Exception e) {
+-            Log.e(TAG, "Error adding back button", e);
+-        }
+-    }
+-    
+-    @Override
+-    public void onBackPressed() {
+-        super.onBackPressed();
+-        finish();
+-    }
++    // This class extends the ZXing CaptureActivity for QR scanning
+ }
+ 
+Index: app/src/main/res/layout/fragment_entrants_myevents_list.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<androidx.constraintlayout.widget.ConstraintLayout\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n    xmlns:tools=\"http://schemas.android.com/tools\"\n    android:background=\"@color/white\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\">\n    <TextView\n        android:id=\"@+id/myevents_list_title\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:gravity=\"center\"\n        android:text=\"My Events\"\n        android:textStyle=\"bold\"\n        android:textSize=\"20sp\"\n        android:layout_margin=\"16dp\"\n        android:textColor=\"@color/black\"\n        app:layout_constraintTop_toTopOf=\"parent\"\n        app:layout_constraintBottom_toTopOf=\"@id/event_status_filters\" />\n\n    <LinearLayout\n        android:id=\"@+id/event_status_filters\"\n        android:layout_width=\"0dp\"\n        android:layout_height=\"wrap_content\"\n        android:orientation=\"horizontal\"\n        android:gravity=\"center\"\n        android:layout_marginTop=\"8dp\"\n        android:layout_marginStart=\"16dp\"\n        android:layout_marginEnd=\"16dp\"\n        app:layout_constraintTop_toBottomOf=\"@id/myevents_list_title\"\n        app:layout_constraintStart_toStartOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\">\n\n        <com.google.android.material.button.MaterialButton\n            android:id=\"@+id/active_filter\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:text=\"Active\"\n            android:textColor=\"@color/black\"\n            android:textAllCaps=\"false\"\n            android:textStyle=\"bold\"\n            app:strokeColor=\"@color/light_opaque_black\"\n            app:strokeWidth=\"1dp\"\n            app:cornerRadius=\"50dp\"\n            app:backgroundTint=\"@android:color/transparent\"\n            android:paddingLeft=\"16dp\"\n            android:paddingTop=\"8dp\"\n            android:paddingRight=\"16dp\"\n            android:paddingBottom=\"8dp\"\n            android:layout_marginEnd=\"8dp\"\n            android:minWidth=\"0dp\"\n            android:minHeight=\"0dp\"\n            style=\"@style/Widget.MaterialComponents.Button.OutlinedButton\"/>\n\n        <com.google.android.material.button.MaterialButton\n            android:id=\"@+id/pending_filter\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:text=\"Pending\"\n            android:textColor=\"@color/black\"\n            android:textAllCaps=\"false\"\n            android:textStyle=\"bold\"\n            app:strokeColor=\"@color/light_opaque_black\"\n            app:strokeWidth=\"1dp\"\n            app:cornerRadius=\"50dp\"\n            app:backgroundTint=\"@android:color/transparent\"\n            android:paddingLeft=\"16dp\"\n            android:paddingTop=\"8dp\"\n            android:paddingRight=\"16dp\"\n            android:paddingBottom=\"8dp\"\n            android:layout_marginEnd=\"8dp\"\n            android:minWidth=\"0dp\"\n            android:minHeight=\"0dp\"\n            style=\"@style/Widget.MaterialComponents.Button.OutlinedButton\"/>\n\n        <com.google.android.material.button.MaterialButton\n            android:id=\"@+id/past_filter\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:text=\"Past\"\n            android:textColor=\"@color/black\"\n            android:textAllCaps=\"false\"\n            android:textStyle=\"bold\"\n            app:strokeColor=\"@color/light_opaque_black\"\n            app:strokeWidth=\"1dp\"\n            app:cornerRadius=\"50dp\"\n            app:backgroundTint=\"@android:color/transparent\"\n            android:paddingLeft=\"16dp\"\n            android:paddingTop=\"8dp\"\n            android:paddingRight=\"16dp\"\n            android:paddingBottom=\"8dp\"\n            android:minWidth=\"0dp\"\n            android:minHeight=\"0dp\"\n            style=\"@style/Widget.MaterialComponents.Button.OutlinedButton\"/>\n\n    </LinearLayout>\n\n    <ProgressBar\n        android:id=\"@+id/loading_indicator\"\n        android:layout_width=\"48dp\"\n        android:layout_height=\"48dp\"\n        android:visibility=\"gone\"\n        app:layout_constraintTop_toTopOf=\"parent\"\n        app:layout_constraintBottom_toBottomOf=\"parent\"\n        app:layout_constraintStart_toStartOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\"\n        style=\"?android:attr/progressBarStyleLarge\"/>\n\n    <androidx.recyclerview.widget.RecyclerView\n        android:id=\"@+id/events_list\"\n        android:layout_width=\"0dp\"\n        android:layout_height=\"0dp\"\n        android:layout_margin=\"16dp\"\n        app:layout_constraintTop_toBottomOf=\"@id/event_status_filters\"\n        app:layout_constraintBottom_toBottomOf=\"parent\"\n        app:layout_constraintStart_toStartOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\"/>\n\n    <!-- Empty State Container -->\n    <LinearLayout\n        android:id=\"@+id/empty_state_container\"\n        android:layout_width=\"0dp\"\n        android:layout_height=\"wrap_content\"\n        android:orientation=\"vertical\"\n        android:gravity=\"center\"\n        android:visibility=\"gone\"\n        android:layout_marginStart=\"16dp\"\n        android:layout_marginEnd=\"16dp\"\n        app:layout_constraintTop_toBottomOf=\"@id/event_status_filters\"\n        app:layout_constraintBottom_toBottomOf=\"parent\"\n        app:layout_constraintStart_toStartOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\">\n\n        <!-- Illustration Image -->\n        <androidx.cardview.widget.CardView\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            app:cardCornerRadius=\"12dp\"\n            app:cardElevation=\"0dp\"\n            android:layout_marginBottom=\"24dp\">\n\n            <ImageView\n                android:id=\"@+id/empty_state_illustration\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"313dp\"\n                android:scaleType=\"centerCrop\"\n                android:src=\"@drawable/empty_calendar_illustration\"\n                android:background=\"#F5F5F5\"\n                android:contentDescription=\"Empty calendar illustration\" />\n        </androidx.cardview.widget.CardView>\n\n        <!-- Text Container -->\n        <LinearLayout\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"vertical\"\n            android:gravity=\"center\"\n            android:layout_marginBottom=\"24dp\">\n\n            <TextView\n                android:id=\"@+id/empty_state_title\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:text=\"No events yet.\"\n                android:textSize=\"34sp\"\n                android:textColor=\"@color/black\"\n                android:textStyle=\"bold\"\n                android:fontFamily=\"sans-serif-medium\"\n                android:letterSpacing=\"-0.02\"\n                android:gravity=\"center\"\n                android:layout_marginBottom=\"8dp\" />\n\n            <TextView\n                android:id=\"@+id/empty_state_description\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:text=\"Join an event from the Home page or scan a QR Code to get started.\"\n                android:textSize=\"17sp\"\n                android:textColor=\"@color/black\"\n                android:fontFamily=\"sans-serif\"\n                android:gravity=\"center\"\n                android:lineSpacingExtra=\"4dp\" />\n        </LinearLayout>\n\n        <!-- Browse Events Button -->\n        <com.google.android.material.button.MaterialButton\n            android:id=\"@+id/browse_events_button\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"50dp\"\n            android:text=\"Browse Events\"\n            android:textSize=\"17sp\"\n            android:textStyle=\"bold\"\n            android:textColor=\"@color/white\"\n            android:fontFamily=\"sans-serif-medium\"\n            app:backgroundTint=\"@color/selected_tab_color\"\n            app:cornerRadius=\"56dp\"\n            app:strokeWidth=\"0dp\" />\n\n    </LinearLayout>\n\n</androidx.constraintlayout.widget.ConstraintLayout>
+===================================================================
+diff --git a/app/src/main/res/layout/fragment_entrants_myevents_list.xml b/app/src/main/res/layout/fragment_entrants_myevents_list.xml
+--- a/app/src/main/res/layout/fragment_entrants_myevents_list.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/res/layout/fragment_entrants_myevents_list.xml	(date 1764397461557)
+@@ -120,82 +120,33 @@
+     <!-- Empty State Container -->
+     <LinearLayout
+         android:id="@+id/empty_state_container"
+-        android:layout_width="0dp"
++        android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:orientation="vertical"
+         android:gravity="center"
+         android:visibility="gone"
+-        android:layout_marginStart="16dp"
+-        android:layout_marginEnd="16dp"
+-        app:layout_constraintTop_toBottomOf="@id/event_status_filters"
++        app:layout_constraintTop_toTopOf="parent"
+         app:layout_constraintBottom_toBottomOf="parent"
+         app:layout_constraintStart_toStartOf="parent"
+         app:layout_constraintEnd_toEndOf="parent">
+ 
+-        <!-- Illustration Image -->
+-        <androidx.cardview.widget.CardView
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            app:cardCornerRadius="12dp"
+-            app:cardElevation="0dp"
+-            android:layout_marginBottom="24dp">
+-
+-            <ImageView
+-                android:id="@+id/empty_state_illustration"
+-                android:layout_width="match_parent"
+-                android:layout_height="313dp"
+-                android:scaleType="centerCrop"
+-                android:src="@drawable/empty_calendar_illustration"
+-                android:background="#F5F5F5"
+-                android:contentDescription="Empty calendar illustration" />
+-        </androidx.cardview.widget.CardView>
+-
+-        <!-- Text Container -->
+-        <LinearLayout
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:orientation="vertical"
+-            android:gravity="center"
+-            android:layout_marginBottom="24dp">
+-
+-            <TextView
+-                android:id="@+id/empty_state_title"
+-                android:layout_width="wrap_content"
+-                android:layout_height="wrap_content"
+-                android:text="No events yet."
+-                android:textSize="34sp"
+-                android:textColor="@color/black"
+-                android:textStyle="bold"
+-                android:fontFamily="sans-serif-medium"
+-                android:letterSpacing="-0.02"
+-                android:gravity="center"
+-                android:layout_marginBottom="8dp" />
++        <TextView
++            android:id="@+id/empty_state_text"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:text="No events joined yet"
++            android:textSize="18sp"
++            android:textColor="@android:color/black"
++            android:textStyle="bold"
++            android:layout_marginBottom="24dp"/>
+ 
+-            <TextView
+-                android:id="@+id/empty_state_description"
+-                android:layout_width="wrap_content"
+-                android:layout_height="wrap_content"
+-                android:text="Join an event from the Home page or scan a QR Code to get started."
+-                android:textSize="17sp"
+-                android:textColor="@color/black"
+-                android:fontFamily="sans-serif"
+-                android:gravity="center"
+-                android:lineSpacingExtra="4dp" />
+-        </LinearLayout>
+-
+-        <!-- Browse Events Button -->
+-        <com.google.android.material.button.MaterialButton
+-            android:id="@+id/browse_events_button"
+-            android:layout_width="match_parent"
+-            android:layout_height="50dp"
++        <Button
++            android:id="@+id/browse_events_button"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
+             android:text="Browse Events"
+-            android:textSize="17sp"
+-            android:textStyle="bold"
+-            android:textColor="@color/white"
+-            android:fontFamily="sans-serif-medium"
+-            app:backgroundTint="@color/selected_tab_color"
+-            app:cornerRadius="56dp"
+-            app:strokeWidth="0dp" />
++            android:paddingStart="24dp"
++            android:paddingEnd="24dp"/>
+ 
+     </LinearLayout>
+ 
+Index: app/src/main/java/com/example/eventlotteryapp/EntrantView/MyEventsListRecyclerViewAdapter.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.eventlotteryapp.EntrantView;\n\nimport android.graphics.Bitmap;\nimport android.graphics.drawable.Drawable;\nimport android.util.Log;\nimport android.util.TypedValue;\nimport android.view.LayoutInflater;\nimport android.view.View;\nimport android.view.ViewGroup;\nimport android.widget.ImageView;\nimport android.widget.LinearLayout;\nimport android.widget.TextView;\n\nimport androidx.annotation.NonNull;\nimport androidx.core.content.ContextCompat;\n\nimport com.example.eventlotteryapp.R;\nimport com.google.firebase.firestore.DocumentReference;\n\nimport java.text.SimpleDateFormat;\nimport java.util.Date;\nimport java.util.List;\nimport java.util.Locale;\n\npublic class MyEventsListRecyclerViewAdapter extends EventsListRecyclerViewAdapter{\n\n    public MyEventsListRecyclerViewAdapter(List<? extends EventItem> list, onEventClickListener listener) {\n        super((List<EventItem>) list, listener);\n    }\n\n    @NonNull\n    @Override\n    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {\n        // Inflate your event_list.xml layout\n        View view = LayoutInflater.from(parent.getContext())\n                .inflate(R.layout.myevent_item, parent, false);\n        return new ViewHolder(view);\n    }\n\n\n    @Override\n    public void onBindViewHolder(@NonNull EventsListRecyclerViewAdapter.ViewHolder holder, int position) {\n\n        MyEventItem event = (MyEventItem) originalList.get(position);\n        ViewHolder myViewHolder = (ViewHolder) holder;\n        \n        // Set event name\n        holder.nameView.setText(event.getName());\n        \n        // Set status with emoji matching Figma design\n        if (event.getStatus() == MyEventItem.Status.PENDING) {\n            myViewHolder.statusView.setText(\"\uD83D\uDFE1 Pending\");\n        } else if (event.getStatus() == MyEventItem.Status.SELECTED) {\n            myViewHolder.statusView.setText(\"\uD83D\uDFE2 Accepted\");\n        } else if (event.getStatus() == MyEventItem.Status.NOT_SELECTED){\n            myViewHolder.statusView.setText(\"\uD83D\uDD34 Not Selected\");\n        } else {\n            myViewHolder.statusView.setText(\"Unknown\");\n        }\n        \n        // Format and set date\n        if (event.getEventStartDate() != null) {\n            SimpleDateFormat dateFormat = new SimpleDateFormat(\"MMMM d, yyyy\", Locale.getDefault());\n            myViewHolder.dateView.setText(dateFormat.format(event.getEventStartDate()));\n        } else {\n            myViewHolder.dateView.setText(\"Date TBD\");\n        }\n        \n        // Set location (placeholder for now - EventItem doesn't have location field)\n        myViewHolder.locationView.setText(\"Location TBD\");\n        \n        // Set cost\n        holder.costView.setText(event.getCost());\n\n        // Load and set image with rounded corners\n        String base64Image = event.getImage();\n        if (base64Image != null && !base64Image.isEmpty()) {\n            try {\n                // Remove the \"data:image/jpeg;base64,\" or similar prefix\n                if (base64Image.startsWith(\"data:image\")) {\n                    base64Image = base64Image.substring(base64Image.indexOf(\",\") + 1);\n                }\n\n                byte[] decodedBytes = android.util.Base64.decode(base64Image, android.util.Base64.DEFAULT);\n                Bitmap bitmap = android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);\n\n                holder.imageView.setImageBitmap(bitmap);\n            } catch (Exception e) {\n                Log.e(\"EventAdapter\", \"Failed to decode image: \" + e.getMessage());\n            }\n        }\n    }\n\n    public class ViewHolder extends EventsListRecyclerViewAdapter.ViewHolder {\n        public final TextView statusView;\n        public final TextView dateView;\n        public final TextView locationView;\n\n        public ViewHolder(View view) {\n            super(view);\n            statusView = view.findViewById(R.id.event_status);\n            dateView = view.findViewById(R.id.event_date);\n            locationView = view.findViewById(R.id.event_location);\n        }\n    }\n\n}\n
+===================================================================
+diff --git a/app/src/main/java/com/example/eventlotteryapp/EntrantView/MyEventsListRecyclerViewAdapter.java b/app/src/main/java/com/example/eventlotteryapp/EntrantView/MyEventsListRecyclerViewAdapter.java
+--- a/app/src/main/java/com/example/eventlotteryapp/EntrantView/MyEventsListRecyclerViewAdapter.java	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/java/com/example/eventlotteryapp/EntrantView/MyEventsListRecyclerViewAdapter.java	(date 1764397461557)
+@@ -7,8 +7,6 @@
+ import android.view.LayoutInflater;
+ import android.view.View;
+ import android.view.ViewGroup;
+-import android.widget.ImageView;
+-import android.widget.LinearLayout;
+ import android.widget.TextView;
+ 
+ import androidx.annotation.NonNull;
+@@ -17,10 +15,7 @@
+ import com.example.eventlotteryapp.R;
+ import com.google.firebase.firestore.DocumentReference;
+ 
+-import java.text.SimpleDateFormat;
+-import java.util.Date;
+ import java.util.List;
+-import java.util.Locale;
+ 
+ public class MyEventsListRecyclerViewAdapter extends EventsListRecyclerViewAdapter{
+ 
+@@ -42,38 +37,32 @@
+     public void onBindViewHolder(@NonNull EventsListRecyclerViewAdapter.ViewHolder holder, int position) {
+ 
+         MyEventItem event = (MyEventItem) originalList.get(position);
+-        ViewHolder myViewHolder = (ViewHolder) holder;
+-        
+-        // Set event name
+         holder.nameView.setText(event.getName());
+-        
+-        // Set status with emoji matching Figma design
+         if (event.getStatus() == MyEventItem.Status.PENDING) {
+-            myViewHolder.statusView.setText("🟡 Pending");
++            ((ViewHolder) holder).statusView.setText("\uD83D\uDFE1 Pending");
+         } else if (event.getStatus() == MyEventItem.Status.SELECTED) {
+-            myViewHolder.statusView.setText("🟢 Accepted");
++            ((ViewHolder) holder).statusView.setText("\uD83D\uDFE2 Selected");
+         } else if (event.getStatus() == MyEventItem.Status.NOT_SELECTED){
+-            myViewHolder.statusView.setText("🔴 Not Selected");
++            ((ViewHolder) holder).statusView.setText("\uD83D\uDD34 Not Selected");
+         } else {
+-            myViewHolder.statusView.setText("Unknown");
++            ((ViewHolder) holder).statusView.setText("Unknown");
+         }
+-        
+-        // Format and set date
+-        if (event.getEventStartDate() != null) {
+-            SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault());
+-            myViewHolder.dateView.setText(dateFormat.format(event.getEventStartDate()));
++        DocumentReference organizerRef = event.getOrganizer();
++        if (organizerRef != null) { // ✅ check null
++            organizerRef.get().addOnSuccessListener(userSnapshot -> {
++                if (userSnapshot.exists()) {
++                    String organizerName = userSnapshot.getString("name");
++                    holder.organizerView.setText(organizerName);
++                }
++            }).addOnFailureListener(e ->
++                    Log.e("EventAdapter", "Error loading organizer", e));
+         } else {
+-            myViewHolder.dateView.setText("Date TBD");
++            holder.organizerView.setText("Unknown Organizer");
+         }
+-        
+-        // Set location (placeholder for now - EventItem doesn't have location field)
+-        myViewHolder.locationView.setText("Location TBD");
+-        
+-        // Set cost
+         holder.costView.setText(event.getCost());
+ 
+-        // Load and set image with rounded corners
+         String base64Image = event.getImage();
++
+         if (base64Image != null && !base64Image.isEmpty()) {
+             try {
+                 // Remove the "data:image/jpeg;base64," or similar prefix
+@@ -89,18 +78,17 @@
+                 Log.e("EventAdapter", "Failed to decode image: " + e.getMessage());
+             }
+         }
++        else {
++        }
++
+     }
+ 
+     public class ViewHolder extends EventsListRecyclerViewAdapter.ViewHolder {
+         public final TextView statusView;
+-        public final TextView dateView;
+-        public final TextView locationView;
+ 
+         public ViewHolder(View view) {
+             super(view);
+             statusView = view.findViewById(R.id.event_status);
+-            dateView = view.findViewById(R.id.event_date);
+-            locationView = view.findViewById(R.id.event_location);
+         }
+     }
+ 

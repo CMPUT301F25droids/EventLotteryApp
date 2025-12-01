@@ -47,6 +47,8 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
     private TextView eventDateRange;
     private TextView eventLocation;
     private TextView eventPrice;
+    private TextView eventDescription;
+    private TextView eventStatusTag;
     private TextView entrantsJoinedText;
     private TextView slotsAvailableText;
     private TextView daysLeftRegistrationText;
@@ -90,6 +92,8 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
         eventDateRange = findViewById(R.id.event_date_range);
         eventLocation = findViewById(R.id.event_location);
         eventPrice = findViewById(R.id.event_price);
+        eventDescription = findViewById(R.id.event_description);
+        eventStatusTag = findViewById(R.id.event_status_tag);
         entrantsJoinedText = findViewById(R.id.entrants_joined_text);
         slotsAvailableText = findViewById(R.id.slots_available_text);
         daysLeftRegistrationText = findViewById(R.id.days_left_registration_text);
@@ -216,6 +220,14 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
             eventPrice.setText("Free");
         }
         
+        // Description
+        String description = document.getString("description");
+        if (description != null && !description.isEmpty()) {
+            eventDescription.setText(description);
+        } else {
+            eventDescription.setText("No description available.");
+        }
+        
         // Image
         String imageBase64 = document.getString("Image");
         if (imageBase64 != null && !imageBase64.isEmpty()) {
@@ -262,29 +274,53 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 
                 // Days Left in Registration
                 Date registrationCloseDate = document.getDate("registrationCloseDate");
+                Date registrationOpenDate = document.getDate("registrationOpenDate");
+                Date now = new Date();
+                
                 if (registrationCloseDate != null) {
-                    Date now = new Date();
                     long diffInMillis = registrationCloseDate.getTime() - now.getTime();
                     long diffInDays = diffInMillis / (1000 * 60 * 60 * 24);
                     
                     if (diffInDays > 0) {
-                        daysLeftRegistrationText.setText("Days Left in Registration: " + diffInDays);
+                        daysLeftRegistrationText.setText("Days Left: " + diffInDays);
                     } else if (diffInDays == 0) {
-                        daysLeftRegistrationText.setText("Days Left in Registration: 0");
+                        daysLeftRegistrationText.setText("Days Left: 0");
                     } else {
-                        daysLeftRegistrationText.setText("Days Left in Registration: Closed");
+                        daysLeftRegistrationText.setText("Days Left: Closed");
                     }
                 } else {
-                    daysLeftRegistrationText.setText("Days Left in Registration: N/A");
+                    daysLeftRegistrationText.setText("Days Left: N/A");
                 }
                 
                 // Lottery Draw Date (using registrationCloseDate)
                 if (registrationCloseDate != null) {
                     String drawDate = dateFormatWithYear.format(registrationCloseDate);
-                    lotteryDrawDateText.setText("Lottery Draw Date: " + drawDate);
+                    lotteryDrawDateText.setText("Draw: " + drawDate);
                 } else {
-                    lotteryDrawDateText.setText("Lottery Draw Date: TBD");
+                    lotteryDrawDateText.setText("Draw: TBD");
                 }
+                
+                // Update status tag
+                boolean isOpen = true;
+                if (registrationOpenDate != null && now.before(registrationOpenDate)) {
+                    isOpen = false; // Registration not open yet
+                } else if (registrationCloseDate != null && now.after(registrationCloseDate)) {
+                    isOpen = false; // Registration closed
+                }
+                
+                // Ensure maxParticipants is valid (at least 1)
+                if (maxParticipants <= 0) {
+                    maxParticipants = 1; // Default to 1 to avoid division by zero or weird display
+                }
+                
+                String statusText;
+                if (isOpen) {
+                    statusText = "🟢 Open - " + selectedCount + "/" + maxParticipants;
+                } else {
+                    statusText = "🔴 Closed - " + selectedCount + "/" + maxParticipants;
+                }
+                
+                eventStatusTag.setText(statusText);
             })
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Error updating statistics", e);

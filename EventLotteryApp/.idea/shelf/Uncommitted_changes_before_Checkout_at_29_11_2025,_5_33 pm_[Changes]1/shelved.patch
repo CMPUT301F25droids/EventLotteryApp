@@ -1,0 +1,1693 @@
+Index: app/src/main/java/com/example/eventlotteryapp/EntrantView/EntrantHomePageActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.eventlotteryapp.EntrantView;\n\nimport android.content.Intent;\nimport android.os.Bundle;\n\nimport androidx.activity.EdgeToEdge;\nimport androidx.appcompat.app.AppCompatActivity;\nimport androidx.core.graphics.Insets;\nimport androidx.core.view.ViewCompat;\nimport androidx.core.view.WindowInsetsCompat;\nimport androidx.viewpager2.widget.ViewPager2;\nimport com.example.eventlotteryapp.R;\nimport com.google.android.material.tabs.TabLayout;\n\nimport java.util.Objects;\n\npublic class EntrantHomePageActivity extends AppCompatActivity {\n    TabLayout tabLayout;\n    ViewPager2 viewPager2;\n    EntrantViewPagerAdapter viewPagerAdapter;\n\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        EdgeToEdge.enable(this);\n        setContentView(R.layout.activity_entrant_home_page);\n        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {\n            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());\n            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);\n            return insets;\n        });\n\n        tabLayout = findViewById(R.id.entrant_home_tabs);\n        viewPager2 = findViewById(R.id.entrant_view_pager);\n\n        viewPagerAdapter = new EntrantViewPagerAdapter(this);\n        viewPager2.setAdapter(viewPagerAdapter);\n\n        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {\n            @Override\n            public void onTabSelected(TabLayout.Tab tab) {\n                int position = tab.getPosition();\n                // Position 3 is the Scan button - open scanner instead of switching page\n                if (position == 3) {\n                    Intent intent = new Intent(EntrantHomePageActivity.this, ScanQrCodeActivity.class);\n                    startActivity(intent);\n                    // Reselect the previously selected tab after a short delay\n                    tabLayout.postDelayed(() -> {\n                        int currentPage = viewPager2.getCurrentItem();\n                        // Map page position to tab position (scan tab is at 3, so pages >= 3 map to tab 4)\n                        int tabPos = currentPage >= 3 ? currentPage + 1 : currentPage;\n                        if (tabPos < tabLayout.getTabCount() && tabPos != 3) {\n                            Objects.requireNonNull(tabLayout.getTabAt(tabPos)).select();\n                        } else {\n                            Objects.requireNonNull(tabLayout.getTabAt(0)).select();\n                        }\n                    }, 100);\n                } else {\n                    // Map tab position to page position (scan tab at 3, so tabs after 3 need -1)\n                    int pagePosition = position > 3 ? position - 1 : position;\n                    viewPager2.setCurrentItem(pagePosition);\n                }\n            }\n            @Override\n            public void onTabUnselected(TabLayout.Tab tab) {\n            }\n            @Override\n            public void onTabReselected(TabLayout.Tab tab) {\n                // If scan tab is reselected, open scanner again\n                if (tab.getPosition() == 3) {\n                    Intent intent = new Intent(EntrantHomePageActivity.this, ScanQrCodeActivity.class);\n                    startActivity(intent);\n                }\n            }\n        });\n\n        viewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {\n            @Override\n            public void onPageSelected(int position) {\n                super.onPageSelected(position);\n                // Map page position to tab position (scan tab is at position 3, so pages after position 2 need +1)\n                int tabPosition = position >= 3 ? position + 1 : position;\n                if (tabPosition < tabLayout.getTabCount()) {\n                    Objects.requireNonNull(tabLayout.getTabAt(tabPosition)).select();\n                }\n            }\n        });\n\n        int tabToOpen = getIntent().getIntExtra(\"open_tab\", 0); // send to home tab\n        viewPager2.setCurrentItem(tabToOpen, false);\n        // Map page position to tab position (scan tab is at 3, so pages >= 3 map to tab 4)\n        int tabPos = tabToOpen >= 3 ? tabToOpen + 1 : tabToOpen;\n        if (tabPos < tabLayout.getTabCount()) {\n            Objects.requireNonNull(tabLayout.getTabAt(tabPos)).select();\n        }\n\n    }\n\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/eventlotteryapp/EntrantView/EntrantHomePageActivity.java b/app/src/main/java/com/example/eventlotteryapp/EntrantView/EntrantHomePageActivity.java
+--- a/app/src/main/java/com/example/eventlotteryapp/EntrantView/EntrantHomePageActivity.java	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/java/com/example/eventlotteryapp/EntrantView/EntrantHomePageActivity.java	(date 1764397461633)
+@@ -1,6 +1,5 @@
+ package com.example.eventlotteryapp.EntrantView;
+ 
+-import android.content.Intent;
+ import android.os.Bundle;
+ 
+ import androidx.activity.EdgeToEdge;
+@@ -39,38 +38,13 @@
+         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+             @Override
+             public void onTabSelected(TabLayout.Tab tab) {
+-                int position = tab.getPosition();
+-                // Position 3 is the Scan button - open scanner instead of switching page
+-                if (position == 3) {
+-                    Intent intent = new Intent(EntrantHomePageActivity.this, ScanQrCodeActivity.class);
+-                    startActivity(intent);
+-                    // Reselect the previously selected tab after a short delay
+-                    tabLayout.postDelayed(() -> {
+-                        int currentPage = viewPager2.getCurrentItem();
+-                        // Map page position to tab position (scan tab is at 3, so pages >= 3 map to tab 4)
+-                        int tabPos = currentPage >= 3 ? currentPage + 1 : currentPage;
+-                        if (tabPos < tabLayout.getTabCount() && tabPos != 3) {
+-                            Objects.requireNonNull(tabLayout.getTabAt(tabPos)).select();
+-                        } else {
+-                            Objects.requireNonNull(tabLayout.getTabAt(0)).select();
+-                        }
+-                    }, 100);
+-                } else {
+-                    // Map tab position to page position (scan tab at 3, so tabs after 3 need -1)
+-                    int pagePosition = position > 3 ? position - 1 : position;
+-                    viewPager2.setCurrentItem(pagePosition);
+-                }
++                viewPager2.setCurrentItem(tab.getPosition());
+             }
+             @Override
+             public void onTabUnselected(TabLayout.Tab tab) {
+             }
+             @Override
+             public void onTabReselected(TabLayout.Tab tab) {
+-                // If scan tab is reselected, open scanner again
+-                if (tab.getPosition() == 3) {
+-                    Intent intent = new Intent(EntrantHomePageActivity.this, ScanQrCodeActivity.class);
+-                    startActivity(intent);
+-                }
+             }
+         });
+ 
+@@ -78,21 +52,13 @@
+             @Override
+             public void onPageSelected(int position) {
+                 super.onPageSelected(position);
+-                // Map page position to tab position (scan tab is at position 3, so pages after position 2 need +1)
+-                int tabPosition = position >= 3 ? position + 1 : position;
+-                if (tabPosition < tabLayout.getTabCount()) {
+-                    Objects.requireNonNull(tabLayout.getTabAt(tabPosition)).select();
+-                }
++                Objects.requireNonNull(tabLayout.getTabAt(position)).select();
+             }
+         });
+ 
+         int tabToOpen = getIntent().getIntExtra("open_tab", 0); // send to home tab
+         viewPager2.setCurrentItem(tabToOpen, false);
+-        // Map page position to tab position (scan tab is at 3, so pages >= 3 map to tab 4)
+-        int tabPos = tabToOpen >= 3 ? tabToOpen + 1 : tabToOpen;
+-        if (tabPos < tabLayout.getTabCount()) {
+-            Objects.requireNonNull(tabLayout.getTabAt(tabPos)).select();
+-        }
++        Objects.requireNonNull(tabLayout.getTabAt(tabToOpen)).select();
+ 
+     }
+ 
+Index: app/src/main/java/com/example/eventlotteryapp/EntrantView/EventDetailsActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.eventlotteryapp.EntrantView;\n\nimport android.content.Intent;\nimport android.graphics.Bitmap;\nimport android.os.Bundle;\nimport android.util.Log;\nimport android.view.ViewGroup;\nimport android.view.View;\nimport android.widget.Button;\nimport android.widget.ImageView;\nimport android.widget.TextView;\n\nimport androidx.activity.EdgeToEdge;\nimport androidx.appcompat.app.AppCompatActivity;\n\nimport com.example.eventlotteryapp.R;\nimport com.example.eventlotteryapp.EntrantView.JoinConfirmationFragment;\nimport com.example.eventlotteryapp.EntrantView.LeaveConfirmationFragment;\nimport com.google.firebase.Timestamp;\nimport com.google.firebase.auth.FirebaseAuth;\nimport com.google.firebase.firestore.DocumentReference;\nimport com.google.firebase.firestore.DocumentSnapshot;\nimport com.google.firebase.firestore.FirebaseFirestore;\nimport com.example.eventlotteryapp.NotificationController;\n\nimport java.text.SimpleDateFormat;\nimport java.util.Calendar;\nimport java.util.Date;\nimport java.util.HashMap;\nimport java.util.List;\nimport java.util.Locale;\n\npublic class EventDetailsActivity extends AppCompatActivity {\n    private String eventId;\n    private FirebaseFirestore db;\n\n    private TextView tvLotteryInfo;\n    private TextView tvWaitlistCount;\n\n    private NotificationController notificationController;\n\n\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        EdgeToEdge.enable(this);\n        setContentView(R.layout.activity_event_details);\n\n        ImageView back_button = findViewById(R.id.back_button);\n        back_button.setOnClickListener(v -> {\n            // Handle back button click\n            finish();\n        });\n        \n        notificationController = new NotificationController();\n\n\n        // Join button click\n        Button join_button = findViewById(R.id.join_waitlist_button);\n        join_button.setOnClickListener(v -> {\n            JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);\n            confirmation.show(getSupportFragmentManager(), confirmation.getTag());\n            // Send notification to organizer about the new entrant\n            notificationController.sendToSelectedEntrants(eventId,\n                    \"New Entrant\",\n                    \"A user has joined the waiting list for your event.\");\n        });\n\n        Button leave_button = findViewById(R.id.leave_waitlist_button);\n        leave_button.setOnClickListener(v -> {\n            // Handle leave button click\n            LeaveConfirmationFragment confirmation = new LeaveConfirmationFragment().newInstance(eventId);\n            confirmation.show(getSupportFragmentManager(), confirmation.getTag());\n            userInWaitlist();\n            // Notify organizer about the user leaving\n            notificationController.sendToCancelledEntrants(eventId,\n                    \"Entrant Left\",\n                    \"A user has left the waiting list for your event.\");\n        });\n\n        eventId = getIntent().getStringExtra(\"eventId\");\n        Log.d(\"EventDetails\", \"Event ID: \" + eventId);\n        db = FirebaseFirestore.getInstance();\n\n        tvLotteryInfo = findViewById(R.id.tv_lottery_info);\n        tvWaitlistCount = findViewById(R.id.waitlist_count);\n        userInWaitlist();\n        populateUI();\n    }\n\n    /** Checks if current user is organizer and updates UI accordingly */\n    private void showOrganizerControlsIfOwner(DocumentReference organizerRef) {\n        FirebaseAuth auth = FirebaseAuth.getInstance();\n        if (auth.getCurrentUser() == null) {\n            return;\n        }\n        DocumentReference currentUserRef = db.collection(\"users\").document(auth.getCurrentUser().getUid());\n        organizerRef.get().addOnSuccessListener(doc -> {\n            if (doc.exists() && doc.getReference().equals(currentUserRef)) {\n                // TODO: Add organizer control buttons if needed\n                // notifyWaitlistButton.setVisibility(View.VISIBLE);\n                // notifySelectedButton.setVisibility(View.VISIBLE);\n                // notifyCancelledButton.setVisibility(View.VISIBLE);\n            } else {\n                // notifyWaitlistButton.setVisibility(View.GONE);\n                // notifySelectedButton.setVisibility(View.GONE);\n                // notifyCancelledButton.setVisibility(View.GONE);\n            }\n        });\n    }\n\n    /** Sends notifications to all users in a specific group field (Waitlist / Selected / Cancelled) */\n    private void sendNotificationsToGroup(String fieldName, String title, String message) {\n        db.collection(\"Events\").document(eventId).get()\n                .addOnSuccessListener(eventDoc -> {\n                    if (!eventDoc.exists()) return;\n                    // TODO: Implement notification sending logic\n                })\n                .addOnFailureListener(e -> Log.e(\"EventDetails\", \"Error sending notifications\", e));\n    }\n\n    protected void userInWaitlist() {\n        FirebaseAuth auth = FirebaseAuth.getInstance();\n        if (auth.getCurrentUser() == null) {\n            return;\n        }\n        String userId = auth.getCurrentUser().getUid();\n        DocumentReference user_ref = db.collection(\"users\").document(userId);\n        Log.d(\"Firestore\", \"Checking waitlist for eventId=\" + eventId + \", userId=\" + userId);\n\n        db.collection(\"Events\").document(eventId)\n                .get()\n                .addOnSuccessListener(documentSnapshot -> {\n                    if (documentSnapshot.exists()) {\n                        // Safely retrieve the array field\n                        List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get(\"Waitlist\");\n                        Button join_button = findViewById(R.id.join_waitlist_button);\n                        Button leave_button = findViewById(R.id.leave_waitlist_button);\n                        Log.d(\"Firestore\", \"Waitlist from DB: \" + waitlist);\n\n                        if (waitlist != null && waitlist.contains(user_ref)) {\n                            join_button.setEnabled(false);\n                            leave_button.setEnabled(true);\n                            join_button.setVisibility(Button.GONE);\n                            leave_button.setVisibility(Button.VISIBLE);\n                            join_button.setAlpha(0.5f);\n                            leave_button.setAlpha(1f);\n                        } else {\n                            join_button.setEnabled(true);\n                            leave_button.setEnabled(false);\n                            join_button.setVisibility(Button.VISIBLE);\n                            leave_button.setVisibility(Button.GONE);\n                            join_button.setAlpha(1f);\n                            leave_button.setAlpha(0.5f);\n\n                        }\n                    }\n                })\n                .addOnFailureListener(e -> Log.e(\"Firestore\", \"Error reading waitlist\", e));\n    }\n\n    protected void populateUI() {\n        if (eventId != null) {\n            db.collection(\"Events\").document(eventId).get()\n                    .addOnSuccessListener(documentSnapshot -> {\n                        if (documentSnapshot.exists()) {\n                            String name = documentSnapshot.getString(\"Name\");\n                            String cost = documentSnapshot.getString(\"Cost\");\n                            DocumentReference organizer = documentSnapshot.getDocumentReference(\"Organizer\");\n                            String image = documentSnapshot.getString(\"Image\");\n                            String lotteryInfo = documentSnapshot.getString(\"LotteryInfo\");\n                            String description = documentSnapshot.getString(\"description\");\n                            String location = documentSnapshot.getString(\"location\");\n                            \n                            Date eventStartDate = documentSnapshot.getDate(\"eventStartDate\");\n                            Date eventEndDate = documentSnapshot.getDate(\"eventEndDate\");\n                            Date registrationOpenDate = documentSnapshot.getDate(\"registrationOpenDate\");\n                            Date registrationCloseDate = documentSnapshot.getDate(\"registrationCloseDate\");\n                            \n                            Integer maxParticipants = documentSnapshot.get(\"maxParticipants\") != null ? \n                                documentSnapshot.getLong(\"maxParticipants\").intValue() : 0;\n                            \n                            List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get(\"Waitlist\");\n                            int waitlistSize = waitlist != null ? waitlist.size() : 0;\n                            \n                            // Get selected entrants count (new system)\n                            List<String> selectedEntrants = (List<String>) documentSnapshot.get(\"selectedEntrantIds\");\n                            int selectedCount = selectedEntrants != null ? selectedEntrants.size() : 0;\n\n                            // Populate basic fields\n                            TextView nameView = findViewById(R.id.event_name);\n                            nameView.setText(name);\n                            \n                            // Cost - remove \"Cost: \" prefix, just show price\n                            TextView costView = findViewById(R.id.event_cost);\n                            if (cost != null && cost.startsWith(\"$\")) {\n                                costView.setText(cost);\n                            } else {\n                                costView.setText(\"$\" + (cost != null ? cost : \"0\"));\n                            }\n                            \n                            // Organizer\n                            TextView organizerView = findViewById(R.id.event_organizer);\n                            if (organizer != null) {\n                                populateOrganizer(organizer, organizerView);\n                            } else {\n                                organizerView.setText(\"Organized by Unknown\");\n                            }\n                            \n                            // Image\n                            ImageView imageView = findViewById(R.id.event_poster);\n                            populateImage(image, imageView);\n                            \n                            // Description\n                            TextView descriptionView = findViewById(R.id.event_description);\n                            if (description != null && !description.isEmpty()) {\n                                descriptionView.setText(description);\n                            } else {\n                                descriptionView.setText(\"No description available.\");\n                            }\n                            \n                            // Location\n                            TextView locationView = findViewById(R.id.event_location);\n                            if (location != null && !location.isEmpty()) {\n                                locationView.setText(location);\n                            } else {\n                                locationView.setText(\"Location TBD\");\n                            }\n                            // Location is now inside a LinearLayout, so the TextView reference still works\n                            \n                            // Date range\n                            TextView dateView = findViewById(R.id.event_date);\n                            if (eventStartDate != null && eventEndDate != null) {\n                                SimpleDateFormat dateFormat = new SimpleDateFormat(\"MMM d, yyyy\", Locale.getDefault());\n                                dateView.setText(dateFormat.format(eventStartDate) + \" - \" + dateFormat.format(eventEndDate));\n                            } else if (eventStartDate != null) {\n                                SimpleDateFormat dateFormat = new SimpleDateFormat(\"MMM d, yyyy\", Locale.getDefault());\n                                dateView.setText(dateFormat.format(eventStartDate));\n                            } else {\n                                dateView.setText(\"Date TBD\");\n                            }\n                            \n                            // Time\n                            TextView timeView = findViewById(R.id.event_time);\n                            if (eventStartDate != null) {\n                                SimpleDateFormat timeFormat = new SimpleDateFormat(\"h:mm a\", Locale.getDefault());\n                                timeView.setText(timeFormat.format(eventStartDate));\n                            } else {\n                                timeView.setText(\"Time TBD\");\n                            }\n                            \n                            // Schedule (for now, just show \"One-time event\" or calculate if recurring)\n                            TextView scheduleView = findViewById(R.id.event_schedule);\n                            scheduleView.setText(\"One-time event\");\n                            \n                            // Status tag - show selected count vs max participants\n                            TextView statusTag = findViewById(R.id.event_status_tag);\n                            updateStatusTag(statusTag, documentSnapshot, selectedCount, maxParticipants);\n                            \n                            // Registration info\n                            TextView registrationInfo = findViewById(R.id.registration_info);\n                            // Check if user is in waitlist (check both old and new systems)\n                            FirebaseAuth auth = FirebaseAuth.getInstance();\n                            boolean userInWaitlist = false;\n                            if (auth.getCurrentUser() != null) {\n                                String userId = auth.getCurrentUser().getUid();\n                                \n                                // Check new system (waitingListEntrantIds)\n                                List<String> waitingListEntrantIds = (List<String>) documentSnapshot.get(\"waitingListEntrantIds\");\n                                if (waitingListEntrantIds != null && waitingListEntrantIds.contains(userId)) {\n                                    userInWaitlist = true;\n                                } else {\n                                    // Check old system (Waitlist) - reuse existing waitlist variable\n                                    DocumentReference user_ref = db.collection(\"users\").document(userId);\n                                    userInWaitlist = waitlist != null && waitlist.contains(user_ref);\n                                }\n                            }\n                            updateRegistrationInfo(registrationInfo, registrationOpenDate, registrationCloseDate, userInWaitlist);\n                            \n                            // Lottery info\n                            displayLotteryCriteria(lotteryInfo);\n                        }\n                    });\n        }\n    }\n    \n    private void updateStatusTag(TextView statusTag, DocumentSnapshot documentSnapshot, int selectedCount, int maxParticipants) {\n        Date now = new Date();\n        Date registrationOpenDate = documentSnapshot.getDate(\"registrationOpenDate\");\n        Date registrationCloseDate = documentSnapshot.getDate(\"registrationCloseDate\");\n        \n        boolean isOpen = true;\n        if (registrationOpenDate != null && now.before(registrationOpenDate)) {\n            isOpen = false; // Registration not open yet\n        } else if (registrationCloseDate != null && now.after(registrationCloseDate)) {\n            isOpen = false; // Registration closed\n        }\n        \n        // Ensure maxParticipants is valid (at least 1)\n        if (maxParticipants <= 0) {\n            maxParticipants = 1; // Default to 1 to avoid division by zero or weird display\n        }\n        \n        String statusText;\n        if (isOpen) {\n            statusText = \"\uD83D\uDFE2 Open - \" + selectedCount + \"/\" + maxParticipants;\n        } else {\n            statusText = \"\uD83D\uDD34 Closed - \" + selectedCount + \"/\" + maxParticipants;\n        }\n        \n        statusTag.setText(statusText);\n    }\n    \n    private void updateRegistrationInfo(TextView registrationInfo, Date registrationOpenDate, Date registrationCloseDate, boolean userInWaitlist) {\n        Date now = new Date();\n        SimpleDateFormat dateFormat = new SimpleDateFormat(\"MMM d, yyyy\", Locale.getDefault());\n        \n        if (userInWaitlist) {\n            // User is in waiting list - show days remaining\n            long daysRemaining = 0;\n            String message = \"\";\n            \n            if (registrationOpenDate != null && now.before(registrationOpenDate)) {\n                // Registration hasn't opened yet\n                long diffInMillis = registrationOpenDate.getTime() - now.getTime();\n                daysRemaining = diffInMillis / (1000 * 60 * 60 * 24);\n                message = daysRemaining + \" day\" + (daysRemaining != 1 ? \"s\" : \"\") + \" until registration opens\";\n            } else if (registrationCloseDate != null) {\n                // Registration is open, show days until lottery/selection\n                long diffInMillis = registrationCloseDate.getTime() - now.getTime();\n                daysRemaining = diffInMillis / (1000 * 60 * 60 * 24);\n                if (daysRemaining > 0) {\n                    message = daysRemaining + \" day\" + (daysRemaining != 1 ? \"s\" : \"\") + \" until lottery selection\";\n                } else if (daysRemaining == 0) {\n                    message = \"Lottery selection today\";\n                } else {\n                    message = \"Lottery selection completed\";\n                }\n            }\n            \n            if (!message.isEmpty()) {\n                registrationInfo.setText(message);\n            } else {\n                registrationInfo.setVisibility(View.GONE);\n            }\n        } else {\n            // User not in waiting list - show normal registration info\n            if (registrationOpenDate != null && now.before(registrationOpenDate)) {\n                registrationInfo.setText(\"Registration opens \" + dateFormat.format(registrationOpenDate));\n            } else if (registrationCloseDate != null) {\n                registrationInfo.setText(\"Registration closes \" + dateFormat.format(registrationCloseDate));\n            } else {\n                registrationInfo.setVisibility(View.GONE);\n            }\n        }\n    }\n\n    protected void populateOrganizer(DocumentReference organizerRef, TextView organizerView) {\n        organizerRef.get().addOnSuccessListener(userSnapshot -> {\n            if (userSnapshot.exists()) {\n                String organizerName = userSnapshot.getString(\"Name\");\n                if (organizerName != null && !organizerName.isEmpty()) {\n                    organizerView.setText(\"Organized by \" + organizerName);\n                } else {\n                    organizerView.setText(\"Organized by Unknown\");\n                }\n            } else {\n                organizerView.setText(\"Organized by Unknown\");\n            }\n        }).addOnFailureListener(e -> {\n            organizerView.setText(\"Organized by Unknown\");\n        });\n    }\n\n    protected void populateImage(String base64Image, ImageView holder) {\n        if (base64Image != null && !base64Image.isEmpty()) {\n            try {\n                // Remove the \"data:image/jpeg;base64,\" or similar prefix\n                if (base64Image.startsWith(\"data:image\")) {\n                    base64Image = base64Image.substring(base64Image.indexOf(\",\") + 1);\n                }\n\n                byte[] decodedBytes = android.util.Base64.decode(base64Image, android.util.Base64.DEFAULT);\n                Bitmap bitmap = android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);\n\n                holder.setImageBitmap(bitmap);\n            } catch (Exception e) {\n                Log.e(\"EventAdapter\", \"Failed to decode image: \" + e.getMessage());\n                // Set placeholder if image fails to load\n                holder.setImageResource(R.drawable.event_placeholder);\n            }\n        } else {\n            // Set placeholder if no image\n            holder.setImageResource(R.drawable.event_placeholder);\n        }\n    }\n\n    /**\n     * US 01.05.05: Display lottery selection criteria to entrants\n     */\n    private void displayLotteryCriteria(String lotteryInfo) {\n        if (lotteryInfo != null && !lotteryInfo.isEmpty()) {\n            tvLotteryInfo.setText(\"Lottery Info: \" + lotteryInfo);\n            tvLotteryInfo.setVisibility(View.VISIBLE);\n        } else {\n            tvLotteryInfo.setText(\"Lottery Info: Random selection. All entrants have equal chance.\");\n            tvLotteryInfo.setVisibility(View.VISIBLE);\n        }\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/eventlotteryapp/EntrantView/EventDetailsActivity.java b/app/src/main/java/com/example/eventlotteryapp/EntrantView/EventDetailsActivity.java
+--- a/app/src/main/java/com/example/eventlotteryapp/EntrantView/EventDetailsActivity.java	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/java/com/example/eventlotteryapp/EntrantView/EventDetailsActivity.java	(date 1764397461633)
+@@ -16,19 +16,14 @@
+ import com.example.eventlotteryapp.R;
+ import com.example.eventlotteryapp.EntrantView.JoinConfirmationFragment;
+ import com.example.eventlotteryapp.EntrantView.LeaveConfirmationFragment;
++import com.example.eventlotteryapp.UserSession;
+ import com.google.firebase.Timestamp;
+-import com.google.firebase.auth.FirebaseAuth;
+ import com.google.firebase.firestore.DocumentReference;
+-import com.google.firebase.firestore.DocumentSnapshot;
+ import com.google.firebase.firestore.FirebaseFirestore;
+ import com.example.eventlotteryapp.NotificationController;
+ 
+-import java.text.SimpleDateFormat;
+-import java.util.Calendar;
+-import java.util.Date;
+ import java.util.HashMap;
+ import java.util.List;
+-import java.util.Locale;
+ 
+ public class EventDetailsActivity extends AppCompatActivity {
+     private String eventId;
+@@ -51,7 +46,6 @@
+             // Handle back button click
+             finish();
+         });
+-        
+         notificationController = new NotificationController();
+ 
+ 
+@@ -82,6 +76,14 @@
+         Log.d("EventDetails", "Event ID: " + eventId);
+         db = FirebaseFirestore.getInstance();
+ 
++        // TEMPORARY: Test invitation response screen
++        Button testButton = findViewById(R.id.btn_test_invitation);
++        testButton.setOnClickListener(v -> {
++            Intent intent = new Intent(EventDetailsActivity.this, InvitationResponseActivity.class);
++            intent.putExtra("eventId", eventId);
++            startActivity(intent);
++        });
++
+         tvLotteryInfo = findViewById(R.id.tv_lottery_info);
+         tvWaitlistCount = findViewById(R.id.waitlist_count);
+         userInWaitlist();
+@@ -90,11 +92,7 @@
+ 
+     /** Checks if current user is organizer and updates UI accordingly */
+     private void showOrganizerControlsIfOwner(DocumentReference organizerRef) {
+-        FirebaseAuth auth = FirebaseAuth.getInstance();
+-        if (auth.getCurrentUser() == null) {
+-            return;
+-        }
+-        DocumentReference currentUserRef = db.collection("users").document(auth.getCurrentUser().getUid());
++        DocumentReference currentUserRef = UserSession.getCurrentUserRef();
+         organizerRef.get().addOnSuccessListener(doc -> {
+             if (doc.exists() && doc.getReference().equals(currentUserRef)) {
+                 // TODO: Add organizer control buttons if needed
+@@ -120,13 +118,9 @@
+     }
+ 
+     protected void userInWaitlist() {
+-        FirebaseAuth auth = FirebaseAuth.getInstance();
+-        if (auth.getCurrentUser() == null) {
+-            return;
+-        }
+-        String userId = auth.getCurrentUser().getUid();
+-        DocumentReference user_ref = db.collection("users").document(userId);
+-        Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + userId);
++        UserSession userSession = new UserSession();
++        DocumentReference user_ref = UserSession.getCurrentUserRef();
++        Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + user_ref);
+ 
+         db.collection("Events").document(eventId)
+                 .get()
+@@ -168,190 +162,36 @@
+                             String cost = documentSnapshot.getString("Cost");
+                             DocumentReference organizer = documentSnapshot.getDocumentReference("Organizer");
+                             String image = documentSnapshot.getString("Image");
+-                            String lotteryInfo = documentSnapshot.getString("LotteryInfo");
+-                            String description = documentSnapshot.getString("description");
+-                            String location = documentSnapshot.getString("location");
+-                            
+-                            Date eventStartDate = documentSnapshot.getDate("eventStartDate");
+-                            Date eventEndDate = documentSnapshot.getDate("eventEndDate");
+-                            Date registrationOpenDate = documentSnapshot.getDate("registrationOpenDate");
+-                            Date registrationCloseDate = documentSnapshot.getDate("registrationCloseDate");
+-                            
+-                            Integer maxParticipants = documentSnapshot.get("maxParticipants") != null ? 
+-                                documentSnapshot.getLong("maxParticipants").intValue() : 0;
+-                            
+-                            List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
+-                            int waitlistSize = waitlist != null ? waitlist.size() : 0;
+-                            
+-                            // Get selected entrants count (new system)
+-                            List<String> selectedEntrants = (List<String>) documentSnapshot.get("selectedEntrantIds");
+-                            int selectedCount = selectedEntrants != null ? selectedEntrants.size() : 0;
++                            String lotteryInfo = documentSnapshot.getString("LotteryInfo"); // for lottery info
++
++                            tvLotteryInfo.setText(lotteryInfo);
+ 
+-                            // Populate basic fields
++                            // populate UI
+                             TextView nameView = findViewById(R.id.event_name);
+                             nameView.setText(name);
+-                            
+-                            // Cost - remove "Cost: " prefix, just show price
+                             TextView costView = findViewById(R.id.event_cost);
+-                            if (cost != null && cost.startsWith("$")) {
+-                                costView.setText(cost);
+-                            } else {
+-                                costView.setText("$" + (cost != null ? cost : "0"));
+-                            }
+-                            
+-                            // Organizer
++                            costView.setText("Cost: " + cost);
+                             TextView organizerView = findViewById(R.id.event_organizer);
+-                            if (organizer != null) {
+-                                populateOrganizer(organizer, organizerView);
+-                            } else {
+-                                organizerView.setText("Organized by Unknown");
+-                            }
+-                            
+-                            // Image
++                            assert organizer != null;
++                            populateOrganizer(organizer, organizerView);
+                             ImageView imageView = findViewById(R.id.event_poster);
+                             populateImage(image, imageView);
+-                            
+-                            // Description
+-                            TextView descriptionView = findViewById(R.id.event_description);
+-                            if (description != null && !description.isEmpty()) {
+-                                descriptionView.setText(description);
+-                            } else {
+-                                descriptionView.setText("No description available.");
+-                            }
+-                            
+-                            // Location
+-                            TextView locationView = findViewById(R.id.event_location);
+-                            if (location != null && !location.isEmpty()) {
+-                                locationView.setText(location);
+-                            } else {
+-                                locationView.setText("Location TBD");
+-                            }
+-                            // Location is now inside a LinearLayout, so the TextView reference still works
+-                            
+-                            // Date range
+-                            TextView dateView = findViewById(R.id.event_date);
+-                            if (eventStartDate != null && eventEndDate != null) {
+-                                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+-                                dateView.setText(dateFormat.format(eventStartDate) + " - " + dateFormat.format(eventEndDate));
+-                            } else if (eventStartDate != null) {
+-                                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+-                                dateView.setText(dateFormat.format(eventStartDate));
+-                            } else {
+-                                dateView.setText("Date TBD");
+-                            }
+-                            
+-                            // Time
+-                            TextView timeView = findViewById(R.id.event_time);
+-                            if (eventStartDate != null) {
+-                                SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm a", Locale.getDefault());
+-                                timeView.setText(timeFormat.format(eventStartDate));
+-                            } else {
+-                                timeView.setText("Time TBD");
+-                            }
+-                            
+-                            // Schedule (for now, just show "One-time event" or calculate if recurring)
+-                            TextView scheduleView = findViewById(R.id.event_schedule);
+-                            scheduleView.setText("One-time event");
+-                            
+-                            // Status tag - show selected count vs max participants
+-                            TextView statusTag = findViewById(R.id.event_status_tag);
+-                            updateStatusTag(statusTag, documentSnapshot, selectedCount, maxParticipants);
+-                            
+-                            // Registration info
+-                            TextView registrationInfo = findViewById(R.id.registration_info);
+-                            // Check if user is in waitlist (check both old and new systems)
+-                            FirebaseAuth auth = FirebaseAuth.getInstance();
+-                            boolean userInWaitlist = false;
+-                            if (auth.getCurrentUser() != null) {
+-                                String userId = auth.getCurrentUser().getUid();
+-                                
+-                                // Check new system (waitingListEntrantIds)
+-                                List<String> waitingListEntrantIds = (List<String>) documentSnapshot.get("waitingListEntrantIds");
+-                                if (waitingListEntrantIds != null && waitingListEntrantIds.contains(userId)) {
+-                                    userInWaitlist = true;
+-                                } else {
+-                                    // Check old system (Waitlist) - reuse existing waitlist variable
+-                                    DocumentReference user_ref = db.collection("users").document(userId);
+-                                    userInWaitlist = waitlist != null && waitlist.contains(user_ref);
+-                                }
+-                            }
+-                            updateRegistrationInfo(registrationInfo, registrationOpenDate, registrationCloseDate, userInWaitlist);
+-                            
+-                            // Lottery info
++
+                             displayLotteryCriteria(lotteryInfo);
+-                        }
+-                    });
+-        }
+-    }
+-    
+-    private void updateStatusTag(TextView statusTag, DocumentSnapshot documentSnapshot, int selectedCount, int maxParticipants) {
+-        Date now = new Date();
+-        Date registrationOpenDate = documentSnapshot.getDate("registrationOpenDate");
+-        Date registrationCloseDate = documentSnapshot.getDate("registrationCloseDate");
+-        
+-        boolean isOpen = true;
+-        if (registrationOpenDate != null && now.before(registrationOpenDate)) {
+-            isOpen = false; // Registration not open yet
+-        } else if (registrationCloseDate != null && now.after(registrationCloseDate)) {
+-            isOpen = false; // Registration closed
+-        }
+-        
+-        // Ensure maxParticipants is valid (at least 1)
+-        if (maxParticipants <= 0) {
+-            maxParticipants = 1; // Default to 1 to avoid division by zero or weird display
+-        }
+-        
+-        String statusText;
+-        if (isOpen) {
+-            statusText = "🟢 Open - " + selectedCount + "/" + maxParticipants;
+-        } else {
+-            statusText = "🔴 Closed - " + selectedCount + "/" + maxParticipants;
+-        }
+-        
+-        statusTag.setText(statusText);
+-    }
+-    
+-    private void updateRegistrationInfo(TextView registrationInfo, Date registrationOpenDate, Date registrationCloseDate, boolean userInWaitlist) {
+-        Date now = new Date();
+-        SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+-        
+-        if (userInWaitlist) {
+-            // User is in waiting list - show days remaining
+-            long daysRemaining = 0;
+-            String message = "";
+-            
+-            if (registrationOpenDate != null && now.before(registrationOpenDate)) {
+-                // Registration hasn't opened yet
+-                long diffInMillis = registrationOpenDate.getTime() - now.getTime();
+-                daysRemaining = diffInMillis / (1000 * 60 * 60 * 24);
+-                message = daysRemaining + " day" + (daysRemaining != 1 ? "s" : "") + " until registration opens";
+-            } else if (registrationCloseDate != null) {
+-                // Registration is open, show days until lottery/selection
+-                long diffInMillis = registrationCloseDate.getTime() - now.getTime();
+-                daysRemaining = diffInMillis / (1000 * 60 * 60 * 24);
+-                if (daysRemaining > 0) {
+-                    message = daysRemaining + " day" + (daysRemaining != 1 ? "s" : "") + " until lottery selection";
+-                } else if (daysRemaining == 0) {
+-                    message = "Lottery selection today";
+-                } else {
+-                    message = "Lottery selection completed";
+-                }
+-            }
+-            
+-            if (!message.isEmpty()) {
+-                registrationInfo.setText(message);
+-            } else {
+-                registrationInfo.setVisibility(View.GONE);
+-            }
+-        } else {
+-            // User not in waiting list - show normal registration info
+-            if (registrationOpenDate != null && now.before(registrationOpenDate)) {
+-                registrationInfo.setText("Registration opens " + dateFormat.format(registrationOpenDate));
+-            } else if (registrationCloseDate != null) {
+-                registrationInfo.setText("Registration closes " + dateFormat.format(registrationCloseDate));
+-            } else {
+-                registrationInfo.setVisibility(View.GONE);
+-            }
++
++                            if (image != null)
++                                populateImage(image, findViewById(R.id.event_poster));
++
++                            // Update waitlist count dynamically
++                            List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
++
++                            if (waitlist != null) {
++                                tvWaitlistCount.setText("Waiting List Entrants: " + waitlist.size());
++                            } else {
++                                tvWaitlistCount.setText("Waiting List Entrants: 0");
++                            }
++                        }
++                    });
+         }
+     }
+ 
+@@ -359,16 +199,8 @@
+         organizerRef.get().addOnSuccessListener(userSnapshot -> {
+             if (userSnapshot.exists()) {
+                 String organizerName = userSnapshot.getString("Name");
+-                if (organizerName != null && !organizerName.isEmpty()) {
+-                    organizerView.setText("Organized by " + organizerName);
+-                } else {
+-                    organizerView.setText("Organized by Unknown");
+-                }
+-            } else {
+-                organizerView.setText("Organized by Unknown");
++                organizerView.setText(organizerName);
+             }
+-        }).addOnFailureListener(e -> {
+-            organizerView.setText("Organized by Unknown");
+         });
+     }
+ 
+@@ -386,12 +218,7 @@
+                 holder.setImageBitmap(bitmap);
+             } catch (Exception e) {
+                 Log.e("EventAdapter", "Failed to decode image: " + e.getMessage());
+-                // Set placeholder if image fails to load
+-                holder.setImageResource(R.drawable.event_placeholder);
+             }
+-        } else {
+-            // Set placeholder if no image
+-            holder.setImageResource(R.drawable.event_placeholder);
+         }
+     }
+ 
+@@ -406,5 +233,6 @@
+             tvLotteryInfo.setText("Lottery Info: Random selection. All entrants have equal chance.");
+             tvLotteryInfo.setVisibility(View.VISIBLE);
+         }
++
+     }
+ }
+\ No newline at end of file
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:tools=\"http://schemas.android.com/tools\">\n\n    <!-- Permissions for OpenStreetMap -->\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />\n    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />\n    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />\n    <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" />\n    <!-- Permission for QR Code Scanning -->\n    <uses-permission android:name=\"android.permission.CAMERA\" />\n    <uses-feature android:name=\"android.hardware.camera\" android:required=\"false\" />\n    <uses-feature android:name=\"android.hardware.camera.autofocus\" android:required=\"false\" />\n\n    <application\n        android:allowBackup=\"true\"\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\n        android:fullBackupContent=\"@xml/backup_rules\"\n        android:icon=\"@mipmap/ic_launcher\"\n        android:label=\"@string/app_name\"\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\n        android:supportsRtl=\"true\"\n        android:theme=\"@style/Theme.EventLotteryApp\">\n        <activity\n            android:name=\".EntrantView.EventDetailsActivity\"\n            android:windowSoftInputMode=\"adjustResize\"\n            android:exported=\"false\" />\n\n        <activity\n            android:name=\".EntrantView.EntrantHomePageActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".OrganizerHomePage\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".Authorization.AuthActivity\"\n            android:exported=\"true\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n        <activity\n            android:name=\".organizer.EntrantListActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".EntrantHomePage\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".organizer.CreateEventActivity\"\n            android:exported=\"false\" />\n\n        <activity\n            android:name=\".EntrantView.InvitationResponseActivity\"\n            android:exported=\"false\"\n            android:theme=\"@style/Theme.EventLotteryApp\" />\n        <activity\n            android:name=\".organizer.ShareQrCodeActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".organizer.OrganizerEventDetailsActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".organizer.RunLotteryActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".organizer.LotteryResultsActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".organizer.NotifyEntrantsActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".organizer.FinalizedListActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".EntrantView.ScanQrCodeActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".EntrantView.QrCaptureActivity\"\n            android:exported=\"false\"\n            android:stateNotNeeded=\"true\"\n            android:screenOrientation=\"portrait\"\n            android:theme=\"@style/zxing_capture\" />\n        <activity\n            android:name=\".Admin.AdminBrowseEventsActivity\"\n            android:exported=\"true\" />\n        <activity\n            android:name=\".Admin.AdminBrowseProfilesActivity\"\n            android:exported=\"true\" />\n\n        <provider\n            android:name=\"androidx.core.content.FileProvider\"\n            android:authorities=\"${applicationId}.fileprovider\"\n            android:exported=\"false\"\n            android:grantUriPermissions=\"true\">\n            <meta-data\n                android:name=\"android.support.FILE_PROVIDER_PATHS\"\n                android:resource=\"@xml/file_paths\" />\n        </provider>\n    </application>\n\n</manifest>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/AndroidManifest.xml	(date 1764397461633)
+@@ -8,10 +8,6 @@
+     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+-    <!-- Permission for QR Code Scanning -->
+-    <uses-permission android:name="android.permission.CAMERA" />
+-    <uses-feature android:name="android.hardware.camera" android:required="false" />
+-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+ 
+     <application
+         android:allowBackup="true"
+@@ -73,21 +69,6 @@
+         <activity
+             android:name=".organizer.FinalizedListActivity"
+             android:exported="false" />
+-        <activity
+-            android:name=".EntrantView.ScanQrCodeActivity"
+-            android:exported="false" />
+-        <activity
+-            android:name=".EntrantView.QrCaptureActivity"
+-            android:exported="false"
+-            android:stateNotNeeded="true"
+-            android:screenOrientation="portrait"
+-            android:theme="@style/zxing_capture" />
+-        <activity
+-            android:name=".Admin.AdminBrowseEventsActivity"
+-            android:exported="true" />
+-        <activity
+-            android:name=".Admin.AdminBrowseProfilesActivity"
+-            android:exported="true" />
+ 
+         <provider
+             android:name="androidx.core.content.FileProvider"
+Index: app/src/main/res/drawable/calendar_background.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/calendar_background.xml b/app/src/main/res/drawable/calendar_background.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/calendar_background.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,7 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<shape xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:shape="rectangle">
+-    <solid android:color="@color/white" />
+-    <corners android:radius="16dp" />
+-</shape>
+-
+Index: app/src/main/java/com/example/eventlotteryapp/EntrantView/CustomDatePickerDialog.java
+===================================================================
+diff --git a/app/src/main/java/com/example/eventlotteryapp/EntrantView/CustomDatePickerDialog.java b/app/src/main/java/com/example/eventlotteryapp/EntrantView/CustomDatePickerDialog.java
+deleted file mode 100644
+--- a/app/src/main/java/com/example/eventlotteryapp/EntrantView/CustomDatePickerDialog.java	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,104 +0,0 @@
+-package com.example.eventlotteryapp.EntrantView;
+-
+-import android.app.Dialog;
+-import android.content.Context;
+-import android.os.Bundle;
+-import android.view.View;
+-import android.view.Window;
+-import android.widget.Button;
+-import android.widget.DatePicker;
+-import android.widget.LinearLayout;
+-import android.widget.TextView;
+-
+-import androidx.annotation.NonNull;
+-
+-import com.example.eventlotteryapp.R;
+-
+-import java.util.Calendar;
+-
+-public class CustomDatePickerDialog extends Dialog {
+-    private DatePicker datePicker;
+-    private OnDateSetListener listener;
+-    private Calendar minDate;
+-
+-    public interface OnDateSetListener {
+-        void onDateSet(int year, int month, int dayOfMonth);
+-    }
+-
+-    public CustomDatePickerDialog(@NonNull Context context, OnDateSetListener listener, Calendar initialDate, Calendar minDate) {
+-        super(context, R.style.CustomDatePickerDialog);
+-        this.listener = listener;
+-        this.minDate = minDate;
+-        
+-        // Set initial date
+-        if (initialDate == null) {
+-            initialDate = Calendar.getInstance();
+-        }
+-    }
+-
+-    @Override
+-    protected void onCreate(Bundle savedInstanceState) {
+-        super.onCreate(savedInstanceState);
+-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+-        setContentView(R.layout.dialog_custom_date_picker);
+-        
+-        // Configure dialog window
+-        Window window = getWindow();
+-        if (window != null) {
+-            window.setBackgroundDrawableResource(android.R.color.transparent);
+-            // Set dialog width to 90% of screen width, centered
+-            android.view.WindowManager.LayoutParams params = window.getAttributes();
+-            int screenWidth = getContext().getResources().getDisplayMetrics().widthPixels;
+-            params.width = (int) (screenWidth * 0.9);
+-            params.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
+-            params.gravity = android.view.Gravity.CENTER;
+-            window.setAttributes(params);
+-        }
+-
+-        datePicker = findViewById(R.id.date_picker);
+-        TextView title = findViewById(R.id.dialog_title);
+-        Button btnCancel = findViewById(R.id.btn_cancel);
+-        Button btnOk = findViewById(R.id.btn_ok);
+-
+-        // Set initial date
+-        Calendar today = Calendar.getInstance();
+-        datePicker.init(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH), null);
+-
+-        // Set minimum date (disable past dates)
+-        if (minDate != null) {
+-            datePicker.setMinDate(minDate.getTimeInMillis());
+-        }
+-
+-        // Apply custom styling to DatePicker
+-        styleDatePicker();
+-
+-        btnCancel.setOnClickListener(v -> dismiss());
+-
+-        btnOk.setOnClickListener(v -> {
+-            if (listener != null) {
+-                listener.onDateSet(
+-                    datePicker.getYear(),
+-                    datePicker.getMonth(),
+-                    datePicker.getDayOfMonth()
+-                );
+-            }
+-            dismiss();
+-        });
+-    }
+-
+-    private void styleDatePicker() {
+-        // Find the CalendarView inside DatePicker and style it
+-        // This is a workaround since DatePicker's internal structure varies by Android version
+-        try {
+-            // Get the CalendarView
+-            View calendarView = datePicker.getChildAt(0);
+-            if (calendarView instanceof android.widget.CalendarView) {
+-                android.widget.CalendarView cv = (android.widget.CalendarView) calendarView;
+-                // Note: CalendarView styling is limited, but we can try to apply some styles
+-            }
+-        } catch (Exception e) {
+-            // If styling fails, continue with default appearance
+-        }
+-    }
+-}
+-
+Index: app/src/main/res/drawable/gradient_top_overlay_rounded.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/gradient_top_overlay_rounded.xml b/app/src/main/res/drawable/gradient_top_overlay_rounded.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/gradient_top_overlay_rounded.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,14 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<shape xmlns:android="http://schemas.android.com/apk/res/android">
+-    <corners
+-        android:topLeftRadius="12dp"
+-        android:topRightRadius="12dp"
+-        android:bottomLeftRadius="0dp"
+-        android:bottomRightRadius="0dp" />
+-    <gradient
+-        android:type="linear"
+-        android:angle="270"
+-        android:startColor="#99000000"
+-        android:endColor="#00000000" />
+-</shape>
+-
+Index: app/src/main/res/layout/activity_qr_capture.xml
+===================================================================
+diff --git a/app/src/main/res/layout/activity_qr_capture.xml b/app/src/main/res/layout/activity_qr_capture.xml
+deleted file mode 100644
+--- a/app/src/main/res/layout/activity_qr_capture.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,22 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:layout_width="match_parent"
+-    android:layout_height="match_parent">
+-
+-    <!-- Back Button Overlay -->
+-    <ImageView
+-        android:id="@+id/back_button"
+-        android:layout_width="48dp"
+-        android:layout_height="48dp"
+-        android:src="@drawable/ic_arrow_back"
+-        android:background="?attr/selectableItemBackgroundBorderless"
+-        android:contentDescription="Back"
+-        android:clickable="true"
+-        android:focusable="true"
+-        android:padding="12dp"
+-        android:layout_margin="16dp"
+-        android:tint="@color/white"
+-        android:elevation="8dp" />
+-
+-</FrameLayout>
+-
+Index: app/src/main/res/drawable/gradient_bottom_overlay.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/gradient_bottom_overlay.xml b/app/src/main/res/drawable/gradient_bottom_overlay.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/gradient_bottom_overlay.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,9 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<shape xmlns:android="http://schemas.android.com/apk/res/android">
+-    <gradient
+-        android:type="linear"
+-        android:angle="90"
+-        android:startColor="#00000000"
+-        android:endColor="#99000000" />
+-</shape>
+-
+Index: app/src/main/res/drawable/rounded_image_corners.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/rounded_image_corners.xml b/app/src/main/res/drawable/rounded_image_corners.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/rounded_image_corners.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,6 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<shape xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:shape="rectangle">
+-    <corners android:radius="12dp" />
+-</shape>
+-
+Index: app/src/main/java/com/example/eventlotteryapp/EntrantView/ScanQrCodeActivity.java
+===================================================================
+diff --git a/app/src/main/java/com/example/eventlotteryapp/EntrantView/ScanQrCodeActivity.java b/app/src/main/java/com/example/eventlotteryapp/EntrantView/ScanQrCodeActivity.java
+deleted file mode 100644
+--- a/app/src/main/java/com/example/eventlotteryapp/EntrantView/ScanQrCodeActivity.java	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,47 +0,0 @@
+-package com.example.eventlotteryapp.EntrantView;
+-
+-import android.content.Intent;
+-import android.os.Bundle;
+-import androidx.activity.result.ActivityResultLauncher;
+-import androidx.appcompat.app.AppCompatActivity;
+-import com.journeyapps.barcodescanner.ScanContract;
+-import com.journeyapps.barcodescanner.ScanOptions;
+-
+-public class ScanQrCodeActivity extends AppCompatActivity {
+-    
+-    private ActivityResultLauncher<ScanOptions> scanLauncher;
+-    
+-    @Override
+-    protected void onCreate(Bundle savedInstanceState) {
+-        super.onCreate(savedInstanceState);
+-        
+-        // Register the activity result launcher
+-        scanLauncher = registerForActivityResult(new ScanContract(), result -> {
+-            if (result.getContents() != null) {
+-                String eventId = result.getContents();
+-                
+-                // Navigate to event details
+-                Intent intent = new Intent(this, EventDetailsActivity.class);
+-                intent.putExtra("eventId", eventId);
+-                startActivity(intent);
+-                finish();
+-            } else {
+-                // User cancelled or scan failed
+-                finish();
+-            }
+-        });
+-        
+-        // Launch QR scanner
+-        ScanOptions options = new ScanOptions();
+-        options.setDesiredBarcodeFormats(ScanOptions.QR_CODE);
+-        options.setPrompt("Scan Event QR Code");
+-        options.setCameraId(0);
+-        options.setBeepEnabled(true);
+-        options.setBarcodeImageEnabled(false);
+-        options.setOrientationLocked(false);
+-        options.setCaptureActivity(QrCaptureActivity.class);
+-        
+-        scanLauncher.launch(options);
+-    }
+-}
+-
+Index: app/src/main/res/drawable/dialog_background.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/dialog_background.xml b/app/src/main/res/drawable/dialog_background.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/dialog_background.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,7 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<shape xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:shape="rectangle">
+-    <solid android:color="@color/white" />
+-    <corners android:radius="16dp" />
+-</shape>
+-
+Index: app/src/main/res/drawable/ic_qr_scan.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/ic_qr_scan.xml b/app/src/main/res/drawable/ic_qr_scan.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/ic_qr_scan.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,11 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<vector xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:width="24dp"
+-    android:height="24dp"
+-    android:viewportWidth="24"
+-    android:viewportHeight="24">
+-    <path
+-        android:fillColor="#000000"
+-        android:pathData="M3,3h4v2H5v2H3V3zM3,17v-2h2v2h2v2H3V17zM17,3h4v4h-2V5h-2V3zM17,17v-2h2v-2h2v4H17zM12,7c-2.76,0 -5,2.24 -5,5s2.24,5 5,5 5,-2.24 5,-5 -2.24,-5 -5,-5zM12,15c-1.65,0 -3,-1.35 -3,-3s1.35,-3 3,-3 3,1.35 3,3 -1.35,3 -3,3z"/>
+-</vector>
+-
+Index: app/src/main/res/drawable/empty_calendar_illustration.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/empty_calendar_illustration.xml b/app/src/main/res/drawable/empty_calendar_illustration.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/empty_calendar_illustration.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,36 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<vector xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:width="361dp"
+-    android:height="313dp"
+-    android:viewportWidth="361"
+-    android:viewportHeight="313">
+-    <!-- Placeholder illustration - Simple calendar icon -->
+-    <!-- Background -->
+-    <path
+-        android:fillColor="#F5F5F5"
+-        android:pathData="M0,0h361v313h-361z"/>
+-    
+-    <!-- Calendar base -->
+-    <path
+-        android:fillColor="#E0E0E0"
+-        android:pathData="M80,80h201v200h-201z"/>
+-    <path
+-        android:fillColor="#BDBDBD"
+-        android:pathData="M80,80h201v30h-201z"/>
+-    
+-    <!-- Calendar grid lines -->
+-    <path
+-        android:strokeColor="#CCCCCC"
+-        android:strokeWidth="1"
+-        android:pathData="M130,110v150 M180,110v150 M230,110v150"/>
+-    <path
+-        android:strokeColor="#CCCCCC"
+-        android:strokeWidth="1"
+-        android:pathData="M80,160h201 M80,210h201"/>
+-    
+-    <!-- Empty state indicator -->
+-    <path
+-        android:fillColor="#9E9E9E"
+-        android:pathData="M180.5,200m-20,0a20,20 0,1 1,40 0a20,20 0,1 1,-40 0"/>
+-</vector>
+-
+Index: app/src/main/res/drawable/gradient_top_overlay.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/gradient_top_overlay.xml b/app/src/main/res/drawable/gradient_top_overlay.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/gradient_top_overlay.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,9 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<shape xmlns:android="http://schemas.android.com/apk/res/android">
+-    <gradient
+-        android:type="linear"
+-        android:angle="270"
+-        android:startColor="#99000000"
+-        android:endColor="#00000000" />
+-</shape>
+-
+Index: app/src/main/res/drawable/ic_arrow_drop_down.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/ic_arrow_drop_down.xml b/app/src/main/res/drawable/ic_arrow_drop_down.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/ic_arrow_drop_down.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,10 +0,0 @@
+-<vector xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:width="24dp"
+-    android:height="24dp"
+-    android:viewportWidth="24"
+-    android:viewportHeight="24">
+-    <path
+-        android:fillColor="#000000"
+-        android:pathData="M7,10l5,5 5,-5z"/>
+-</vector>
+-
+Index: app/src/main/res/layout/dialog_custom_date_picker.xml
+===================================================================
+diff --git a/app/src/main/res/layout/dialog_custom_date_picker.xml b/app/src/main/res/layout/dialog_custom_date_picker.xml
+deleted file mode 100644
+--- a/app/src/main/res/layout/dialog_custom_date_picker.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,103 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+-    xmlns:app="http://schemas.android.com/apk/res-auto"
+-    android:layout_width="match_parent"
+-    android:layout_height="wrap_content"
+-    android:background="@drawable/dialog_background"
+-    android:padding="16dp">
+-
+-    <!-- Header with title and chevron -->
+-    <LinearLayout
+-        android:id="@+id/header"
+-        android:layout_width="0dp"
+-        android:layout_height="wrap_content"
+-        android:orientation="horizontal"
+-        android:gravity="center_vertical"
+-        android:paddingBottom="8dp"
+-        app:layout_constraintTop_toTopOf="parent"
+-        app:layout_constraintStart_toStartOf="parent"
+-        app:layout_constraintEnd_toEndOf="parent">
+-
+-        <TextView
+-            android:id="@+id/dialog_title"
+-            android:layout_width="0dp"
+-            android:layout_height="wrap_content"
+-            android:layout_weight="1"
+-            android:text="Event Start Date"
+-            android:textColor="@color/black"
+-            android:textSize="22sp"
+-            android:textStyle="bold"
+-            android:fontFamily="sans-serif-medium"
+-            android:letterSpacing="-0.01" />
+-
+-    </LinearLayout>
+-
+-    <!-- Calendar Container with rounded corners -->
+-    <FrameLayout
+-        android:id="@+id/calendar_container"
+-        android:layout_width="0dp"
+-        android:layout_height="wrap_content"
+-        android:layout_marginTop="8dp"
+-        android:background="@drawable/calendar_background"
+-        android:padding="16dp"
+-        app:layout_constraintTop_toBottomOf="@+id/header"
+-        app:layout_constraintStart_toStartOf="parent"
+-        app:layout_constraintEnd_toEndOf="parent">
+-
+-        <DatePicker
+-            android:id="@+id/date_picker"
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:calendarViewShown="true"
+-            android:datePickerMode="calendar"
+-            android:theme="@style/CustomDatePickerTheme" />
+-
+-    </FrameLayout>
+-
+-    <!-- Action Buttons -->
+-    <LinearLayout
+-        android:id="@+id/button_container"
+-        android:layout_width="0dp"
+-        android:layout_height="wrap_content"
+-        android:layout_marginTop="16dp"
+-        android:orientation="horizontal"
+-        android:gravity="end"
+-        app:layout_constraintTop_toBottomOf="@+id/calendar_container"
+-        app:layout_constraintStart_toStartOf="parent"
+-        app:layout_constraintEnd_toEndOf="parent">
+-
+-        <Button
+-            android:id="@+id/btn_cancel"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:text="Cancel"
+-            android:textColor="@color/date_picker_purple"
+-            android:background="?attr/selectableItemBackground"
+-            android:paddingStart="16dp"
+-            android:paddingEnd="16dp"
+-            android:paddingTop="8dp"
+-            android:paddingBottom="8dp"
+-            android:minHeight="0dp"
+-            android:minWidth="0dp"
+-            style="?android:attr/buttonStyleSmall" />
+-
+-        <Button
+-            android:id="@+id/btn_ok"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:text="OK"
+-            android:textColor="@color/date_picker_purple"
+-            android:background="?attr/selectableItemBackground"
+-            android:paddingStart="16dp"
+-            android:paddingEnd="16dp"
+-            android:paddingTop="8dp"
+-            android:paddingBottom="8dp"
+-            android:layout_marginStart="16dp"
+-            android:minHeight="0dp"
+-            android:minWidth="0dp"
+-            style="?android:attr/buttonStyleSmall" />
+-
+-    </LinearLayout>
+-
+-</androidx.constraintlayout.widget.ConstraintLayout>
+-
+Index: app/src/main/res/drawable/event_placeholder.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/event_placeholder.xml b/app/src/main/res/drawable/event_placeholder.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/event_placeholder.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,36 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<vector xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:width="361dp"
+-    android:height="361dp"
+-    android:viewportWidth="361"
+-    android:viewportHeight="361">
+-    <!-- Background -->
+-    <path
+-        android:fillColor="#F5F5F5"
+-        android:pathData="M0,0h361v361h-361z"/>
+-    
+-    <!-- Event Icon -->
+-    <path
+-        android:fillColor="#CCCCCC"
+-        android:pathData="M180.5,100.5m-60,0a60,60 0,1 1,120 0a60,60 0,1 1,-120 0"/>
+-    
+-    <!-- Calendar Icon -->
+-    <path
+-        android:fillColor="#999999"
+-        android:pathData="M120,180h121v121h-121z"/>
+-    <path
+-        android:fillColor="#CCCCCC"
+-        android:pathData="M120,180h121v30h-121z"/>
+-    
+-    <!-- Text Placeholder -->
+-    <path
+-        android:fillColor="#E0E0E0"
+-        android:pathData="M140,250h81v8h-81z"/>
+-    <path
+-        android:fillColor="#E0E0E0"
+-        android:pathData="M140,270h121v8h-121z"/>
+-    <path
+-        android:fillColor="#E0E0E0"
+-        android:pathData="M140,290h91v8h-91z"/>
+-</vector>
+-
+Index: app/src/main/res/drawable/status_tag_background.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/status_tag_background.xml b/app/src/main/res/drawable/status_tag_background.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/status_tag_background.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ /dev/null	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
+@@ -1,17 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+-    <!-- Blur-like effect: dark semi-transparent background -->
+-    <item>
+-        <shape android:shape="rectangle">
+-            <corners android:radius="16dp" />
+-            <solid android:color="#CC000000" />
+-        </shape>
+-    </item>
+-    <!-- Main background with higher opacity -->
+-    <item>
+-        <shape android:shape="rectangle">
+-            <corners android:radius="16dp" />
+-            <solid android:color="#E6000000" />
+-        </shape>
+-    </item>
+-</layer-list>
+Index: app/src/main/res/layout/activity_event_details.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<androidx.constraintlayout.widget.ConstraintLayout\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n    xmlns:tools=\"http://schemas.android.com/tools\"\n    android:fitsSystemWindows=\"true\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:background=\"@color/white\">\n\n    <!-- Top Bar -->\n    <androidx.constraintlayout.widget.ConstraintLayout\n        android:id=\"@+id/top_bar\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:minHeight=\"56dp\"\n        android:background=\"@color/white\"\n        android:paddingHorizontal=\"16dp\"\n        android:paddingTop=\"@dimen/status_bar_padding\"\n        android:paddingBottom=\"12dp\"\n        app:layout_constraintTop_toTopOf=\"parent\">\n\n        <ImageView\n            android:id=\"@+id/back_button\"\n            android:layout_width=\"24dp\"\n            android:layout_height=\"24dp\"\n            android:src=\"@drawable/ic_arrow_back\"\n            android:contentDescription=\"Back\"\n            app:layout_constraintStart_toStartOf=\"parent\"\n            app:layout_constraintTop_toTopOf=\"parent\"\n            app:layout_constraintBottom_toBottomOf=\"parent\"/>\n\n        <TextView\n            android:id=\"@+id/title_text\"\n            android:layout_width=\"0dp\"\n            android:layout_height=\"wrap_content\"\n            android:text=\"Event Lottery\"\n            android:textSize=\"17sp\"\n            android:textStyle=\"bold\"\n            android:fontFamily=\"sans-serif-medium\"\n            android:gravity=\"center\"\n            android:textColor=\"@color/black\"\n            app:layout_constraintStart_toStartOf=\"parent\"\n            app:layout_constraintEnd_toEndOf=\"parent\"\n            app:layout_constraintTop_toTopOf=\"parent\"\n            app:layout_constraintBottom_toBottomOf=\"parent\"/>\n    </androidx.constraintlayout.widget.ConstraintLayout>\n\n    <!-- Scroll Content -->\n    <androidx.core.widget.NestedScrollView\n        android:id=\"@+id/scroll_view\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"0dp\"\n        android:fillViewport=\"true\"\n        app:layout_constraintTop_toBottomOf=\"@id/top_bar\"\n        app:layout_constraintBottom_toBottomOf=\"parent\">\n\n        <androidx.constraintlayout.widget.ConstraintLayout\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\">\n\n            <!-- Event Poster Image -->\n            <ImageView\n                android:id=\"@+id/event_poster\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"0dp\"\n                android:scaleType=\"centerCrop\"\n                app:layout_constraintDimensionRatio=\"1:1\"\n                app:layout_constraintTop_toTopOf=\"parent\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\"\n                tools:srcCompat=\"@tools:sample/avatars\" />\n\n            <!-- Status Tag Overlay -->\n            <TextView\n                android:id=\"@+id/event_status_tag\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"28dp\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginBottom=\"16dp\"\n                android:background=\"@drawable/status_tag_background\"\n                android:elevation=\"4dp\"\n                android:paddingStart=\"12dp\"\n                android:paddingEnd=\"12dp\"\n                android:gravity=\"center_vertical\"\n                android:text=\"\uD83D\uDFE2 Open - 50/60\"\n                android:textColor=\"@color/white\"\n                android:textSize=\"13sp\"\n                android:textStyle=\"bold\"\n                android:fontFamily=\"sans-serif-medium\"\n                app:layout_constraintBottom_toBottomOf=\"@+id/event_poster\"\n                app:layout_constraintStart_toStartOf=\"@+id/event_poster\" />\n\n            <!-- Event Title -->\n            <TextView\n                android:id=\"@+id/event_name\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"16dp\"\n                android:text=\"Jazz Night at the Park\"\n                android:textColor=\"@color/black\"\n                android:textSize=\"28sp\"\n                android:textStyle=\"bold\"\n                android:fontFamily=\"sans-serif-medium\"\n                android:letterSpacing=\"-0.01\"\n                app:layout_constraintTop_toBottomOf=\"@+id/event_poster\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\" />\n\n            <!-- Organizer -->\n            <TextView\n                android:id=\"@+id/event_organizer\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"4dp\"\n                android:text=\"Organized by John Doe\"\n                android:textColor=\"@color/calendar_weekday_text\"\n                android:textSize=\"17sp\"\n                android:fontFamily=\"sans-serif\"\n                app:layout_constraintTop_toBottomOf=\"@+id/event_name\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\" />\n\n            <!-- Schedule -->\n            <TextView\n                android:id=\"@+id/event_schedule\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"4dp\"\n                android:text=\"One-time event\"\n                android:textColor=\"@color/calendar_weekday_text\"\n                android:textSize=\"17sp\"\n                android:fontFamily=\"sans-serif\"\n                app:layout_constraintTop_toBottomOf=\"@+id/event_organizer\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\" />\n\n            <!-- Date Range with Calendar Icon -->\n            <LinearLayout\n                android:id=\"@+id/date_container\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"4dp\"\n                android:orientation=\"horizontal\"\n                android:gravity=\"center_vertical\"\n                app:layout_constraintTop_toBottomOf=\"@+id/event_schedule\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\">\n\n                <ImageView\n                    android:layout_width=\"18dp\"\n                    android:layout_height=\"18dp\"\n                    android:src=\"@drawable/ic_calendar\"\n                    android:tint=\"@color/calendar_weekday_text\"\n                    android:layout_marginEnd=\"6dp\" />\n\n                <TextView\n                    android:id=\"@+id/event_date\"\n                    android:layout_width=\"wrap_content\"\n                    android:layout_height=\"wrap_content\"\n                    android:text=\"Jan 15, 2024 - Jan 31 2024\"\n                    android:textColor=\"@color/calendar_weekday_text\"\n                    android:textSize=\"17sp\"\n                    android:fontFamily=\"sans-serif\" />\n            </LinearLayout>\n\n            <!-- Time with Clock Icon -->\n            <LinearLayout\n                android:id=\"@+id/time_container\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"4dp\"\n                android:orientation=\"horizontal\"\n                android:gravity=\"center_vertical\"\n                app:layout_constraintTop_toBottomOf=\"@+id/date_container\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\">\n\n                <ImageView\n                    android:layout_width=\"18dp\"\n                    android:layout_height=\"18dp\"\n                    android:src=\"@drawable/ic_clock\"\n                    android:tint=\"@color/calendar_weekday_text\"\n                    android:layout_marginEnd=\"6dp\" />\n\n                <TextView\n                    android:id=\"@+id/event_time\"\n                    android:layout_width=\"wrap_content\"\n                    android:layout_height=\"wrap_content\"\n                    android:text=\"6:00 PM\"\n                    android:textColor=\"@color/calendar_weekday_text\"\n                    android:textSize=\"17sp\"\n                    android:fontFamily=\"sans-serif\" />\n            </LinearLayout>\n\n            <!-- Price with Dollar Icon -->\n            <LinearLayout\n                android:id=\"@+id/price_container\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"4dp\"\n                android:orientation=\"horizontal\"\n                android:gravity=\"center_vertical\"\n                app:layout_constraintTop_toBottomOf=\"@+id/time_container\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\">\n\n                <ImageView\n                    android:layout_width=\"17dp\"\n                    android:layout_height=\"24dp\"\n                    android:src=\"@drawable/ic_dollar\"\n                    android:tint=\"@color/calendar_weekday_text\"\n                    android:layout_marginEnd=\"6dp\" />\n\n                <TextView\n                    android:id=\"@+id/event_cost\"\n                    android:layout_width=\"wrap_content\"\n                    android:layout_height=\"wrap_content\"\n                    android:text=\"$60\"\n                    android:textColor=\"@color/calendar_weekday_text\"\n                    android:textSize=\"17sp\"\n                    android:fontFamily=\"sans-serif\" />\n            </LinearLayout>\n\n            <!-- Location with Location Icon -->\n            <LinearLayout\n                android:id=\"@+id/location_container\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"4dp\"\n                android:orientation=\"horizontal\"\n                android:gravity=\"center_vertical\"\n                app:layout_constraintTop_toBottomOf=\"@+id/price_container\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\">\n\n                <ImageView\n                    android:layout_width=\"18dp\"\n                    android:layout_height=\"18dp\"\n                    android:src=\"@drawable/ic_location\"\n                    android:tint=\"@color/calendar_weekday_text\"\n                    android:layout_marginEnd=\"6dp\" />\n\n                <TextView\n                    android:id=\"@+id/event_location\"\n                    android:layout_width=\"wrap_content\"\n                    android:layout_height=\"wrap_content\"\n                    android:text=\"Riverbend Community Centre\"\n                    android:textColor=\"@color/calendar_weekday_text\"\n                    android:textSize=\"17sp\"\n                    android:fontFamily=\"sans-serif\" />\n            </LinearLayout>\n\n            <!-- About This Event Section -->\n            <TextView\n                android:id=\"@+id/about_title\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"24dp\"\n                android:text=\"About This Event\"\n                android:textColor=\"@color/black\"\n                android:textSize=\"18sp\"\n                android:textStyle=\"bold\"\n                android:fontFamily=\"sans-serif-medium\"\n                android:letterSpacing=\"-0.01\"\n                app:layout_constraintTop_toBottomOf=\"@+id/location_container\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\" />\n\n            <TextView\n                android:id=\"@+id/event_description\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"8dp\"\n                android:layout_marginBottom=\"8dp\"\n                android:text=\"Join us for a night of soulful jazz music featuring top artists from around the world. Enjoy an unforgettable experience at the Riverbend Community Centre.\"\n                android:textColor=\"@color/calendar_weekday_text\"\n                android:textSize=\"15sp\"\n                android:fontFamily=\"sans-serif\"\n                android:lineSpacingExtra=\"4dp\"\n                app:layout_constraintTop_toBottomOf=\"@+id/about_title\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\" />\n\n            <!-- Lottery Info (hidden by default, shown if exists) -->\n            <TextView\n                android:id=\"@+id/tv_lottery_info\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"8dp\"\n                android:text=\"Random selection. All entrants have equal chance.\"\n                android:textColor=\"@color/calendar_weekday_text\"\n                android:textSize=\"15sp\"\n                android:fontFamily=\"sans-serif\"\n                android:visibility=\"gone\"\n                app:layout_constraintTop_toBottomOf=\"@+id/event_description\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\" />\n\n            <!-- Waitlist Count (hidden by default) -->\n            <TextView\n                android:id=\"@+id/waitlist_count\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"8dp\"\n                android:text=\"Waiting List Entrants: 0\"\n                android:textColor=\"@color/calendar_weekday_text\"\n                android:textSize=\"15sp\"\n                android:fontFamily=\"sans-serif\"\n                android:visibility=\"gone\"\n                app:layout_constraintTop_toBottomOf=\"@+id/tv_lottery_info\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\" />\n\n            <!-- Notification Section -->\n            <LinearLayout\n                android:id=\"@+id/notification_section\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"24dp\"\n                android:orientation=\"horizontal\"\n                android:gravity=\"center_vertical\"\n                android:padding=\"12dp\"\n                android:background=\"@color/opaque_light_grey\"\n                app:layout_constraintTop_toBottomOf=\"@+id/waitlist_count\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\">\n\n                <TextView\n                    android:id=\"@+id/notification_label\"\n                    android:layout_width=\"0dp\"\n                    android:layout_height=\"wrap_content\"\n                    android:layout_weight=\"1\"\n                    android:text=\"Enable Notifications\"\n                    android:textSize=\"16sp\"\n                    android:textColor=\"@color/black\"\n                    android:fontFamily=\"sans-serif\" />\n\n                <com.google.android.material.switchmaterial.SwitchMaterial\n                    android:id=\"@+id/switch_notifications\"\n                    android:layout_width=\"wrap_content\"\n                    android:layout_height=\"wrap_content\"\n                    app:thumbTint=\"@color/switch_thumb_tint\"\n                    app:trackTint=\"@color/switch_track_tint\"\n                    android:checked=\"true\" />\n            </LinearLayout>\n\n            <!-- Registration Info Text -->\n            <TextView\n                android:id=\"@+id/registration_info\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"24dp\"\n                android:text=\"Registration closes Jan 7, 2024\"\n                android:textColor=\"@color/black\"\n                android:textSize=\"17sp\"\n                android:textStyle=\"bold\"\n                android:fontFamily=\"sans-serif-medium\"\n                android:gravity=\"center\"\n                app:layout_constraintTop_toBottomOf=\"@+id/notification_section\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\" />\n\n            <!-- Join/Leave Button -->\n            <com.google.android.material.button.MaterialButton\n                android:id=\"@+id/join_waitlist_button\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"50dp\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"16dp\"\n                android:layout_marginBottom=\"24dp\"\n                android:text=\"Join Waiting List\"\n                android:textSize=\"17sp\"\n                android:textStyle=\"bold\"\n                android:textColor=\"@color/white\"\n                android:fontFamily=\"sans-serif-medium\"\n                app:backgroundTint=\"@color/selected_tab_color\"\n                app:cornerRadius=\"56dp\"\n                app:layout_constraintTop_toBottomOf=\"@+id/registration_info\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\" />\n\n            <com.google.android.material.button.MaterialButton\n                android:id=\"@+id/leave_waitlist_button\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"50dp\"\n                android:layout_marginStart=\"16dp\"\n                android:layout_marginEnd=\"16dp\"\n                android:layout_marginTop=\"16dp\"\n                android:layout_marginBottom=\"24dp\"\n                android:text=\"Leave Waiting List\"\n                android:textSize=\"17sp\"\n                android:textStyle=\"bold\"\n                android:textColor=\"@color/white\"\n                android:fontFamily=\"sans-serif-medium\"\n                app:backgroundTint=\"@color/selected_tab_color\"\n                app:cornerRadius=\"56dp\"\n                android:visibility=\"gone\"\n                app:layout_constraintTop_toBottomOf=\"@+id/registration_info\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\" />\n\n        </androidx.constraintlayout.widget.ConstraintLayout>\n    </androidx.core.widget.NestedScrollView>\n\n</androidx.constraintlayout.widget.ConstraintLayout>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/activity_event_details.xml b/app/src/main/res/layout/activity_event_details.xml
+--- a/app/src/main/res/layout/activity_event_details.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/res/layout/activity_event_details.xml	(date 1764397461633)
+@@ -5,8 +5,7 @@
+     xmlns:tools="http://schemas.android.com/tools"
+     android:fitsSystemWindows="true"
+     android:layout_width="match_parent"
+-    android:layout_height="match_parent"
+-    android:background="@color/white">
++    android:layout_height="match_parent">
+ 
+     <!-- Top Bar -->
+     <androidx.constraintlayout.widget.ConstraintLayout
+@@ -14,10 +13,12 @@
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:minHeight="56dp"
+-        android:background="@color/white"
+-        android:paddingHorizontal="16dp"
++        android:background="@color/None"
++        android:paddingHorizontal="12dp"
+         android:paddingTop="@dimen/status_bar_padding"
+         android:paddingBottom="12dp"
++        android:elevation="4dp"
++        android:layout_marginTop="20dp"
+         app:layout_constraintTop_toTopOf="parent">
+ 
+         <ImageView
+@@ -34,20 +35,19 @@
+             android:id="@+id/title_text"
+             android:layout_width="0dp"
+             android:layout_height="wrap_content"
+-            android:text="Event Lottery"
+-            android:textSize="17sp"
++            android:text="Event Details"
++            android:textSize="20sp"
+             android:textStyle="bold"
+-            android:fontFamily="sans-serif-medium"
+             android:gravity="center"
+             android:textColor="@color/black"
+-            app:layout_constraintStart_toStartOf="parent"
++            app:layout_constraintStart_toEndOf="@id/back_button"
+             app:layout_constraintEnd_toEndOf="parent"
+             app:layout_constraintTop_toTopOf="parent"
+             app:layout_constraintBottom_toBottomOf="parent"/>
+     </androidx.constraintlayout.widget.ConstraintLayout>
+ 
+     <!-- Scroll Content -->
+-    <androidx.core.widget.NestedScrollView
++    <ScrollView
+         android:id="@+id/scroll_view"
+         android:layout_width="match_parent"
+         android:layout_height="0dp"
+@@ -55,300 +55,113 @@
+         app:layout_constraintTop_toBottomOf="@id/top_bar"
+         app:layout_constraintBottom_toBottomOf="parent">
+ 
+-        <androidx.constraintlayout.widget.ConstraintLayout
++        <LinearLayout
+             android:layout_width="match_parent"
+-            android:layout_height="wrap_content">
++            android:layout_height="wrap_content"
++            android:orientation="vertical">
+ 
+-            <!-- Event Poster Image -->
++            <!-- Event Poster -->
+             <ImageView
+                 android:id="@+id/event_poster"
+-                android:layout_width="0dp"
+-                android:layout_height="0dp"
+-                android:scaleType="centerCrop"
+-                app:layout_constraintDimensionRatio="1:1"
+-                app:layout_constraintTop_toTopOf="parent"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:background="@color/black"
++                android:adjustViewBounds="true"
++                android:scaleType="fitCenter"
+                 tools:srcCompat="@tools:sample/avatars" />
+ 
+-            <!-- Status Tag Overlay -->
+-            <TextView
+-                android:id="@+id/event_status_tag"
+-                android:layout_width="wrap_content"
+-                android:layout_height="28dp"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginBottom="16dp"
+-                android:background="@drawable/status_tag_background"
+-                android:elevation="4dp"
+-                android:paddingStart="12dp"
+-                android:paddingEnd="12dp"
+-                android:gravity="center_vertical"
+-                android:text="🟢 Open - 50/60"
+-                android:textColor="@color/white"
+-                android:textSize="13sp"
+-                android:textStyle="bold"
+-                android:fontFamily="sans-serif-medium"
+-                app:layout_constraintBottom_toBottomOf="@+id/event_poster"
+-                app:layout_constraintStart_toStartOf="@+id/event_poster" />
+-
+-            <!-- Event Title -->
++            <!-- Event Info -->
+             <TextView
+                 android:id="@+id/event_name"
+-                android:layout_width="0dp"
++                android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="16dp"
+-                android:text="Jazz Night at the Park"
++                android:text="Event Name"
+                 android:textColor="@color/black"
+-                android:textSize="28sp"
++                android:textSize="22sp"
+                 android:textStyle="bold"
+-                android:fontFamily="sans-serif-medium"
+-                android:letterSpacing="-0.01"
+-                app:layout_constraintTop_toBottomOf="@+id/event_poster"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent" />
++                android:layout_marginHorizontal="16dp"
++                android:paddingTop="16dp"/>
+ 
+-            <!-- Organizer -->
+             <TextView
+                 android:id="@+id/event_organizer"
+-                android:layout_width="0dp"
+-                android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="4dp"
+-                android:text="Organized by John Doe"
+-                android:textColor="@color/calendar_weekday_text"
+-                android:textSize="17sp"
+-                android:fontFamily="sans-serif"
+-                app:layout_constraintTop_toBottomOf="@+id/event_name"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent" />
+-
+-            <!-- Schedule -->
+-            <TextView
+-                android:id="@+id/event_schedule"
+-                android:layout_width="0dp"
+-                android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="4dp"
+-                android:text="One-time event"
+-                android:textColor="@color/calendar_weekday_text"
+-                android:textSize="17sp"
+-                android:fontFamily="sans-serif"
+-                app:layout_constraintTop_toBottomOf="@+id/event_organizer"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent" />
+-
+-            <!-- Date Range with Calendar Icon -->
+-            <LinearLayout
+-                android:id="@+id/date_container"
+-                android:layout_width="0dp"
++                android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="4dp"
+-                android:orientation="horizontal"
+-                android:gravity="center_vertical"
+-                app:layout_constraintTop_toBottomOf="@+id/event_schedule"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent">
+-
+-                <ImageView
+-                    android:layout_width="18dp"
+-                    android:layout_height="18dp"
+-                    android:src="@drawable/ic_calendar"
+-                    android:tint="@color/calendar_weekday_text"
+-                    android:layout_marginEnd="6dp" />
+-
+-                <TextView
+-                    android:id="@+id/event_date"
+-                    android:layout_width="wrap_content"
+-                    android:layout_height="wrap_content"
+-                    android:text="Jan 15, 2024 - Jan 31 2024"
+-                    android:textColor="@color/calendar_weekday_text"
+-                    android:textSize="17sp"
+-                    android:fontFamily="sans-serif" />
+-            </LinearLayout>
+-
+-            <!-- Time with Clock Icon -->
+-            <LinearLayout
+-                android:id="@+id/time_container"
+-                android:layout_width="0dp"
++                android:text="Organizer:"
++                android:textSize="16sp"
++                android:layout_marginHorizontal="16dp"
++                android:paddingTop="8dp"/>
++            <TextView
++                android:id="@+id/event_date"
++                android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="4dp"
+-                android:orientation="horizontal"
+-                android:gravity="center_vertical"
+-                app:layout_constraintTop_toBottomOf="@+id/date_container"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent">
+-
+-                <ImageView
+-                    android:layout_width="18dp"
+-                    android:layout_height="18dp"
+-                    android:src="@drawable/ic_clock"
+-                    android:tint="@color/calendar_weekday_text"
+-                    android:layout_marginEnd="6dp" />
+-
+-                <TextView
+-                    android:id="@+id/event_time"
+-                    android:layout_width="wrap_content"
+-                    android:layout_height="wrap_content"
+-                    android:text="6:00 PM"
+-                    android:textColor="@color/calendar_weekday_text"
+-                    android:textSize="17sp"
+-                    android:fontFamily="sans-serif" />
+-            </LinearLayout>
+-
+-            <!-- Price with Dollar Icon -->
+-            <LinearLayout
+-                android:id="@+id/price_container"
+-                android:layout_width="0dp"
+-                android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="4dp"
+-                android:orientation="horizontal"
+-                android:gravity="center_vertical"
+-                app:layout_constraintTop_toBottomOf="@+id/time_container"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent">
+-
+-                <ImageView
+-                    android:layout_width="17dp"
+-                    android:layout_height="24dp"
+-                    android:src="@drawable/ic_dollar"
+-                    android:tint="@color/calendar_weekday_text"
+-                    android:layout_marginEnd="6dp" />
++                android:text="None"
++                android:drawableStart="@drawable/ic_calendar"
++                android:drawablePadding="8dp"
++                android:textSize="16sp"
++                android:layout_marginHorizontal="16dp"
++                android:paddingTop="8dp"/>
+ 
+-                <TextView
+-                    android:id="@+id/event_cost"
+-                    android:layout_width="wrap_content"
+-                    android:layout_height="wrap_content"
+-                    android:text="$60"
+-                    android:textColor="@color/calendar_weekday_text"
+-                    android:textSize="17sp"
+-                    android:fontFamily="sans-serif" />
+-            </LinearLayout>
+-
+-            <!-- Location with Location Icon -->
+-            <LinearLayout
+-                android:id="@+id/location_container"
+-                android:layout_width="0dp"
++            <TextView
++                android:id="@+id/event_cost"
++                android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="4dp"
+-                android:orientation="horizontal"
+-                android:gravity="center_vertical"
+-                app:layout_constraintTop_toBottomOf="@+id/price_container"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent">
+-
+-                <ImageView
+-                    android:layout_width="18dp"
+-                    android:layout_height="18dp"
+-                    android:src="@drawable/ic_location"
+-                    android:tint="@color/calendar_weekday_text"
+-                    android:layout_marginEnd="6dp" />
+-
+-                <TextView
+-                    android:id="@+id/event_location"
+-                    android:layout_width="wrap_content"
+-                    android:layout_height="wrap_content"
+-                    android:text="Riverbend Community Centre"
+-                    android:textColor="@color/calendar_weekday_text"
+-                    android:textSize="17sp"
+-                    android:fontFamily="sans-serif" />
+-            </LinearLayout>
+-
+-            <!-- About This Event Section -->
++                android:drawableStart="@drawable/ic_dollar"
++                android:drawablePadding="14dp"
++                android:text="$0"
++                android:textSize="16sp"
++                android:layout_marginHorizontal="16dp"
++                android:paddingTop="8dp"/>
+             <TextView
+-                android:id="@+id/about_title"
+-                android:layout_width="0dp"
++                android:id="@+id/title"
++                android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="24dp"
+                 android:text="About This Event"
+                 android:textColor="@color/black"
+-                android:textSize="18sp"
++                android:textSize="17sp"
+                 android:textStyle="bold"
+-                android:fontFamily="sans-serif-medium"
+-                android:letterSpacing="-0.01"
+-                app:layout_constraintTop_toBottomOf="@+id/location_container"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent" />
++                android:layout_marginHorizontal="16dp"
++                android:paddingTop="12dp"/>
+ 
+             <TextView
+                 android:id="@+id/event_description"
+-                android:layout_width="0dp"
++                android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="8dp"
+-                android:layout_marginBottom="8dp"
+-                android:text="Join us for a night of soulful jazz music featuring top artists from around the world. Enjoy an unforgettable experience at the Riverbend Community Centre."
+-                android:textColor="@color/calendar_weekday_text"
++                android:text="Event details..."
+                 android:textSize="15sp"
+-                android:fontFamily="sans-serif"
+-                android:lineSpacingExtra="4dp"
+-                app:layout_constraintTop_toBottomOf="@+id/about_title"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent" />
++                android:layout_marginHorizontal="16dp"
++                android:paddingTop="12dp"/>
+ 
+-            <!-- Lottery Info (hidden by default, shown if exists) -->
+             <TextView
+                 android:id="@+id/tv_lottery_info"
+-                android:layout_width="0dp"
++                android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="8dp"
+-                android:text="Random selection. All entrants have equal chance."
+-                android:textColor="@color/calendar_weekday_text"
++                android:text="Lottery Info:"
+                 android:textSize="15sp"
+-                android:fontFamily="sans-serif"
+-                android:visibility="gone"
+-                app:layout_constraintTop_toBottomOf="@+id/event_description"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent" />
++                android:layout_marginHorizontal="16dp"
++                android:paddingTop="8dp"
++                android:visibility="gone"/>
+ 
+-            <!-- Waitlist Count (hidden by default) -->
++            <!-- ✅ WAITLIST COUNT -->
+             <TextView
+                 android:id="@+id/waitlist_count"
+-                android:layout_width="0dp"
++                android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="8dp"
+-                android:text="Waiting List Entrants: 0"
+-                android:textColor="@color/calendar_weekday_text"
++                android:text="Loading waitlist..."
+                 android:textSize="15sp"
+-                android:fontFamily="sans-serif"
+-                android:visibility="gone"
+-                app:layout_constraintTop_toBottomOf="@+id/tv_lottery_info"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent" />
++                android:layout_marginHorizontal="16dp"
++                android:paddingTop="8dp"
++                android:textColor="@color/black"/>
+ 
+             <!-- Notification Section -->
+             <LinearLayout
+                 android:id="@+id/notification_section"
+-                android:layout_width="0dp"
++                android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
++                android:layout_marginHorizontal="16dp"
+                 android:layout_marginTop="24dp"
+                 android:orientation="horizontal"
+-                android:gravity="center_vertical"
+                 android:padding="12dp"
+-                android:background="@color/opaque_light_grey"
+-                app:layout_constraintTop_toBottomOf="@+id/waitlist_count"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent">
++                android:background="#F5F5F5">
+ 
+                 <TextView
+                     android:id="@+id/notification_label"
+@@ -357,77 +170,49 @@
+                     android:layout_weight="1"
+                     android:text="Enable Notifications"
+                     android:textSize="16sp"
+-                    android:textColor="@color/black"
+-                    android:fontFamily="sans-serif" />
++                    android:textColor="@color/black"/>
+ 
+                 <com.google.android.material.switchmaterial.SwitchMaterial
+                     android:id="@+id/switch_notifications"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+-                    app:thumbTint="@color/switch_thumb_tint"
+-                    app:trackTint="@color/switch_track_tint"
+-                    android:checked="true" />
++                    android:checked="true"/>
+             </LinearLayout>
+ 
+-            <!-- Registration Info Text -->
+-            <TextView
+-                android:id="@+id/registration_info"
+-                android:layout_width="0dp"
++            <!-- Join/Leave Buttons -->
++            <Button
++                android:id="@+id/join_waitlist_button"
++                android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="24dp"
+-                android:text="Registration closes Jan 7, 2024"
+-                android:textColor="@color/black"
+-                android:textSize="17sp"
+-                android:textStyle="bold"
+-                android:fontFamily="sans-serif-medium"
+-                android:gravity="center"
+-                app:layout_constraintTop_toBottomOf="@+id/notification_section"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent" />
+-
+-            <!-- Join/Leave Button -->
+-            <com.google.android.material.button.MaterialButton
+-                android:id="@+id/join_waitlist_button"
+-                android:layout_width="0dp"
+-                android:layout_height="50dp"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="16dp"
+-                android:layout_marginBottom="24dp"
+                 android:text="Join Waiting List"
+-                android:textSize="17sp"
+-                android:textStyle="bold"
+-                android:textColor="@color/white"
+-                android:fontFamily="sans-serif-medium"
+-                app:backgroundTint="@color/selected_tab_color"
+-                app:cornerRadius="56dp"
+-                app:layout_constraintTop_toBottomOf="@+id/registration_info"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent" />
++                android:layout_marginTop="24dp"
++                android:layout_marginHorizontal="16dp"
++                android:backgroundTint="?attr/colorPrimary"
++                android:textColor="@android:color/white"/>
+ 
+-            <com.google.android.material.button.MaterialButton
++            <Button
+                 android:id="@+id/leave_waitlist_button"
+-                android:layout_width="0dp"
+-                android:layout_height="50dp"
+-                android:layout_marginStart="16dp"
+-                android:layout_marginEnd="16dp"
+-                android:layout_marginTop="16dp"
+-                android:layout_marginBottom="24dp"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
+                 android:text="Leave Waiting List"
+-                android:textSize="17sp"
+-                android:textStyle="bold"
+-                android:textColor="@color/white"
+-                android:fontFamily="sans-serif-medium"
+-                app:backgroundTint="@color/selected_tab_color"
+-                app:cornerRadius="56dp"
+-                android:visibility="gone"
+-                app:layout_constraintTop_toBottomOf="@+id/registration_info"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent" />
++                android:layout_marginTop="24dp"
++                android:layout_marginHorizontal="16dp"
++                android:backgroundTint="?attr/colorPrimary"
++                android:textColor="@android:color/white"
++                android:visibility="gone"/>
+ 
+-        </androidx.constraintlayout.widget.ConstraintLayout>
+-    </androidx.core.widget.NestedScrollView>
++            <!-- Test Button -->
++            <Button
++                android:id="@+id/btn_test_invitation"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:text="🧪 TEST INVITATION (DELETE ME)"
++                android:layout_marginTop="12dp"
++                android:layout_marginHorizontal="16dp"
++                android:backgroundTint="#FF0000"
++                android:textColor="@android:color/white"/>
++
++        </LinearLayout>
++    </ScrollView>
+ 
+ </androidx.constraintlayout.widget.ConstraintLayout>
+Index: app/src/main/java/com/example/eventlotteryapp/EntrantView/EventsListFragment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.eventlotteryapp.EntrantView;\n\nimport android.annotation.SuppressLint;\nimport android.animation.ArgbEvaluator;\nimport android.animation.ValueAnimator;\nimport android.content.Context;\nimport android.content.Intent;\nimport android.content.res.ColorStateList;\nimport android.os.Bundle;\n\nimport androidx.fragment.app.Fragment;\nimport androidx.recyclerview.widget.GridLayoutManager;\nimport androidx.recyclerview.widget.RecyclerView;\n\nimport android.util.Log;\nimport android.view.LayoutInflater;\nimport android.view.MotionEvent;\nimport android.view.View;\nimport android.view.ViewGroup;\nimport android.view.inputmethod.EditorInfo;\nimport android.view.inputmethod.InputMethodManager;\nimport android.widget.EditText;\nimport android.widget.ProgressBar;\nimport android.widget.TextView;\n\nimport com.example.eventlotteryapp.R;\nimport com.google.android.material.button.MaterialButton;\nimport com.google.firebase.firestore.FirebaseFirestore;\nimport com.google.firebase.firestore.QueryDocumentSnapshot;\n\nimport java.util.ArrayList;\nimport java.util.Calendar;\nimport java.util.HashMap;\nimport java.util.List;\nimport java.util.Map;\n\n/**\n * A fragment representing a list of Items. Load the event from the database\n * and display it in a RecyclerView.\n */\npublic class EventsListFragment extends Fragment {\n\n    private static final String ARG_COLUMN_COUNT = \"column-count\";\n    private int mColumnCount = 1;\n    private EventsListRecyclerViewAdapter adapter; // Adapter is now a fragment field\n\n    /**\n     * Mandatory empty constructor for the fragment manager to instantiate the\n     * fragment (e.g. upon screen orientation changes).\n     */\n    public EventsListFragment() {\n    }\n\n    /**\n     * Factory method to create a new instance of\n     * this fragment using the provided parameters.\n     */\n    public static EventsListFragment newInstance(int columnCount) {\n        EventsListFragment fragment = new EventsListFragment();\n        Bundle args = new Bundle();\n        args.putInt(ARG_COLUMN_COUNT, columnCount);\n        fragment.setArguments(args);\n        return fragment;\n    }\n\n    /**\n     * Called to do initial creation of a fragment.\n     */\n    @Override\n    public void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        if (getArguments() != null) {\n            mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);\n        }\n    }\n\n    /**\n     * Called to have the fragment instantiate its user interface view.\n     */\n    @Override\n    public View onCreateView(LayoutInflater inflater, ViewGroup container,\n                             Bundle savedInstanceState) {\n\n        View view = inflater.inflate(R.layout.fragment_events_list, container, false);\n\n        RecyclerView recyclerView = view.findViewById(R.id.events_list);\n        EditText searchBar = view.findViewById(R.id.search_bar);\n        ProgressBar progressBar = view.findViewById(R.id.loading_indicator);\n\n        // Initialize adapter with empty list and assign to fragment field\n        List<EventItem> eventList = new ArrayList<>();\n        adapter = setupRecyclerView(recyclerView, eventList);\n\n        setupSearchBar(searchBar, adapter);\n\n        loadEventsFromFirestore(adapter, progressBar);\n        setupFilters(view, adapter);\n\n        return view;\n    }\n\n    /**\n     * Setup RecyclerView with GridLayoutManager and Adapter\n     */\n    private EventsListRecyclerViewAdapter setupRecyclerView(RecyclerView recyclerView, List<EventItem> eventList) {\n        recyclerView.setHasFixedSize(true);\n        int spanCount = getResources().getConfiguration().smallestScreenWidthDp >= 600 ? 3 : 2;\n        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), spanCount);\n        recyclerView.setLayoutManager(gridLayoutManager);\n\n        adapter = new EventsListRecyclerViewAdapter(eventList, position -> {\n            EventItem clickedEvent = adapter.getFilteredList().get(position);\n            Intent intent = new Intent(getContext(), EventDetailsActivity.class);\n            intent.putExtra(\"eventId\", clickedEvent.getId());\n            startActivity(intent);\n        });\n\n        recyclerView.setAdapter(adapter);\n        return adapter;\n    }\n\n    /**\n     * Setup EditText to hide keyboard and clear focus on Done\n     */\n    @SuppressLint(\"ClickableViewAccessibility\")\n    private void setupSearchBar(EditText searchBar, EventsListRecyclerViewAdapter adapter) {\n        searchBar.setSingleLine(true);\n        searchBar.setImeOptions(EditorInfo.IME_ACTION_DONE);\n        // Hide keyboard on Done\n        searchBar.setOnEditorActionListener((v, actionId, event) -> {\n            if (actionId == EditorInfo.IME_ACTION_DONE) {\n                InputMethodManager imm = (InputMethodManager) getActivity()\n                        .getSystemService(Context.INPUT_METHOD_SERVICE);\n                imm.hideSoftInputFromWindow(searchBar.getWindowToken(), 0);\n                searchBar.clearFocus();\n                return true;\n            }\n            return false;\n        });\n\n        // Real-time search\n        searchBar.addTextChangedListener(new android.text.TextWatcher() {\n            @Override\n            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }\n\n            @Override\n            public void onTextChanged(CharSequence s, int start, int before, int count) {\n                adapter.filter(s.toString());\n            }\n\n            @Override\n            public void afterTextChanged(android.text.Editable s) { }\n        });\n\n        searchBar.setOnTouchListener((v, event) -> {\n            if (event.getAction() == MotionEvent.ACTION_UP) {\n                int drawableRight = 2; // index for RIGHT drawable\n                int paddingRight = searchBar.getPaddingRight();\n                if (event.getRawX() >= (searchBar.getRight() - searchBar.getCompoundDrawables()[drawableRight].getBounds().width() - paddingRight)) {\n                    // CLICKED the calendar icon\n\n                    openDatePicker(adapter);\n\n                    return true;\n                }\n            }\n            return false;\n        });\n\n    }\n\n    /**\n     * Load events from Firestore and update adapter\n     */\n    private void loadEventsFromFirestore(EventsListRecyclerViewAdapter adapter, ProgressBar progressBar) {\n        progressBar.setVisibility(View.VISIBLE);\n\n        FirebaseFirestore db = FirebaseFirestore.getInstance();\n        db.collection(\"Events\")\n                .addSnapshotListener((queryDocumentSnapshots, e) -> {\n                    progressBar.setVisibility(View.GONE);\n\n                    if (e != null) {\n                        Log.e(\"Firestore\", \"Error loading events\", e);\n                        return;\n                    }\n\n                    if (queryDocumentSnapshots != null) {\n                        List<EventItem> newEvents = new ArrayList<>();\n                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {\n                            EventItem event = doc.toObject(EventItem.class);\n                            event.setId(doc.getId());\n                            newEvents.add(event);\n                        }\n                        adapter.updateList(newEvents);\n                    }\n                });\n    }\n    private void setupFilters(View root, EventsListRecyclerViewAdapter adapter) {\n        MaterialButton allBtn = root.findViewById(R.id.all_filter);\n        MaterialButton sportsBtn = root.findViewById(R.id.sports_filter);\n        MaterialButton musicBtn = root.findViewById(R.id.music_filter);\n        MaterialButton workshopsBtn = root.findViewById(R.id.workshops_filter);\n        MaterialButton freeBtn = root.findViewById(R.id.free_filter);\n        MaterialButton communityBtn = root.findViewById(R.id.community_filter);\n        \n        android.widget.HorizontalScrollView scrollView = root.findViewById(R.id.filter_scroller);\n\n        List<MaterialButton> buttons = List.of(allBtn, sportsBtn, musicBtn, workshopsBtn, freeBtn, communityBtn);\n\n        View.OnClickListener listener = v -> {\n            MaterialButton selected = (MaterialButton) v;\n\n            // update adapter\n            String category = (String) selected.getTag(); // we'll set tags in XML\n            adapter.applyCategoryFilter(category);\n\n            // update button styles\n            updateFilterButtonStyles(buttons, selected);\n            \n            // Center the selected button in the scroll view\n            centerButtonInScrollView(scrollView, selected);\n        };\n\n        allBtn.setOnClickListener(listener);\n        sportsBtn.setOnClickListener(listener);\n        musicBtn.setOnClickListener(listener);\n        workshopsBtn.setOnClickListener(listener);\n        freeBtn.setOnClickListener(listener);\n        communityBtn.setOnClickListener(listener);\n\n        // default selection\n        updateFilterButtonStyles(buttons, allBtn);\n    }\n    private void updateFilterButtonStyles(List<MaterialButton> buttons, MaterialButton selected) {\n        int selectedBgColor = getResources().getColor(R.color.filter_selected_bg);\n        int selectedTextColor = getResources().getColor(R.color.filter_selected_text);\n        int unselectedBgColor = getResources().getColor(R.color.filter_unselected_bg);\n        int unselectedTextColor = getResources().getColor(R.color.filter_unselected_text);\n        \n        int animationDuration = 250; // milliseconds\n        \n        for (MaterialButton btn : buttons) {\n            // Get current colors - handle transparent/initial state\n            ColorStateList currentBgTint = btn.getBackgroundTintList();\n            int currentBgColor = unselectedBgColor; // Default starting point\n            if (currentBgTint != null) {\n                int color = currentBgTint.getDefaultColor();\n                // If not transparent, use the actual color; otherwise start from unselected\n                if ((color & 0xFF000000) != 0) { // Check if not fully transparent\n                    currentBgColor = color;\n                }\n            }\n            \n            int currentTextColor = btn.getCurrentTextColor();\n            // If text color appears to be default (likely black), use unselected color as baseline\n            if (currentTextColor == 0xFF000000 || currentTextColor == 0) {\n                currentTextColor = unselectedTextColor;\n            }\n            \n            // Determine target colors\n            int targetBgColor = (btn == selected) ? selectedBgColor : unselectedBgColor;\n            int targetTextColor = (btn == selected) ? selectedTextColor : unselectedTextColor;\n            \n            // Skip animation if already at target colors\n            if (currentBgColor == targetBgColor && currentTextColor == targetTextColor) {\n                continue;\n            }\n            \n            // Animate background color\n            ValueAnimator bgAnimator = ValueAnimator.ofObject(new ArgbEvaluator(), currentBgColor, targetBgColor);\n            bgAnimator.setDuration(animationDuration);\n            bgAnimator.addUpdateListener(animator -> {\n                int color = (int) animator.getAnimatedValue();\n                btn.setBackgroundTintList(ColorStateList.valueOf(color));\n            });\n            bgAnimator.start();\n            \n            // Animate text color\n            ValueAnimator textAnimator = ValueAnimator.ofObject(new ArgbEvaluator(), currentTextColor, targetTextColor);\n            textAnimator.setDuration(animationDuration);\n            textAnimator.addUpdateListener(animator -> {\n                int color = (int) animator.getAnimatedValue();\n                btn.setTextColor(color);\n            });\n            textAnimator.start();\n        }\n    }\n\n    private void openDatePicker(EventsListRecyclerViewAdapter adapter) {\n        // Get today's date\n        Calendar today = Calendar.getInstance();\n\n        CustomDatePickerDialog dialog = new CustomDatePickerDialog(\n                requireContext(),\n                (year, month, dayOfMonth) -> {\n                    adapter.applyDateFilter(year, month, dayOfMonth);\n                },\n                today,\n                today // min date\n        );\n\n        dialog.show();\n    }\n\n    private void centerButtonInScrollView(android.widget.HorizontalScrollView scrollView, MaterialButton button) {\n        // Post to ensure layout is complete\n        scrollView.post(() -> {\n            int scrollViewWidth = scrollView.getWidth();\n            int buttonLeft = button.getLeft();\n            int buttonWidth = button.getWidth();\n            int buttonCenter = buttonLeft + (buttonWidth / 2);\n            int scrollViewCenter = scrollViewWidth / 2;\n            int targetScrollX = buttonCenter - scrollViewCenter;\n            \n            // Smooth scroll to center the button\n            scrollView.smoothScrollTo(targetScrollX, 0);\n        });\n    }\n\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/eventlotteryapp/EntrantView/EventsListFragment.java b/app/src/main/java/com/example/eventlotteryapp/EntrantView/EventsListFragment.java
+--- a/app/src/main/java/com/example/eventlotteryapp/EntrantView/EventsListFragment.java	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/java/com/example/eventlotteryapp/EntrantView/EventsListFragment.java	(date 1764397461632)
+@@ -1,11 +1,13 @@
+ package com.example.eventlotteryapp.EntrantView;
+ 
+ import android.annotation.SuppressLint;
++import android.app.DatePickerDialog;
+ import android.animation.ArgbEvaluator;
+ import android.animation.ValueAnimator;
+ import android.content.Context;
+ import android.content.Intent;
+ import android.content.res.ColorStateList;
++import android.graphics.Typeface;
+ import android.os.Bundle;
+ 
+ import androidx.fragment.app.Fragment;
+@@ -13,6 +15,7 @@
+ import androidx.recyclerview.widget.RecyclerView;
+ 
+ import android.util.Log;
++import android.view.Gravity;
+ import android.view.LayoutInflater;
+ import android.view.MotionEvent;
+ import android.view.View;
+@@ -290,17 +293,34 @@
+     private void openDatePicker(EventsListRecyclerViewAdapter adapter) {
+         // Get today's date
+         Calendar today = Calendar.getInstance();
++        int year = today.get(Calendar.YEAR);
++        int month = today.get(Calendar.MONTH);
++        int day = today.get(Calendar.DAY_OF_MONTH);
+ 
+-        CustomDatePickerDialog dialog = new CustomDatePickerDialog(
++
++        DatePickerDialog dp = new DatePickerDialog(
+                 requireContext(),
+-                (year, month, dayOfMonth) -> {
+-                    adapter.applyDateFilter(year, month, dayOfMonth);
++                (view, selectedYear, selectedMonth, selectedDay) -> {
++                    adapter.applyDateFilter(selectedYear, selectedMonth, selectedDay);
+                 },
+-                today,
+-                today // min date
++                year, month, day // <-- opens to today's date
+         );
++        // Title
++        // Create a centered title
++        TextView title = new TextView(requireContext());
++        title.setText("Filter by Event Start Date");
++        title.setPadding(20, 20, 20, 20);
++        title.setTextSize(20);
++        title.setGravity(Gravity.CENTER);
++        title.setTypeface(null, Typeface.BOLD);
++
++        dp.setCustomTitle(title);
+ 
+-        dialog.show();
++
++        // Disable past dates
++        dp.getDatePicker().setMinDate(today.getTimeInMillis());
++
++        dp.show();
+     }
+ 
+     private void centerButtonInScrollView(android.widget.HorizontalScrollView scrollView, MaterialButton button) {
+@@ -318,4 +338,5 @@
+         });
+     }
+ 
++
+ }
+Index: app/src/main/res/layout/activity_entrant_home_page.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<androidx.constraintlayout.widget.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n    xmlns:tools=\"http://schemas.android.com/tools\"\n    android:id=\"@+id/main\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:layout_margin=\"0dp\"\n    android:background=\"@color/white\"\n    tools:context=\".EntrantView.EntrantHomePageActivity\">\n\n    <com.google.android.material.tabs.TabLayout\n        android:id=\"@+id/entrant_home_tabs\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        app:layout_constraintBottom_toBottomOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\"\n        app:layout_constraintStart_toStartOf=\"parent\"\n        app:tabGravity=\"fill\"\n        app:tabIndicatorFullWidth=\"true\"\n        app:tabMaxWidth=\"0dp\"\n        app:tabMode=\"fixed\">\n\n        <com.google.android.material.tabs.TabItem\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:icon=\"@drawable/ic_home\"\n            android:text=\"@string/home\" />\n\n        <com.google.android.material.tabs.TabItem\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:icon=\"@drawable/ic_events\"\n            android:text=\"@string/events\" />\n\n        <com.google.android.material.tabs.TabItem\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:icon=\"@drawable/ic_notifications\"\n            android:text=\"@string/notifications\" />\n\n        <com.google.android.material.tabs.TabItem\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:icon=\"@drawable/ic_qr_scan\"\n            android:text=\"@string/scan\" />\n\n        <com.google.android.material.tabs.TabItem\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:icon=\"@drawable/ic_profile\"\n            android:text=\"@string/profile\" />\n\n    </com.google.android.material.tabs.TabLayout>\n    <androidx.viewpager2.widget.ViewPager2\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"0dp\"\n        android:id=\"@+id/entrant_view_pager\"\n        app:layout_constraintBottom_toTopOf=\"@+id/entrant_home_tabs\"\n        app:layout_constraintTop_toTopOf=\"parent\"/>\n\n</androidx.constraintlayout.widget.ConstraintLayout>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/activity_entrant_home_page.xml b/app/src/main/res/layout/activity_entrant_home_page.xml
+--- a/app/src/main/res/layout/activity_entrant_home_page.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/res/layout/activity_entrant_home_page.xml	(date 1764397461633)
+@@ -39,12 +39,6 @@
+             android:icon="@drawable/ic_notifications"
+             android:text="@string/notifications" />
+ 
+-        <com.google.android.material.tabs.TabItem
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:icon="@drawable/ic_qr_scan"
+-            android:text="@string/scan" />
+-
+         <com.google.android.material.tabs.TabItem
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+Index: app/src/main/res/drawable/ic_search.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:width=\"18dp\"\n    android:height=\"18dp\"\n    android:viewportWidth=\"18\"\n    android:viewportHeight=\"18\">\n  <group>\n    <clip-path\n        android:pathData=\"M0,0h18v18h-18z\"/>\n    <path\n        android:pathData=\"M7.5,0.75C3.772,0.75 0.75,3.772 0.75,7.5C0.75,11.228 3.772,14.25 7.5,14.25C9.094,14.25 10.559,13.698 11.713,12.774L15.97,17.03C16.263,17.323 16.737,17.323 17.03,17.03C17.323,16.737 17.323,16.263 17.03,15.97L12.774,11.713C13.698,10.559 14.25,9.094 14.25,7.5C14.25,3.772 11.228,0.75 7.5,0.75ZM2.25,7.5C2.25,4.601 4.601,2.25 7.5,2.25C10.399,2.25 12.75,4.601 12.75,7.5C12.75,10.399 10.399,12.75 7.5,12.75C4.601,12.75 2.25,10.399 2.25,7.5Z\"\n        android:fillColor=\"#808080\"\n        android:fillType=\"evenOdd\"/>\n  </group>\n</vector>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/drawable/ic_search.xml b/app/src/main/res/drawable/ic_search.xml
+--- a/app/src/main/res/drawable/ic_search.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/res/drawable/ic_search.xml	(date 1764462481171)
+@@ -1,3 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
+ <vector xmlns:android="http://schemas.android.com/apk/res/android"
+     android:width="18dp"
+     android:height="18dp"
+Index: app/src/main/res/layout/fragment_profile.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<androidx.core.widget.NestedScrollView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n    xmlns:tools=\"http://schemas.android.com/tools\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:background=\"#FFFFFF\"\n    tools:context=\".ui.profile.ProfileFragment\">\n\n    <LinearLayout\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:orientation=\"vertical\"\n        android:padding=\"16dp\">\n\n        <!-- Role Toggle -->\n        <com.google.android.material.button.MaterialButtonToggleGroup\n            android:id=\"@+id/role_toggle_group\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_gravity=\"center_horizontal\"\n            android:layout_marginTop=\"8dp\"\n            app:singleSelection=\"true\"\n            app:selectionRequired=\"true\"\n            app:checkedButton=\"@+id/entrant_button\">\n\n            <Button\n                android:id=\"@+id/entrant_button\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:text=\"Entrant\"\n                android:textSize=\"14sp\"\n                android:drawableStart=\"@drawable/ic_lightning\"\n                android:drawablePadding=\"8dp\"\n                android:paddingStart=\"16dp\"\n                android:paddingEnd=\"16dp\"\n                android:paddingTop=\"12dp\"\n                android:paddingBottom=\"12dp\"\n                style=\"?attr/materialButtonOutlinedStyle\" />\n\n            <Button\n                android:id=\"@+id/organizer_button\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:text=\"Organizer\"\n                android:textSize=\"14sp\"\n                android:drawableStart=\"@drawable/ic_grid\"\n                android:drawablePadding=\"8dp\"\n                android:paddingStart=\"16dp\"\n                android:paddingEnd=\"16dp\"\n                android:paddingTop=\"12dp\"\n                android:paddingBottom=\"12dp\"\n                style=\"?attr/materialButtonOutlinedStyle\" />\n        </com.google.android.material.button.MaterialButtonToggleGroup>\n\n        <!-- Profile Picture -->\n        <ImageView\n            android:id=\"@+id/profile_picture\"\n            android:layout_width=\"120dp\"\n            android:layout_height=\"120dp\"\n            android:layout_gravity=\"center_horizontal\"\n            android:layout_marginTop=\"32dp\"\n            android:src=\"@android:drawable/ic_menu_gallery\"\n            android:scaleType=\"centerCrop\"\n            android:background=\"@drawable/profile_picture_bg\"\n            android:contentDescription=\"Profile picture\" />\n\n        <!-- Name -->\n        <TextView\n            android:id=\"@+id/profile_name\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_gravity=\"center_horizontal\"\n            android:layout_marginTop=\"16dp\"\n            android:text=\"Johnathan Doe\"\n            android:textColor=\"@color/black\"\n            android:textSize=\"24sp\"\n            android:textStyle=\"bold\" />\n\n        <!-- Email -->\n        <TextView\n            android:id=\"@+id/profile_email\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_gravity=\"center_horizontal\"\n            android:layout_marginTop=\"8dp\"\n            android:text=\"john.doe@example.com\"\n            android:textColor=\"@color/black\"\n            android:textSize=\"16sp\" />\n\n        <!-- Phone -->\n        <TextView\n            android:id=\"@+id/profile_phone\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_gravity=\"center_horizontal\"\n            android:layout_marginTop=\"4dp\"\n            android:layout_marginBottom=\"16dp\"\n            android:text=\"123-456-7890 Phone\"\n            android:textColor=\"@color/medium_grey\"\n            android:textSize=\"14sp\" />\n        <Button\n            android:id=\"@+id/logout_button\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_gravity=\"center_horizontal\"\n            android:layout_marginTop=\"0dp\"\n            android:text=\"LOGOUT\"\n            android:textColor=\"#FF0000\"\n            android:textSize=\"16sp\"\n            android:textStyle=\"bold\"\n            android:background=\"@drawable/delete_account_button_bg\"\n            android:paddingStart=\"24dp\"\n            android:paddingEnd=\"24dp\"\n            android:paddingTop=\"6dp\"\n            android:paddingBottom=\"16dp\" />\n        <!-- Full Name Input -->\n        <TextView\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"16dp\"\n            android:text=\"Full Name\"\n            android:textColor=\"@color/black\"\n            android:textSize=\"14sp\"\n            android:textStyle=\"bold\" />\n\n        <EditText\n            android:id=\"@+id/full_name_edit\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"8dp\"\n            android:hint=\"Full Name\"\n            android:background=\"@drawable/edit_text_custom_bg\"\n            android:paddingStart=\"16dp\"\n            android:paddingTop=\"14dp\"\n            android:paddingEnd=\"16dp\"\n            android:paddingBottom=\"14dp\"\n            android:textColorHint=\"#80000000\"\n            android:textSize=\"16sp\" />\n\n        <!-- Email Address Input -->\n        <TextView\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"16dp\"\n            android:text=\"Email Address\"\n            android:textColor=\"@color/black\"\n            android:textSize=\"14sp\"\n            android:textStyle=\"bold\" />\n\n        <EditText\n            android:id=\"@+id/email_edit\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"8dp\"\n            android:hint=\"Email Address\"\n            android:inputType=\"textEmailAddress\"\n            android:background=\"@drawable/edit_text_custom_bg\"\n            android:paddingStart=\"16dp\"\n            android:paddingTop=\"14dp\"\n            android:paddingEnd=\"16dp\"\n            android:paddingBottom=\"14dp\"\n            android:textColorHint=\"#80000000\"\n            android:textSize=\"16sp\" />\n\n        <!-- Phone Number Input -->\n        <TextView\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"16dp\"\n            android:text=\"Phone Number\"\n            android:textColor=\"@color/black\"\n            android:textSize=\"14sp\"\n            android:textStyle=\"bold\" />\n\n        <EditText\n            android:id=\"@+id/phone_edit\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"8dp\"\n            android:hint=\"Phone Number\"\n            android:inputType=\"phone\"\n            android:background=\"@drawable/edit_text_custom_bg\"\n            android:paddingStart=\"16dp\"\n            android:paddingTop=\"14dp\"\n            android:paddingEnd=\"16dp\"\n            android:paddingBottom=\"14dp\"\n            android:textColorHint=\"#80000000\"\n            android:textSize=\"16sp\" />\n\n        <!-- Notification Settings -->\n        <TextView\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"24dp\"\n            android:text=\"Notification Settings\"\n            android:textColor=\"@color/black\"\n            android:textSize=\"14sp\"\n            android:textStyle=\"bold\" />\n\n        <!-- Allow Notifications Dropdown -->\n        <TextView\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"16dp\"\n            android:text=\"Allow Notifications\"\n            android:textColor=\"@color/black\"\n            android:textSize=\"14sp\"\n            android:textStyle=\"bold\" />\n\n        <Spinner\n            android:id=\"@+id/allow_notifications_spinner\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"8dp\"\n            android:background=\"@drawable/edit_text_custom_bg\"\n            android:paddingStart=\"16dp\"\n            android:paddingTop=\"14dp\"\n            android:paddingEnd=\"16dp\"\n            android:paddingBottom=\"14dp\" />\n\n        <!-- Lottery Results Notification Dropdown -->\n        <TextView\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"16dp\"\n            android:text=\"Notify me when lottery results are released\"\n            android:textColor=\"@color/black\"\n            android:textSize=\"14sp\"\n            android:textStyle=\"bold\" />\n\n        <Spinner\n            android:id=\"@+id/lottery_results_spinner\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"8dp\"\n            android:background=\"@drawable/edit_text_custom_bg\"\n            android:paddingStart=\"16dp\"\n            android:paddingTop=\"14dp\"\n            android:paddingEnd=\"16dp\"\n            android:paddingBottom=\"14dp\" />\n\n        <!-- DELETE ACCOUNT Button -->\n        <Button\n            android:id=\"@+id/delete_account_button\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_gravity=\"center_horizontal\"\n            android:layout_marginTop=\"32dp\"\n            android:text=\"DELETE ACCOUNT\"\n            android:textColor=\"#FF0000\"\n            android:textSize=\"16sp\"\n            android:textStyle=\"bold\"\n            android:background=\"@drawable/delete_account_button_bg\"\n            android:paddingStart=\"24dp\"\n            android:paddingEnd=\"24dp\"\n            android:paddingTop=\"16dp\"\n            android:paddingBottom=\"16dp\" />\n\n        <!-- Save Changes Button -->\n        <Button\n            android:id=\"@+id/save_changes_button\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"16dp\"\n            android:layout_marginStart=\"16dp\"\n            android:layout_marginEnd=\"16dp\"\n            android:layout_marginBottom=\"80dp\"\n            android:text=\"SAVE CHANGES\"\n            android:textColor=\"@color/white\"\n            android:textSize=\"16sp\"\n            android:textStyle=\"bold\"\n            android:background=\"@drawable/purple_button_bg\"\n            android:paddingTop=\"16dp\"\n            android:paddingBottom=\"16dp\" />\n\n    </LinearLayout>\n\n</androidx.core.widget.NestedScrollView>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/fragment_profile.xml b/app/src/main/res/layout/fragment_profile.xml
+--- a/app/src/main/res/layout/fragment_profile.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/res/layout/fragment_profile.xml	(date 1764462253563)
+@@ -276,4 +276,4 @@
+ 
+     </LinearLayout>
+ 
+-</androidx.core.widget.NestedScrollView>
++</androidx.core.widget.NestedScrollView>
+\ No newline at end of file
+Index: app/src/main/res/values/colors.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <color name=\"purple_500\">#6200EE</color>\n    <color name=\"purple_700\">#3700B3</color>\n    <color name=\"teal_200\">#03DAC5</color>\n    <color name=\"black\">#000000</color>\n    <color name=\"white\">#FFFFFFFF</color>\n\n    <!-- Tab Colors -->\n    <color name=\"selected_tab_color\">#4E3CDB</color>\n    <color name=\"unselected_tab_color\">#888888</color>\n\n    <!-- Custom Colors For Inputs -->\n    <color name=\"date_picker_purple\">#4E3CDB</color>\n    <color name=\"date_picker_green_semi_transparent\">#80D1FF66</color>\n    <color name=\"edit_text_bg\">#0A000000</color>\n\n    <!-- Missing Colors -->\n    <color name=\"opaque_light_grey\">#F5F5F5</color>\n    <color name=\"medium_grey\">#808080</color>\n    <color name=\"button_grey\">#CCCCCC</color>\n\n    <color name=\"None\">#00FFFFFF</color>\n\n    <color name=\"opaque_black\">#80000000</color>\n    <color name=\"light_opaque_black\">#1F000000</color>\n\n    <color name=\"button_background\">#FF4E3CDB</color>\n    <color name=\"button_text\">#FFFFFFFF</color>\n    <color name=\"run_lottery_button_bg\">#0A000000</color>\n    \n    <!-- Filter Colors - Purple style -->\n    <color name=\"filter_selected_bg\">#6200EE</color> \n    <color name=\"filter_selected_text\">#FFFFFF</color> \n    <color name=\"filter_unselected_bg\">#FFFFFF</color> \n    <color name=\"filter_unselected_text\">#000000</color> \n\n    <!-- Date Picker Colors from Figma -->\n    <color name=\"calendar_selected_bg\">#4E3CDB</color>\n    <color name=\"calendar_selected_text\">#FFFFFF</color>\n    <color name=\"calendar_range_fill\">#80D1FF66</color>\n    <color name=\"calendar_day_bg\">#0F000000</color>\n    <color name=\"calendar_weekday_text\">#80000000</color>\n    <color name=\"calendar_other_month_text\">#4D000000</color>\n\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/colors.xml b/app/src/main/res/values/colors.xml
+--- a/app/src/main/res/values/colors.xml	(revision 2ffef305abdb938f095e5af75d878ed5fdd9977b)
++++ b/app/src/main/res/values/colors.xml	(date 1764462481171)
+@@ -35,12 +35,7 @@
+     <color name="filter_unselected_bg">#FFFFFF</color> 
+     <color name="filter_unselected_text">#000000</color> 
+ 
+-    <!-- Date Picker Colors from Figma -->
++    <!-- Calendar Colors -->
+     <color name="calendar_selected_bg">#4E3CDB</color>
+-    <color name="calendar_selected_text">#FFFFFF</color>
+-    <color name="calendar_range_fill">#80D1FF66</color>
+-    <color name="calendar_day_bg">#0F000000</color>
+-    <color name="calendar_weekday_text">#80000000</color>
+-    <color name="calendar_other_month_text">#4D000000</color>
+ 
+ </resources>
+\ No newline at end of file

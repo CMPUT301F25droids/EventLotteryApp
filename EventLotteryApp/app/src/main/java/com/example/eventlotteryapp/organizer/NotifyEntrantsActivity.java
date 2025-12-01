@@ -199,15 +199,9 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
             .get()
             .addOnSuccessListener(document -> {
                 // Load event image
-                String posterImageBase64 = document.getString("posterImageBase64");
-                if (posterImageBase64 != null && !posterImageBase64.isEmpty()) {
-                    try {
-                        byte[] decodedBytes = Base64.decode(posterImageBase64, Base64.DEFAULT);
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-                        eventImage.setImageBitmap(bitmap);
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error decoding event image", e);
-                    }
+                String imageBase64 = document.getString("Image");
+                if (imageBase64 != null && !imageBase64.isEmpty()) {
+                    populateImage(imageBase64, eventImage);
                 }
                 
                 // Load event title
@@ -236,6 +230,24 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
                 Log.e(TAG, "Error loading event data", e);
                 Toast.makeText(this, "Error loading event data", Toast.LENGTH_SHORT).show();
             });
+    }
+    
+    private void populateImage(String base64Image, ImageView imageView) {
+        try {
+            // Remove the "data:image/jpeg;base64," or similar prefix
+            if (base64Image.startsWith("data:image")) {
+                base64Image = base64Image.substring(base64Image.indexOf(",") + 1);
+            }
+            
+            byte[] decodedBytes = Base64.decode(base64Image, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+            
+            if (bitmap != null) {
+                imageView.setImageBitmap(bitmap);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to decode image", e);
+        }
     }
     
     private void updateRecipients() {

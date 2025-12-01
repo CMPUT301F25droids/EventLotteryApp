@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/opaque_light_grey"
+    android:background="@color/white"
     android:fitsSystemWindows="true">
 
     <!-- Top Bar -->
@@ -14,10 +14,7 @@
         android:layout_height="wrap_content"
         android:minHeight="56dp"
         android:background="@color/white"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="@dimen/status_bar_padding"
-        android:paddingBottom="12dp"
-        android:elevation="4dp"
+        android:padding="16dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <!-- Back Button -->
@@ -31,9 +28,7 @@
             android:focusable="true"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="12dp" />
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <!-- Title -->
         <TextView
@@ -41,16 +36,15 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Event Details"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
             android:gravity="center"
             android:textColor="@color/black"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toEndOf="@id/back_button"
-            app:layout_constraintEnd_toStartOf="@id/edit_button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="12dp" />
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <!-- Edit Button -->
         <ImageView
@@ -64,14 +58,12 @@
             app:tint="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="12dp" />
+            app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Scrollable content -->
-    <ScrollView
+    <!-- Scroll Content -->
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -79,67 +71,157 @@
         app:layout_constraintTop_toBottomOf="@id/top_bar"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
-            <!-- Event Image -->
+            <!-- Event Poster Image -->
             <ImageView
                 android:id="@+id/event_image"
-                android:layout_width="match_parent"
-                android:layout_height="250dp"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
                 android:scaleType="centerCrop"
                 android:background="@color/black"
-                android:contentDescription="Event image" />
+                android:contentDescription="Event image"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <!-- Status Tag Overlay -->
+            <TextView
+                android:id="@+id/event_status_tag"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/status_tag_background"
+                android:elevation="4dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:gravity="center_vertical"
+                android:text="🟢 Open - 0/0"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                app:layout_constraintBottom_toBottomOf="@+id/event_image"
+                app:layout_constraintStart_toStartOf="@+id/event_image" />
 
             <!-- Event Title -->
             <TextView
                 android:id="@+id/event_title"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="16dp"
                 android:text="Event Title"
-                android:textSize="24sp"
+                android:textColor="@color/black"
+                android:textSize="28sp"
                 android:textStyle="bold"
-                android:textColor="@color/black"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="16dp" />
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="-0.01"
+                app:layout_constraintTop_toBottomOf="@+id/event_image"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- Date Range -->
-            <TextView
-                android:id="@+id/event_date_range"
-                android:layout_width="match_parent"
+            <!-- Date Range with Calendar Icon -->
+            <LinearLayout
+                android:id="@+id/date_container"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Jan 1 – Mar 1, 2025"
-                android:textSize="16sp"
-                android:textColor="@color/medium_grey"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="8dp" />
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                app:layout_constraintTop_toBottomOf="@+id/event_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
-            <!-- Location -->
-            <TextView
-                android:id="@+id/event_location"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Location"
-                android:textSize="16sp"
-                android:textColor="@color/medium_grey"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="4dp" />
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_calendar"
+                    android:tint="@color/calendar_weekday_text"
+                    android:layout_marginEnd="6dp" />
 
-            <!-- Price -->
-            <TextView
-                android:id="@+id/event_price"
-                android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/event_date_range"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Jan 1 – Mar 1, 2025"
+                    android:textColor="@color/calendar_weekday_text"
+                    android:textSize="17sp"
+                    android:fontFamily="sans-serif" />
+            </LinearLayout>
+
+            <!-- Location with Location Icon -->
+            <LinearLayout
+                android:id="@+id/location_container"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="$60 per participant"
-                android:textSize="16sp"
-                android:textColor="@color/black"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="8dp" />
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                app:layout_constraintTop_toBottomOf="@+id/date_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_location"
+                    android:tint="@color/calendar_weekday_text"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/event_location"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Location"
+                    android:textColor="@color/calendar_weekday_text"
+                    android:textSize="17sp"
+                    android:fontFamily="sans-serif" />
+            </LinearLayout>
+
+            <!-- Price with Dollar Icon -->
+            <LinearLayout
+                android:id="@+id/price_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                app:layout_constraintTop_toBottomOf="@+id/location_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageView
+                    android:layout_width="17dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_dollar"
+                    android:tint="@color/calendar_weekday_text"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/event_price"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="$60 per participant"
+                    android:textColor="@color/calendar_weekday_text"
+                    android:textSize="17sp"
+                    android:fontFamily="sans-serif" />
+            </LinearLayout>
 
             <!-- Statistics Section -->
             <HorizontalScrollView
+                android:id="@+id/statistics_scroll"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
@@ -149,7 +231,10 @@
                 android:paddingEnd="16dp"
                 android:paddingTop="4dp"
                 android:paddingBottom="4dp"
-                android:clipToPadding="false">
+                android:clipToPadding="false"
+                app:layout_constraintTop_toBottomOf="@+id/price_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -166,12 +251,6 @@
                         android:gravity="center_vertical"
                         android:padding="12dp"
                         android:background="@drawable/chip_background">
-
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:src="@drawable/ic_profile"
-                                app:tint="#4E3CDB" />
 
                         <ImageView
                             android:layout_width="20dp"
@@ -237,7 +316,7 @@
                             android:id="@+id/days_left_registration_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Days Left in Registration: 2"
+                            android:text="Days Left: 2"
                             android:textSize="14sp"
                             android:textColor="@color/black"
                             android:textStyle="bold"
@@ -263,7 +342,7 @@
                             android:id="@+id/lottery_draw_date_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Lottery Draw Date: Dec 15, 2024"
+                            android:text="Draw: Dec 15, 2024"
                             android:textSize="14sp"
                             android:textColor="@color/black"
                             android:textStyle="bold"
@@ -273,49 +352,109 @@
                 </LinearLayout>
             </HorizontalScrollView>
 
-            <!-- Primary Action Buttons -->
-            <Button
-                android:id="@+id/manage_waiting_list_button"
-                android:layout_width="match_parent"
+            <!-- About This Event Section -->
+            <TextView
+                android:id="@+id/about_title"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Manage Waiting List"
-                android:textColor="@color/white"
-                android:backgroundTint="@color/button_background"
-                android:layout_marginHorizontal="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginTop="24dp"
-                android:padding="16dp" />
+                android:text="About This Event"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="-0.01"
+                app:layout_constraintTop_toBottomOf="@+id/statistics_scroll"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-            <Button
+            <TextView
+                android:id="@+id/event_description"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:text="No description available."
+                android:textColor="@color/calendar_weekday_text"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif"
+                android:lineSpacingExtra="4dp"
+                app:layout_constraintTop_toBottomOf="@+id/about_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <!-- Primary Action Buttons -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/manage_waiting_list_button"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="24dp"
+                android:text="Manage Waiting List"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="@color/selected_tab_color"
+                app:cornerRadius="56dp"
+                app:layout_constraintTop_toBottomOf="@+id/event_description"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/notify_entrants_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="12dp"
                 android:text="Notify Entrants"
+                android:textSize="17sp"
+                android:textStyle="bold"
                 android:textColor="@color/white"
-                android:backgroundTint="@color/button_background"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="12dp"
-                android:padding="16dp" />
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="@color/selected_tab_color"
+                app:cornerRadius="56dp"
+                app:layout_constraintTop_toBottomOf="@+id/manage_waiting_list_button"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/share_qr_code_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Share QR Code"
-                android:textColor="@color/white"
-                android:backgroundTint="@color/button_background"
-                android:layout_marginHorizontal="16dp"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginTop="12dp"
-                android:padding="16dp" />
+                android:text="Share QR Code"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="@color/selected_tab_color"
+                app:cornerRadius="56dp"
+                app:layout_constraintTop_toBottomOf="@+id/notify_entrants_button"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <!-- Secondary Action Buttons -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/secondary_actions"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginHorizontal="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginTop="24dp"
-                android:layout_marginBottom="24dp"
-                android:gravity="center">
+                android:orientation="horizontal"
+                android:gravity="center"
+                app:layout_constraintTop_toBottomOf="@+id/share_qr_code_button"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <!-- Finalized List -->
                 <LinearLayout
@@ -376,32 +515,44 @@
             </LinearLayout>
 
             <!-- Debug Buttons (for testing only - can be removed in production) -->
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/debug_add_users_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="[DEBUG] Add 20 Test Users to Waiting List"
-                android:textColor="@color/white"
-                android:backgroundTint="#FF6B6B"
-                android:layout_marginHorizontal="16dp"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginTop="12dp"
-                android:padding="16dp" />
-
-            <Button
-                android:id="@+id/debug_remove_users_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="[DEBUG] Remove All Test Users from Waiting List"
+                android:text="[DEBUG] Add 20 Test Users"
+                android:textSize="17sp"
+                android:textStyle="bold"
                 android:textColor="@color/white"
-                android:backgroundTint="#FF6B6B"
-                android:layout_marginHorizontal="16dp"
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="#FF6B6B"
+                app:cornerRadius="56dp"
+                app:layout_constraintTop_toBottomOf="@+id/secondary_actions"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/debug_remove_users_button"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginTop="12dp"
                 android:layout_marginBottom="24dp"
-                android:padding="16dp" />
+                android:text="[DEBUG] Remove All Test Users"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="#FF6B6B"
+                app:cornerRadius="56dp"
+                app:layout_constraintTop_toBottomOf="@+id/debug_add_users_button"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-        </LinearLayout>
-    </ScrollView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-
-
