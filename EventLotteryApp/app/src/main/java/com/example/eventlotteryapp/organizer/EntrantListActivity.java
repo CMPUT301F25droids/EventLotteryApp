@@ -2,6 +2,7 @@ package com.example.eventlotteryapp.organizer;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -22,6 +23,7 @@ import com.google.android.material.button.MaterialButton;
 import androidx.annotation.NonNull;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.eventlotteryapp.CsvExportController;
@@ -738,7 +740,9 @@ public class EntrantListActivity extends AppCompatActivity {
                                             marker.setPosition(location);
                                             marker.setTitle(name);
                                             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-                                            
+                                            Drawable icon = ContextCompat.getDrawable(this, R.drawable.ic_location_pin);
+                                            marker.setIcon(icon);
+
                                             // Set click listener to show user name
                                             marker.setOnMarkerClickListener((marker1, mapView) -> {
                                                 String userName = marker1.getTitle();
