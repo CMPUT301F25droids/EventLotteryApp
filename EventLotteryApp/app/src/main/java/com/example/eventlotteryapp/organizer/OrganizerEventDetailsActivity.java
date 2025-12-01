@@ -541,13 +541,15 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 }
                 
                 // Get event title for notification
-                String eventTitle = eventDoc.getString("title");
-                if (eventTitle == null) {
-                    eventTitle = eventDoc.getString("Name");
+                String titleFromDoc = eventDoc.getString("title");
+                if (titleFromDoc == null) {
+                    titleFromDoc = eventDoc.getString("Name");
                 }
-                if (eventTitle == null || eventTitle.isEmpty()) {
-                    eventTitle = "Event";
+                if (titleFromDoc == null || titleFromDoc.isEmpty()) {
+                    titleFromDoc = "Event";
                 }
+                // Make final for use in lambda
+                final String eventTitle = titleFromDoc;
                 
                 // Now update the event to cancelled
                 Map<String, Object> updateData = new HashMap<>();
