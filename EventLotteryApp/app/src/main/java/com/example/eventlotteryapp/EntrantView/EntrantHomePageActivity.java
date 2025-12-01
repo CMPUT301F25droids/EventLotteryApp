@@ -11,6 +11,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.viewpager2.widget.ViewPager2;
 import com.example.eventlotteryapp.R;
 import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.Objects;
 
@@ -32,7 +33,6 @@ public class EntrantHomePageActivity extends AppCompatActivity {
 
         tabLayout = findViewById(R.id.entrant_home_tabs);
         viewPager2 = findViewById(R.id.entrant_view_pager);
-
         viewPagerAdapter = new EntrantViewPagerAdapter(this);
         viewPager2.setAdapter(viewPagerAdapter);
 
