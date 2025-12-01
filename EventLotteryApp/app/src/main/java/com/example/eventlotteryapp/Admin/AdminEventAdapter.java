@@ -9,15 +9,23 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eventlotteryapp.R;
-import com.example.eventlotteryapp.data.Event;
 
 import java.util.List;
 
+/**
+ * RecyclerView adapter used by the admin panel to display
+ * a list of events in the Browse Events screen.
+ */
 public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.ViewHolder> {
 
-    private final List<Event> events;
+    private final List<AdminEvent> events;
 
-    public AdminEventAdapter(List<Event> events) {
+    /**
+     * Creates a new adapter instance.
+     *
+     * @param events A list of events to display.
+     */
+    public AdminEventAdapter(List<AdminEvent> events) {
         this.events = events;
     }
 
@@ -31,9 +39,9 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Event e = events.get(position);
-        holder.title.setText(e.getTitle());
-        holder.location.setText(e.getLocation());
+        AdminEvent event = events.get(position);
+        holder.title.setText(event.getTitle());
+        holder.location.setText(event.getLocation());
     }
 
     @Override
@@ -41,9 +49,17 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
         return events.size();
     }
 
+    /**
+     * ViewHolder class holding the UI components for each event item.
+     */
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView title, location;
 
+        /**
+         * Initializes UI references for a single event card.
+         *
+         * @param itemView The inflated item view layout.
+         */
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.event_title);
@@ -51,3 +67,4 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
         }
     }
 }
+

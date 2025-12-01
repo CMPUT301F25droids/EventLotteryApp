@@ -3,12 +3,18 @@ package com.example.eventlotteryapp.Admin;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.eventlotteryapp.Authorization.AuthActivity;
 import com.example.eventlotteryapp.R;
 import com.google.firebase.auth.FirebaseAuth;
 
+/**
+ * The main landing screen for administrators.
+ * Allows navigation to event browsing, profile browsing,
+ * image browsing, and logout functionality.
+ */
 public class AdminHomeActivity extends AppCompatActivity {
 
     @Override
@@ -18,28 +24,39 @@ public class AdminHomeActivity extends AppCompatActivity {
 
         Button browseEventsButton = findViewById(R.id.adminBrowseEventsButton);
         Button browseProfilesButton = findViewById(R.id.adminBrowseProfilesButton);
-        Button browseImagesButton = findViewById(R.id.adminBrowseImagesButton);  // ✅ NEW
+        Button browseImagesButton = findViewById(R.id.adminBrowseImagesButton);
         Button logoutButton = findViewById(R.id.adminLogoutButton);
 
-        // Browse Events
+        /**
+         * Opens the page where the admin can browse all events.
+         */
         browseEventsButton.setOnClickListener(v -> {
-            startActivity(new Intent(AdminHomeActivity.this, AdminBrowseEventsActivity.class));
+            Intent intent = new Intent(this, AdminBrowseEventsActivity.class);
+            startActivity(intent);
         });
 
-        // Browse Profiles
+        /**
+         * Opens the page where the admin can browse user profiles.
+         */
         browseProfilesButton.setOnClickListener(v -> {
-            startActivity(new Intent(AdminHomeActivity.this, AdminBrowseProfilesActivity.class));
+            Intent intent = new Intent(this, AdminBrowseProfilesActivity.class);
+            startActivity(intent);
         });
 
-        // Browse Images (NEW)
+        /**
+         * Opens the page where the admin can browse all uploaded event images.
+         */
         browseImagesButton.setOnClickListener(v -> {
-            startActivity(new Intent(AdminHomeActivity.this, AdminBrowseImagesActivity.class));
+            Intent intent = new Intent(this, AdminBrowseImagesActivity.class);
+            startActivity(intent);
         });
 
-        // Logout
+        /**
+         * Logs the admin out and returns to the authentication page.
+         */
         logoutButton.setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();
-            startActivity(new Intent(AdminHomeActivity.this, AuthActivity.class));
+            startActivity(new Intent(this, AuthActivity.class));
             finish();
         });
     }
