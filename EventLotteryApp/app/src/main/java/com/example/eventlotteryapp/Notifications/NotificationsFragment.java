@@ -70,38 +70,81 @@ public class NotificationsFragment extends Fragment {
         notificationsRef = db.collection("Notifications");
         notificationsArray.clear();
 
-        notificationsRef.whereEqualTo("UserId", auth.getUid())
-                        .get()
-                        .addOnCompleteListener((task) -> {
-                            if (task.isSuccessful()) {
-                                int totalDocs = task.getResult().size();
+        String currentUserId = auth.getUid();
+        if (currentUserId == null) {
+            updateUI();
+            return;
+        }
 
-                                if (totalDocs == 0) {
+        // Get current user's role to filter notifications by UserType
+        db.collection("users").document(currentUserId).get()
+                .addOnSuccessListener(userDoc -> {
+                    String userRole = userDoc.getString("role");
+                    String userType = (userRole != null && userRole.equals("organizer")) ? "organizer" : "entrant";
+                    
+                    // Filter notifications by both UserId and UserType to separate logs
+                    notificationsRef.whereEqualTo("UserId", currentUserId)
+                            .whereEqualTo("UserType", userType)
+                            .get()
+                            .addOnCompleteListener((task) -> {
+                                if (task.isSuccessful()) {
+                                    int totalDocs = task.getResult().size();
+
+                                    if (totalDocs == 0) {
+                                        updateUI();
+                                        return;
+                                    }
+
+                                    AtomicInteger loadedCount = new AtomicInteger(0);
+
+                                    for (DocumentSnapshot doc : task.getResult()) {
+                                        Notification.fromDocument(doc, notification -> {
+                                            notificationsArray.add(notification);
+
+                                            if (loadedCount.incrementAndGet() == totalDocs) {
+                                                Collections.sort(notificationsArray);
+                                                updateUI();
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    Log.e("notif", "error getting documents", task.getException());
                                     updateUI();
-                                    return;
                                 }
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("notif", "error getting user document", e);
+                    // Fallback: load without UserType filter for backward compatibility
+                    notificationsRef.whereEqualTo("UserId", currentUserId)
+                            .get()
+                            .addOnCompleteListener((task) -> {
+                                if (task.isSuccessful()) {
+                                    int totalDocs = task.getResult().size();
 
-                                AtomicInteger loadedCount = new AtomicInteger(0);
+                                    if (totalDocs == 0) {
+                                        updateUI();
+                                        return;
+                                    }
 
-                                for (DocumentSnapshot doc : task.getResult()) {
-                                    Notification.fromDocument(doc, notification -> {
-                                        notificationsArray.add(notification);
+                                    AtomicInteger loadedCount = new AtomicInteger(0);
 
-                                        if (loadedCount.incrementAndGet() == totalDocs) {
-                                            Collections.sort(notificationsArray);
-                                            updateUI();
-                                        }
-                                    });
+                                    for (DocumentSnapshot doc : task.getResult()) {
+                                        Notification.fromDocument(doc, notification -> {
+                                            notificationsArray.add(notification);
+
+                                            if (loadedCount.incrementAndGet() == totalDocs) {
+                                                Collections.sort(notificationsArray);
+                                                updateUI();
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    Log.e("notif", "error getting documents", task.getException());
+                                    updateUI();
                                 }
-                            } else {
-                                Log.e("notif", "error getting documents", task.getException());
-                                updateUI();
-                            }
-
-
-                            Collections.sort(notificationsArray);
-                            updateUI();
-                        });
+                            });
+                });
     }
 
     private void updateUI() {

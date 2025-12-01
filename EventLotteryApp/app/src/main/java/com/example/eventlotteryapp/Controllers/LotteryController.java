@@ -162,6 +162,10 @@ public class LotteryController {
             Boolean notificationsEnabled = userDoc.getBoolean("notificationPreference");
             // If notificationPreference is null or true, send notification
             if (notificationsEnabled == null || notificationsEnabled) {
+                // Get user's role to determine UserType
+                String role = userDoc.getString("role");
+                String userType = (role != null && role.equals("organizer")) ? "organizer" : "entrant";
+                
                 Map<String, Object> notification = new HashMap<>();
                 notification.put("UserId", userId);  // Store as string, not DocumentReference
                 notification.put("EventId", db.collection("Events").document(eventId));
@@ -169,6 +173,7 @@ public class LotteryController {
                 notification.put("Message", message);
                 notification.put("TimeStamp", new java.util.Date().toString());
                 notification.put("Read", false);
+                notification.put("UserType", userType); // Separate logs for entrants and organizers
 
                 db.collection("Notifications").add(notification)
                         .addOnSuccessListener(ref -> Log.d(TAG, "Notification created: " + ref.getId()))

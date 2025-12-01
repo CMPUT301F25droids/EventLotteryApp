@@ -49,6 +49,7 @@ public class NotificationController {
         notifData.put("Type", "MESSAGE");
         notifData.put("TimeStamp", new Date());
         notifData.put("UserId", entrantDoc.getId());
+        notifData.put("UserType", "entrant"); // Separate logs for entrants and organizers
 
         // 3. Save into Firestore under /notifications
         db.collection("Notifications")

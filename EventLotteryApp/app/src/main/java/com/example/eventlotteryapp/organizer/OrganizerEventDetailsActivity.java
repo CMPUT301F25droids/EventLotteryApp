@@ -315,14 +315,15 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 int waitingListSize = (waitingListSizeLong != null) ? waitingListSizeLong.intValue() : 0;
                 
                 // Build status text - use waiting list size as denominator if limited, otherwise show just numerator
+                // Numerator is the current waiting list count (entrantsJoined)
                 String statusText;
                 String countText;
                 if (isLimitEnabled && waitingListSize > 0) {
                     // Waiting list is limited - show numerator/denominator
-                    countText = selectedCount + "/" + waitingListSize;
+                    countText = entrantsJoined + "/" + waitingListSize;
                 } else {
                     // Waiting list is infinite - show just numerator without slash
-                    countText = String.valueOf(selectedCount);
+                    countText = String.valueOf(entrantsJoined);
                 }
                 
                 if (isOpen) {
