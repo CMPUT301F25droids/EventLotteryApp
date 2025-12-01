@@ -223,10 +223,10 @@ public class RunLotteryActivity extends AppCompatActivity {
                                     "Lottery Selection", 
                                     "Congratulations! You've been selected for " + eventTitle);
                                 
-                                // Notify non-selected entrants (those still in waiting list)
+                                // Notify non-selected entrants (those still in waiting list) - rejection notification
                                 notificationController.sendToWaitingList(eventId,
-                                    "Lottery Results",
-                                    "Thank you for your interest in " + eventTitle + ". The lottery draw has been completed. You were not selected this time, but you remain on the waiting list.");
+                                    "Lottery Results - Not Selected",
+                                    "The lottery draw for " + eventTitle + " has been completed. Unfortunately, you were not selected in this lottery draw. You remain on the waiting list in case spots become available.");
                             }
                             
                             // Navigate to Lottery Results screen
@@ -259,10 +259,10 @@ public class RunLotteryActivity extends AppCompatActivity {
                                     "Lottery Selection", 
                                     "Congratulations! You've been selected for " + eventTitle);
                                 
-                                // Notify non-selected entrants (those still in waiting list)
+                                // Notify non-selected entrants (those still in waiting list) - rejection notification
                                 notificationController.sendToWaitingList(eventId,
-                                    "Lottery Results",
-                                    "Thank you for your interest in " + eventTitle + ". The lottery draw has been completed. You were not selected this time, but you remain on the waiting list.");
+                                    "Lottery Results - Not Selected",
+                                    "The lottery draw for " + eventTitle + " has been completed. Unfortunately, you were not selected in this lottery draw. You remain on the waiting list in case spots become available.");
                             }
                             
                             // Navigate to Lottery Results screen

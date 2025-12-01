@@ -1,5 +1,7 @@
 package com.example.eventlotteryapp.EntrantView;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -197,65 +199,137 @@ public class MyEventsFragment extends Fragment {
         MaterialButton selectFilter = view.findViewById(R.id.selected_filter);
         MaterialButton pendingFilter = view.findViewById(R.id.pending_filter);
         MaterialButton notSelectedFilter = view.findViewById(R.id.not_selected_filter);
+        
+        android.widget.HorizontalScrollView scrollView = view.findViewById(R.id.filter_scroller);
 
-        selectFilter.setOnClickListener(v -> {
-            if (currentFilter == MyEventItem.Status.SELECTED) {
-                currentFilter = null;
-                updateFilterButtonStyle(selectFilter, false);
-            } else {
-                currentFilter = MyEventItem.Status.SELECTED;
-                updateFilterButtonStyle(selectFilter, true);
-                updateFilterButtonStyle(pendingFilter, false);
-                updateFilterButtonStyle(notSelectedFilter, false);
-            }
-            applyFilter();
-        });
+        List<MaterialButton> buttons = List.of(selectFilter, pendingFilter, notSelectedFilter);
 
-        pendingFilter.setOnClickListener(v -> {
-            if (currentFilter == MyEventItem.Status.PENDING) {
-                currentFilter = null;
-                updateFilterButtonStyle(pendingFilter, false);
-            } else {
-                currentFilter = MyEventItem.Status.PENDING;
-                updateFilterButtonStyle(selectFilter, false);
-                updateFilterButtonStyle(pendingFilter, true);
-                updateFilterButtonStyle(notSelectedFilter, false);
+        View.OnClickListener listener = v -> {
+            MaterialButton selected = (MaterialButton) v;
+            
+            // Determine which filter was clicked
+            MyEventItem.Status clickedFilter = null;
+            if (selected == selectFilter) {
+                clickedFilter = MyEventItem.Status.SELECTED;
+            } else if (selected == pendingFilter) {
+                clickedFilter = MyEventItem.Status.PENDING;
+            } else if (selected == notSelectedFilter) {
+                clickedFilter = MyEventItem.Status.NOT_SELECTED;
             }
+            
+            // Toggle filter: if clicking the same filter, deselect it
+            if (currentFilter == clickedFilter) {
+                currentFilter = null;
+                updateFilterButtonStyles(buttons, null);
+            } else {
+                currentFilter = clickedFilter;
+                updateFilterButtonStyles(buttons, selected);
+            }
+            
+            // Center the selected button in the scroll view
+            if (currentFilter != null) {
+                centerButtonInScrollView(scrollView, selected);
+            }
+            
             applyFilter();
-        });
+        };
 
-        notSelectedFilter.setOnClickListener(v -> {
-            if (currentFilter == MyEventItem.Status.NOT_SELECTED) {
-                currentFilter = null;
-                updateFilterButtonStyle(notSelectedFilter, false);
-            } else {
-                currentFilter = MyEventItem.Status.NOT_SELECTED;
-                updateFilterButtonStyle(selectFilter, false);
-                updateFilterButtonStyle(pendingFilter, false);
-                updateFilterButtonStyle(notSelectedFilter, true);
-            }
-            applyFilter();
-        });
+        selectFilter.setOnClickListener(listener);
+        pendingFilter.setOnClickListener(listener);
+        notSelectedFilter.setOnClickListener(listener);
+
+        // No default selection - show all events initially
     }
 
     /**
-     * Updates the visual style of a filter button based on selection state.
+     * Updates the visual style of filter buttons based on selection state.
+     * Uses animated transitions matching the home page filter chips.
      *
-     * @param button The MaterialButton to style
-     * @param isSelected True if the button should be styled as selected
+     * @param buttons List of all filter buttons
+     * @param selected The currently selected button (null if none selected)
      */
-    private void updateFilterButtonStyle(MaterialButton button, boolean isSelected) {
-        if (isSelected) {
-            button.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.selected_tab_color)));
-            button.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
-            button.setStrokeWidth(0);
-        } else {
-            button.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
-            button.setTextColor(ContextCompat.getColor(requireContext(), R.color.black));
-            button.setStrokeWidth((int) TypedValue.applyDimension(
-                    TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
+    private void updateFilterButtonStyles(List<MaterialButton> buttons, MaterialButton selected) {
+        int selectedBgColor = getResources().getColor(R.color.filter_selected_bg);
+        int selectedTextColor = getResources().getColor(R.color.filter_selected_text);
+        int unselectedBgColor = getResources().getColor(R.color.filter_unselected_bg);
+        int unselectedTextColor = getResources().getColor(R.color.filter_unselected_text);
+        
+        int animationDuration = 250; // milliseconds
+        
+        for (MaterialButton btn : buttons) {
+            // Get current colors - handle transparent/initial state
+            ColorStateList currentBgTint = btn.getBackgroundTintList();
+            int currentBgColor = unselectedBgColor; // Default starting point
+            if (currentBgTint != null) {
+                int color = currentBgTint.getDefaultColor();
+                // If not transparent, use the actual color; otherwise start from unselected
+                if ((color & 0xFF000000) != 0) { // Check if not fully transparent
+                    currentBgColor = color;
+                }
+            }
+            
+            int currentTextColor = btn.getCurrentTextColor();
+            // If text color appears to be default (likely black), use unselected color as baseline
+            if (currentTextColor == 0xFF000000 || currentTextColor == 0) {
+                currentTextColor = unselectedTextColor;
+            }
+            
+            // Determine target colors
+            int targetBgColor = (btn == selected) ? selectedBgColor : unselectedBgColor;
+            int targetTextColor = (btn == selected) ? selectedTextColor : unselectedTextColor;
+            
+            // Skip animation if already at target colors
+            if (currentBgColor == targetBgColor && currentTextColor == targetTextColor) {
+                continue;
+            }
+            
+            // Animate background color
+            ValueAnimator bgAnimator = ValueAnimator.ofObject(new ArgbEvaluator(), currentBgColor, targetBgColor);
+            bgAnimator.setDuration(animationDuration);
+            bgAnimator.addUpdateListener(animator -> {
+                int color = (int) animator.getAnimatedValue();
+                btn.setBackgroundTintList(ColorStateList.valueOf(color));
+            });
+            bgAnimator.start();
+            
+            // Animate text color
+            ValueAnimator textAnimator = ValueAnimator.ofObject(new ArgbEvaluator(), currentTextColor, targetTextColor);
+            textAnimator.setDuration(animationDuration);
+            textAnimator.addUpdateListener(animator -> {
+                int color = (int) animator.getAnimatedValue();
+                btn.setTextColor(color);
+            });
+            textAnimator.start();
+            
+            // Update stroke width (no animation needed)
+            if (btn == selected) {
+                btn.setStrokeWidth(0);
+            } else {
+                btn.setStrokeWidth((int) TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
+            }
         }
+    }
+    
+    /**
+     * Centers the selected button in the horizontal scroll view.
+     *
+     * @param scrollView The HorizontalScrollView containing the buttons
+     * @param button The button to center
+     */
+    private void centerButtonInScrollView(android.widget.HorizontalScrollView scrollView, MaterialButton button) {
+        // Post to ensure layout is complete
+        scrollView.post(() -> {
+            int scrollViewWidth = scrollView.getWidth();
+            int buttonLeft = button.getLeft();
+            int buttonWidth = button.getWidth();
+            int buttonCenter = buttonLeft + (buttonWidth / 2);
+            int scrollViewCenter = scrollViewWidth / 2;
+            int targetScrollX = buttonCenter - scrollViewCenter;
+            
+            // Smooth scroll to center the button
+            scrollView.smoothScrollTo(targetScrollX, 0);
+        });
     }
 
     /**
@@ -565,6 +639,16 @@ public class MyEventsFragment extends Fragment {
         }
 
         if (waitingListEntrants != null && waitingListEntrants.contains(userId)) {
+            // Check if lottery has run (registration closed) and user was not selected
+            java.util.Date registrationCloseDate = eventDoc.getDate("registrationCloseDate");
+            java.util.Date now = new java.util.Date();
+            boolean lotteryHasRun = (registrationCloseDate != null && now.after(registrationCloseDate));
+            
+            // If lottery has run and user is still in waiting list but not selected, they were rejected
+            if (lotteryHasRun && (selectedEntrants == null || !selectedEntrants.contains(userId))) {
+                return MyEventItem.Status.NOT_SELECTED;
+            }
+            
             return MyEventItem.Status.PENDING;
         }
 

@@ -40,6 +40,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     private TextView tvLotteryInfo;
     private TextView tvWaitlistCount;
+    private TextView tvStatusMessage;
 
     private NotificationController notificationController;
 
@@ -157,6 +158,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         tvLotteryInfo = findViewById(R.id.tv_lottery_info);
         tvWaitlistCount = findViewById(R.id.waitlist_count);
+        tvStatusMessage = findViewById(R.id.status_message);
         userInWaitlist();
         populateUI();
     }
@@ -228,6 +230,9 @@ public class EventDetailsActivity extends AppCompatActivity {
 
                         // Check if lottery has run and user was selected (cannot leave waitlist)
                         boolean lotteryRanAndUserSelected = isEventClosed && isSelected;
+                        
+                        // Check if lottery has run and user was NOT selected (rejected)
+                        boolean lotteryRanAndUserNotSelected = isEventClosed && isInWaitingList && !isSelected && !isAccepted && !isCancelled && !isDeclined;
 
                         Log.d("Firestore", "Status check - waiting: " + isInWaitingList +
                                 ", selected: " + isSelected +
@@ -235,7 +240,11 @@ public class EventDetailsActivity extends AppCompatActivity {
                                 ", cancelled: " + isCancelled +
                                 ", declined: " + isDeclined +
                                 ", eventClosed: " + isEventClosed +
-                                ", lotteryRanAndUserSelected: " + lotteryRanAndUserSelected);
+                                ", lotteryRanAndUserSelected: " + lotteryRanAndUserSelected +
+                                ", lotteryRanAndUserNotSelected: " + lotteryRanAndUserNotSelected);
+                        
+                        // Update status message to show rejection if applicable
+                        updateStatusMessage(isEventClosed, isSelected, isAccepted, isInWaitingList, isCancelled, isDeclined);
 
                         // Show appropriate buttons based on status
                         if (isSelected) {
@@ -540,6 +549,42 @@ public class EventDetailsActivity extends AppCompatActivity {
         } else {
             tvLotteryInfo.setText("Lottery Info: Random selection. All entrants have equal chance.");
             tvLotteryInfo.setVisibility(View.VISIBLE);
+        }
+    }
+    
+    /**
+     * Updates the status message to inform users about their lottery status.
+     * Shows rejection message if lottery has run and user was not selected.
+     */
+    private void updateStatusMessage(boolean isEventClosed, boolean isSelected, boolean isAccepted, 
+                                     boolean isInWaitingList, boolean isCancelled, boolean isDeclined) {
+        if (tvStatusMessage == null) {
+            return;
+        }
+        
+        // If lottery has run (event closed) and user is in waiting list but not selected/accepted, they were rejected
+        if (isEventClosed && isInWaitingList && !isSelected && !isAccepted && !isCancelled && !isDeclined) {
+            tvStatusMessage.setText("❌ You were not selected in the lottery draw. You remain on the waiting list.");
+            tvStatusMessage.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            tvStatusMessage.setVisibility(View.VISIBLE);
+        } else if (isSelected && !isAccepted) {
+            tvStatusMessage.setText("🎉 Congratulations! You've been selected in the lottery. Please accept or decline your invitation.");
+            tvStatusMessage.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            tvStatusMessage.setVisibility(View.VISIBLE);
+        } else if (isAccepted) {
+            tvStatusMessage.setText("✅ You're registered for this event!");
+            tvStatusMessage.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            tvStatusMessage.setVisibility(View.VISIBLE);
+        } else if (isCancelled) {
+            tvStatusMessage.setText("ℹ️ You cancelled your registration for this event.");
+            tvStatusMessage.setTextColor(getResources().getColor(android.R.color.darker_gray));
+            tvStatusMessage.setVisibility(View.VISIBLE);
+        } else if (isDeclined) {
+            tvStatusMessage.setText("ℹ️ You declined the invitation for this event.");
+            tvStatusMessage.setTextColor(getResources().getColor(android.R.color.darker_gray));
+            tvStatusMessage.setVisibility(View.VISIBLE);
+        } else {
+            tvStatusMessage.setVisibility(View.GONE);
         }
     }
     /**
