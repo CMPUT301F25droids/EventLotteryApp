@@ -472,9 +472,8 @@ public class EventDetailsActivity extends AppCompatActivity {
                             }
                             updateRegistrationInfo(registrationInfo, registrationOpenDate, registrationCloseDate, userInWaitlist);
                             
-                            // Set waitlist count
-                            tvWaitlistCount.setText("Waiting List Entrants: " + waitlistSize);
-                            tvWaitlistCount.setVisibility(View.VISIBLE);
+                            // Hide waitlist count
+                            tvWaitlistCount.setVisibility(View.GONE);
                             
                             // Lottery info
                             displayLotteryCriteria(lotteryInfo);
@@ -545,7 +544,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         } else {
             // User not in waiting list - show normal registration info
             if (registrationOpenDate != null && now.before(registrationOpenDate)) {
-                registrationInfo.setText("Registration opens " + dateFormat.format(registrationOpenDate));
+                registrationInfo.setText("Registration is not open");
             } else if (registrationCloseDate != null) {
                 registrationInfo.setText("Registration closes " + dateFormat.format(registrationCloseDate));
             } else {
