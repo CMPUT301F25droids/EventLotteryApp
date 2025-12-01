@@ -13,7 +13,6 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.eventlotteryapp.NotificationController;
 import com.example.eventlotteryapp.R;
-import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
@@ -22,7 +21,8 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Activity for running a lottery draw with configurable number of participants and auto-notify option.
+ * Activity for running a lottery draw with configurable number of participants.
+ * All entrants are automatically notified of the results.
  */
 public class RunLotteryActivity extends AppCompatActivity {
 
@@ -34,7 +34,6 @@ public class RunLotteryActivity extends AppCompatActivity {
     private NotificationController notificationController;
     
     private EditText participantsCountEditText;
-    private SwitchMaterial autoNotifySwitch;
     private Button runDrawButton;
     private TextView availableSlotsText;
     private TextView slotsInfoText;
@@ -62,7 +61,6 @@ public class RunLotteryActivity extends AppCompatActivity {
     
     private void initializeViews() {
         participantsCountEditText = findViewById(R.id.participants_count_edit_text);
-        autoNotifySwitch = findViewById(R.id.auto_notify_switch);
         runDrawButton = findViewById(R.id.run_draw_button);
         availableSlotsText = findViewById(R.id.available_slots_text);
         slotsInfoText = findViewById(R.id.slots_info_text);
@@ -172,20 +170,18 @@ public class RunLotteryActivity extends AppCompatActivity {
             return;
         }
         
-        boolean autoNotify = autoNotifySwitch.isChecked();
-        
         // Confirm before running
         new AlertDialog.Builder(this)
             .setTitle("Run Lottery Draw")
-            .setMessage("This will randomly select " + participantsToDraw + " participant(s) from the waiting list. Continue?")
+            .setMessage("This will randomly select " + participantsToDraw + " participant(s) from the waiting list. All entrants will be automatically notified. Continue?")
             .setPositiveButton("Run Draw", (dialog, which) -> {
-                executeLotteryDraw(participantsToDraw, autoNotify);
+                executeLotteryDraw(participantsToDraw);
             })
             .setNegativeButton("Cancel", null)
             .show();
     }
     
-    private void executeLotteryDraw(int participantsToDraw, boolean autoNotify) {
+    private void executeLotteryDraw(int participantsToDraw) {
         firestore.collection("Events").document(eventId)
             .get()
             .addOnSuccessListener(document -> {
@@ -256,21 +252,19 @@ public class RunLotteryActivity extends AppCompatActivity {
                             String message = "Replacement drawn. " + actualDrawCount + " participant(s) selected.";
                             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
                             
-                            // Auto-notify if enabled
-                            if (autoNotify) {
-                                String eventTitle = document.getString("title");
-                                if (eventTitle == null) eventTitle = document.getString("Name");
-                                
-                                // Notify selected entrants
-                                notificationController.sendToSelectedEntrants(eventId, 
-                                    "Lottery Selection", 
-                                    "Congratulations! You've been selected for " + eventTitle);
-                                
-                                // Notify non-selected entrants (those still in waiting list) - rejection notification
-                                notificationController.sendToWaitingList(eventId,
-                                    "Lottery Results - Not Selected",
-                                    "The lottery draw for " + eventTitle + " has been completed. Unfortunately, you were not selected in this lottery draw. You remain on the waiting list in case spots become available.");
-                            }
+                            // Always notify all entrants
+                            String eventTitle = document.getString("title");
+                            if (eventTitle == null) eventTitle = document.getString("Name");
+                            
+                            // Notify selected entrants
+                            notificationController.sendToSelectedEntrants(eventId, 
+                                "Lottery Selection", 
+                                "Congratulations! You've been selected for " + eventTitle);
+                            
+                            // Notify non-selected entrants (those still in waiting list) - rejection notification
+                            notificationController.sendToWaitingList(eventId,
+                                "Lottery Results - Not Selected",
+                                "The lottery draw for " + eventTitle + " has been completed. Unfortunately, you were not selected in this lottery draw. You remain on the waiting list in case spots become available.");
                             
                             // Navigate to Lottery Results screen
                             Intent resultsIntent = new Intent(RunLotteryActivity.this, LotteryResultsActivity.class);
@@ -292,21 +286,19 @@ public class RunLotteryActivity extends AppCompatActivity {
                             String message = "Lottery draw completed. " + actualDrawCount + " participant(s) selected.";
                             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
                             
-                            // Auto-notify if enabled
-                            if (autoNotify) {
-                                String eventTitle = document.getString("title");
-                                if (eventTitle == null) eventTitle = document.getString("Name");
-                                
-                                // Notify selected entrants
-                                notificationController.sendToSelectedEntrants(eventId, 
-                                    "Lottery Selection", 
-                                    "Congratulations! You've been selected for " + eventTitle);
-                                
-                                // Notify non-selected entrants (those still in waiting list) - rejection notification
-                                notificationController.sendToWaitingList(eventId,
-                                    "Lottery Results - Not Selected",
-                                    "The lottery draw for " + eventTitle + " has been completed. Unfortunately, you were not selected in this lottery draw. You remain on the waiting list in case spots become available.");
-                            }
+                            // Always notify all entrants
+                            String eventTitle = document.getString("title");
+                            if (eventTitle == null) eventTitle = document.getString("Name");
+                            
+                            // Notify selected entrants
+                            notificationController.sendToSelectedEntrants(eventId, 
+                                "Lottery Selection", 
+                                "Congratulations! You've been selected for " + eventTitle);
+                            
+                            // Notify non-selected entrants (those still in waiting list) - rejection notification
+                            notificationController.sendToWaitingList(eventId,
+                                "Lottery Results - Not Selected",
+                                "The lottery draw for " + eventTitle + " has been completed. Unfortunately, you were not selected in this lottery draw. You remain on the waiting list in case spots become available.");
                             
                             // Navigate to Lottery Results screen
                             Intent resultsIntent = new Intent(RunLotteryActivity.this, LotteryResultsActivity.class);

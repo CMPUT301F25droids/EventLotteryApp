@@ -127,33 +127,6 @@
                 android:textColorHint="@color/medium_grey"
                 android:layout_marginBottom="24dp" />
 
-            <!-- Auto-notify Toggle -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="16dp"
-                android:background="@drawable/edit_text_custom_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_marginBottom="24dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Auto-notify all entrants after draw"
-                    android:textSize="16sp"
-                    android:textColor="@color/black" />
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/auto_notify_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true" />
-            </LinearLayout>
-
             <!-- Run Draw Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/run_draw_button"
