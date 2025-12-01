@@ -268,13 +268,18 @@ public class ProfileFragment extends Fragment {
 
         String uid = auth.getCurrentUser().getUid();
 
+        // Delete all user-related data first
+        deleteAllNotifications(uid);
+        deleteJoinLocationsFromAllEvents(uid);
+        cleanEntrantFromAllEvents(uid);
+        deleteEventsOwnedByOrganizer(uid);
+
+        // Delete user document
         firestore.collection("users").document(uid).delete()
             .addOnSuccessListener(aVoid -> {
+                // Delete Firebase Auth user
                 auth.getCurrentUser().delete()
                     .addOnSuccessListener(aVoid1 -> {
-                        deleteEventsOwnedByOrganizer(uid);
-                        cleanEntrantFromAllEvents(uid);
-
                         Toast.makeText(getContext(), "Account deleted", Toast.LENGTH_SHORT).show();
                         // Navigate to login
                         Intent intent = new Intent(requireActivity(), AuthActivity.class);
@@ -323,18 +328,37 @@ public class ProfileFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
+    /**
+     * Removes user from all event arrays and old Waitlist field
+     */
     private void cleanEntrantFromAllEvents(String uid) {
+        DocumentReference userRef = firestore.collection("users").document(uid);
+        
         firestore.collection("Events").get()
                 .addOnSuccessListener(query -> {
                     for (DocumentSnapshot event : query.getDocuments()) {
-                        event.getReference().update(
+                        DocumentReference eventRef = event.getReference();
+                        
+                        // Remove from all entrant ID arrays
+                        eventRef.update(
                                 "waitingListEntrantIds", FieldValue.arrayRemove(uid),
                                 "selectedEntrantIds", FieldValue.arrayRemove(uid),
-                                "cancelledEntrantIds", FieldValue.arrayRemove(uid)
-                        );
+                                "acceptedEntrantIds", FieldValue.arrayRemove(uid),
+                                "declinedEntrantIds", FieldValue.arrayRemove(uid),
+                                "cancelledEntrantIds", FieldValue.arrayRemove(uid),
+                                "Waitlist", FieldValue.arrayRemove(userRef) // Old system with DocumentReference
+                        ).addOnFailureListener(e -> {
+                            Log.e("ProfileFragment", "Error removing user from event: " + event.getId(), e);
+                        });
                     }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("ProfileFragment", "Error fetching events for cleanup", e);
                 });
     }
+    /**
+     * Deletes all events owned by the organizer
+     */
     private void deleteEventsOwnedByOrganizer(String organizerUid) {
         DocumentReference organizerRef = firestore.collection("users").document(organizerUid);
 
@@ -343,8 +367,55 @@ public class ProfileFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(query -> {
                     for (DocumentSnapshot event : query.getDocuments()) {
-                        event.getReference().delete();
+                        event.getReference().delete()
+                                .addOnFailureListener(e -> {
+                                    Log.e("ProfileFragment", "Error deleting event: " + event.getId(), e);
+                                });
                     }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("ProfileFragment", "Error fetching organizer events", e);
+                });
+    }
+
+    /**
+     * Deletes all notifications for the user
+     */
+    private void deleteAllNotifications(String uid) {
+        firestore.collection("Notifications")
+                .whereEqualTo("UserId", uid)
+                .get()
+                .addOnSuccessListener(query -> {
+                    for (DocumentSnapshot notification : query.getDocuments()) {
+                        notification.getReference().delete()
+                                .addOnFailureListener(e -> {
+                                    Log.e("ProfileFragment", "Error deleting notification: " + notification.getId(), e);
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("ProfileFragment", "Error fetching notifications for cleanup", e);
+                });
+    }
+
+    /**
+     * Deletes joinLocations subcollection from all events for the user
+     */
+    private void deleteJoinLocationsFromAllEvents(String uid) {
+        firestore.collection("Events").get()
+                .addOnSuccessListener(query -> {
+                    for (DocumentSnapshot event : query.getDocuments()) {
+                        DocumentReference eventRef = event.getReference();
+                        // Delete the user's location document from joinLocations subcollection
+                        eventRef.collection("joinLocations").document(uid).delete()
+                                .addOnFailureListener(e -> {
+                                    // It's okay if the document doesn't exist
+                                    Log.d("ProfileFragment", "Could not delete joinLocation (may not exist): " + event.getId());
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("ProfileFragment", "Error fetching events for joinLocations cleanup", e);
                 });
     }
 
