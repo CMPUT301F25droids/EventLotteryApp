@@ -199,6 +199,47 @@ public class NotificationController {
         });
     }
 
+    /**
+     * Sends notifications to all entrants who accepted their invitation.
+     * 
+     * @param eventId the ID of the event
+     * @param title the notification title
+     * @param message the notification message body
+     */
+    public void sendToAcceptedEntrants(String eventId, String title, String message) {
+        db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
+            List<String> accepted = (List<String>) eventDoc.get("acceptedEntrantIds");
+            String organizerId = extractOrganizerId(eventDoc);
+            sendBulkNotifications(accepted, title, message, eventId, organizerId);
+        });
+    }
+
+    /**
+     * Sends notifications to all entrants who signed up for the event.
+     * This includes waiting list, selected, and accepted entrants.
+     * 
+     * @param eventId the ID of the event
+     * @param title the notification title
+     * @param message the notification message body
+     */
+    public void sendToAllSignedUpEntrants(String eventId, String title, String message) {
+        db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
+            String organizerId = extractOrganizerId(eventDoc);
+            
+            // Send to waiting list
+            List<String> waitingList = (List<String>) eventDoc.get("waitingListEntrantIds");
+            sendBulkNotifications(waitingList, title, message, eventId, organizerId);
+            
+            // Send to selected entrants
+            List<String> selected = (List<String>) eventDoc.get("selectedEntrantIds");
+            sendBulkNotifications(selected, title, message, eventId, organizerId);
+            
+            // Send to accepted entrants
+            List<String> accepted = (List<String>) eventDoc.get("acceptedEntrantIds");
+            sendBulkNotifications(accepted, title, message, eventId, organizerId);
+        });
+    }
+
     /** Send notification to the organizer of an event */
     public void sendToOrganizer(String eventId, String title, String message) {
         db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {

@@ -519,6 +519,7 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
     
     /**
      * Performs the actual cancellation of the event in Firestore.
+     * Sends notifications to all signed-up entrants and the organizer.
      */
     private void cancelEvent() {
         if (eventId == null || eventId.isEmpty()) {
@@ -529,23 +530,61 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
         
         Log.d(TAG, "Attempting to cancel event in Firestore: " + eventId);
         
-        Map<String, Object> updateData = new HashMap<>();
-        updateData.put("cancelled", true);
-        
+        // First, get the event document to get the title and send notifications
         firestore.collection("Events").document(eventId)
-            .update(updateData)
-            .addOnSuccessListener(aVoid -> {
-                Log.d(TAG, "Event successfully cancelled: " + eventId);
-                Toast.makeText(this, "Event cancelled successfully", Toast.LENGTH_SHORT).show();
-                finish();
+            .get()
+            .addOnSuccessListener(eventDoc -> {
+                if (!eventDoc.exists()) {
+                    Log.e(TAG, "Event document does not exist: " + eventId);
+                    Toast.makeText(this, "Error: Event not found", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                
+                // Get event title for notification
+                String eventTitle = eventDoc.getString("title");
+                if (eventTitle == null) {
+                    eventTitle = eventDoc.getString("Name");
+                }
+                if (eventTitle == null || eventTitle.isEmpty()) {
+                    eventTitle = "Event";
+                }
+                
+                // Now update the event to cancelled
+                Map<String, Object> updateData = new HashMap<>();
+                updateData.put("cancelled", true);
+                
+                firestore.collection("Events").document(eventId)
+                    .update(updateData)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "Event successfully cancelled: " + eventId);
+                        
+                        // Send notifications to all signed-up entrants
+                        String notificationTitle = "Event Cancelled";
+                        String notificationMessage = "The event \"" + eventTitle + "\" has been cancelled by the organizer.";
+                        
+                        Log.d(TAG, "Sending cancellation notifications to all signed-up entrants");
+                        notificationController.sendToAllSignedUpEntrants(eventId, notificationTitle, notificationMessage);
+                        
+                        // Send notification to the organizer
+                        Log.d(TAG, "Sending cancellation notification to organizer");
+                        notificationController.sendToOrganizer(eventId, notificationTitle, 
+                            "You have cancelled the event \"" + eventTitle + "\". All participants have been notified.");
+                        
+                        Toast.makeText(this, "Event cancelled successfully. All participants have been notified.", Toast.LENGTH_LONG).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Error cancelling event: " + eventId, e);
+                        String errorMessage = "Error cancelling event";
+                        if (e.getMessage() != null) {
+                            errorMessage += ": " + e.getMessage();
+                        }
+                        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+                    });
             })
             .addOnFailureListener(e -> {
-                Log.e(TAG, "Error cancelling event: " + eventId, e);
-                String errorMessage = "Error cancelling event";
-                if (e.getMessage() != null) {
-                    errorMessage += ": " + e.getMessage();
-                }
-                Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Error loading event document: " + eventId, e);
+                Toast.makeText(this, "Error loading event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
     }
     

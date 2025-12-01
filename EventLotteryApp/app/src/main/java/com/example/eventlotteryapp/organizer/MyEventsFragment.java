@@ -257,6 +257,12 @@ public class MyEventsFragment extends Fragment {
 
         for (EventWithId eventWithId : allEvents) {
             Event event = eventWithId.event;
+
+            // Skip cancelled events entirely from counts
+            if (event.isCancelled()) {
+                continue;
+            }
+
             if (event.getEventStartDate() != null && event.getEventEndDate() != null) {
                 if (now.before(event.getEventStartDate())) {
                     upcomingCount++;
@@ -279,20 +285,20 @@ public class MyEventsFragment extends Fragment {
     private void filterEvents() {
         Date now = new Date();
         List<EventWithId> filtered = new ArrayList<>();
-
-        // If "all" filter, return all events
-        if (currentFilter.equals("all")) {
-            filtered.addAll(allEvents);
-            eventAdapter.updateEvents(filtered);
-            return;
-        }
-
+        
         for (EventWithId eventWithId : allEvents) {
             Event event = eventWithId.event;
 
+            // Skip cancelled events from all views
+            if (event.isCancelled()) {
+                continue;
+            }
+
             boolean matches;
 
-            if (event.getEventStartDate() == null || event.getEventEndDate() == null) {
+            if ("all".equals(currentFilter)) {
+                matches = true;
+            } else if (event.getEventStartDate() == null || event.getEventEndDate() == null) {
                 // Events without dates show in active filter
                 matches = currentFilter.equals("active");
             } else {
@@ -311,12 +317,12 @@ public class MyEventsFragment extends Fragment {
                         matches = true;
                 }
             }
-
+            
             if (matches) {
                 filtered.add(eventWithId);
             }
         }
-
+        
         eventAdapter.updateEvents(filtered);
     }
 
