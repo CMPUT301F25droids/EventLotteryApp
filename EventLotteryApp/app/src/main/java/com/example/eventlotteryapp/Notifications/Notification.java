@@ -15,7 +15,7 @@ public class Notification implements Comparable<Notification>{
     private final String message;
     private String eventName;
 
-    private Notification(Date timeStamp, String type, String message){
+    public Notification(Date timeStamp, String type, String message){
         this.timeStamp = timeStamp;
         this.type = type;
         this.message = message;
@@ -29,8 +29,12 @@ public class Notification implements Comparable<Notification>{
     public static void fromDocument(DocumentSnapshot doc, NotificationLoadCallback callback) {
         String message = doc.getString("Message");
         String type = doc.getString("Type");
-        Date date = DateTimeFormat.toDate(doc.getString("TimeStamp"));
-
+        Date date;
+        try {
+            date = DateTimeFormat.toDate(doc.getString("TimeStamp"));
+        } catch (Exception e)  {
+            date = doc.getDate("TimeStamp");
+        }
         DocumentReference eventRef = doc.getDocumentReference("EventId");
         Notification notification = new Notification(date, type, message);
 

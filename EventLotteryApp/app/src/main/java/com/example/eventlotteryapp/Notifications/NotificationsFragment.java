@@ -61,11 +61,9 @@ public class NotificationsFragment extends Fragment {
         notificationsList.setVisibility(View.GONE);
         auth = FirebaseAuth.getInstance();
         notificationsRef = db.collection("Notifications");
-        String userId = UserSession.getCurrentUserId();
-        DocumentReference userRef = db.document("Users/" + userId);
         notificationsArray.clear();
 
-        notificationsRef.whereEqualTo("UserId", auth.getUid() )
+        notificationsRef.whereEqualTo("UserId", auth.getUid())
                         .get()
                         .addOnCompleteListener((task) -> {
                             if (task.isSuccessful()) {
