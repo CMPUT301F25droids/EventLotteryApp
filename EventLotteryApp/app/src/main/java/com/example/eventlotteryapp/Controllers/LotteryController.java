@@ -55,9 +55,9 @@ public class LotteryController {
             transaction.update(eventRef, "selectedEntrantIds", selectedEntrants);
             transaction.update(eventRef, "acceptedEntrantIds", acceptedEntrants);
 
-            // Create notification
+            // Create notification (entrant notification)
             createNotification(userId, eventId, "invitation_accepted",
-                    "You've successfully accepted the invitation!");
+                    "You've successfully accepted the invitation!", "entrant");
 
             return null;
         }).addOnSuccessListener(aVoid -> {
@@ -119,9 +119,9 @@ public class LotteryController {
         }).addOnSuccessListener(organizerId -> {
             Log.d(TAG, "Invitation declined successfully");
             
-            // Create notification for the person who declined
+            // Create notification for the person who declined (entrant notification)
             createNotification(userId, eventId, "invitation_declined",
-                    "You've declined the invitation. Thank you for letting us know.");
+                    "You've declined the invitation. Thank you for letting us know.", "entrant");
             
             // Notify the organizer
             if (organizerId != null && !organizerId.isEmpty()) {
@@ -145,15 +145,15 @@ public class LotteryController {
                         final String notificationMessage = userName + " has declined their invitation for " + eventName + ". " +
                                 "You may want to run another lottery draw to fill the spot, but it's your choice.";
                         
-                        // Notify organizer directly using the organizer ID
-                        createNotification(organizerId, eventId, "entrant_declined", notificationMessage);
+                        // Notify organizer directly using the organizer ID (organizer notification)
+                        createNotification(organizerId, eventId, "entrant_declined", notificationMessage, "organizer");
                         Log.d(TAG, "Organizer notified about decline: " + organizerId);
                     }).addOnFailureListener(e -> {
                         Log.e(TAG, "Error getting user document", e);
                         // Still notify organizer even if we can't get user name
                         final String fallbackMessage = "An entrant has declined their invitation for " + eventName + ". " +
                                 "You may want to run another lottery draw to fill the spot, but it's your choice.";
-                        createNotification(organizerId, eventId, "entrant_declined", fallbackMessage);
+                        createNotification(organizerId, eventId, "entrant_declined", fallbackMessage, "organizer");
                         Log.d(TAG, "Organizer notified about decline (fallback): " + organizerId);
                     });
                 }).addOnFailureListener(e -> {
@@ -161,7 +161,7 @@ public class LotteryController {
                     // Still try to notify organizer with minimal info
                     final String fallbackMessage = "An entrant has declined their invitation. " +
                             "You may want to run another lottery draw to fill the spot, but it's your choice.";
-                    createNotification(organizerId, eventId, "entrant_declined", fallbackMessage);
+                    createNotification(organizerId, eventId, "entrant_declined", fallbackMessage, "organizer");
                     Log.d(TAG, "Organizer notified about decline (minimal info): " + organizerId);
                 });
             } else {
@@ -177,17 +177,15 @@ public class LotteryController {
 
     /**
      * Helper: Create notification for user (only if notifications are enabled)
+     * @param userType The type of notification: "entrant" or "organizer". 
+     *                 This should be based on the context of the notification, not the recipient's role field.
      */
-    private void createNotification(String userId, String eventId, String type, String message) {
+    private void createNotification(String userId, String eventId, String type, String message, String userType) {
         // Check if user has notifications enabled
         db.collection("users").document(userId).get().addOnSuccessListener(userDoc -> {
             Boolean notificationsEnabled = userDoc.getBoolean("notificationPreference");
             // If notificationPreference is null or true, send notification
             if (notificationsEnabled == null || notificationsEnabled) {
-                // Get user's role to determine UserType
-                String role = userDoc.getString("role");
-                String userType = (role != null && role.equals("organizer")) ? "organizer" : "entrant";
-                
                 Map<String, Object> notification = new HashMap<>();
                 notification.put("UserId", userId);  // Store as string, not DocumentReference
                 notification.put("EventId", db.collection("Events").document(eventId));
@@ -195,7 +193,7 @@ public class LotteryController {
                 notification.put("Message", message);
                 notification.put("TimeStamp", new java.util.Date().toString());
                 notification.put("Read", false);
-                notification.put("UserType", userType); // Separate logs for entrants and organizers
+                notification.put("UserType", userType); // Use the explicitly provided UserType
 
                 db.collection("Notifications").add(notification)
                         .addOnSuccessListener(ref -> Log.d(TAG, "Notification created: " + ref.getId()))

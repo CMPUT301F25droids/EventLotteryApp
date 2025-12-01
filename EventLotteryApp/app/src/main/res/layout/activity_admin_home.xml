@@ -42,7 +42,17 @@
         android:id="@+id/adminBrowseImagesButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Browse Images" />
+        android:text="Browse Images"
+        android:padding="12dp"
+        android:layout_marginBottom="20dp" />
+
+    <Button
+        android:id="@+id/adminNotificationLogsButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Review Notification Logs"
+        android:padding="12dp"
+        android:layout_marginBottom="20dp" />
 
     <Button
         android:id="@+id/adminLogoutButton"

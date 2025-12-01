@@ -26,13 +26,15 @@ public class NotificationController {
     /**
      * Sends notifications to all entrants in a list, respecting their opt-out preferences.
      * Only sends notifications to users who have notifications enabled.
+     * Always sets UserType to "entrant" for entrant notifications, regardless of recipient's role.
      * 
      * @param entrantIds the list of entrant user IDs to send notifications to
      * @param title the notification title
      * @param message the notification message body
      * @param eventId the ID of the event this notification is related to
+     * @param organizerId the ID of the organizer sending the notification (for admin logs)
      */
-    private void sendBulkNotifications(List<String> entrantIds, String title, String message, String eventId) {
+    private void sendBulkNotifications(List<String> entrantIds, String title, String message, String eventId, String organizerId) {
         if (entrantIds == null || entrantIds.isEmpty()) return;
 
         for (String userId : entrantIds) {
@@ -40,7 +42,8 @@ public class NotificationController {
                 Boolean notificationsEnabled = userDoc.getBoolean("notificationPreference");
                 if (notificationsEnabled == null || notificationsEnabled) {
                     System.out.println("Sending notification to user: " + userId);
-                    sendNotificationToUser(userDoc, title, message, eventId);
+                    // Always set UserType to "entrant" for entrant notifications, regardless of recipient's role
+                    sendNotificationToUser(userDoc, title, message, eventId, organizerId, "entrant");
                 }
             });
         }
@@ -50,13 +53,34 @@ public class NotificationController {
      * Actually sends a notification and logs it in Firestore.
      * Creates a notification document in the "Notifications" collection and prepares
      * an FCM payload for push notification delivery.
+     * Default: determines UserType from recipient's role.
      * 
      * @param userDoc the Firestore document snapshot of the user
      * @param title the notification title
      * @param message the notification message body
      * @param eventId the ID of the event this notification is related to
+     * @param organizerId the ID of the organizer sending the notification (for admin logs)
      */
-    private void sendNotificationToUser(DocumentSnapshot userDoc, String title, String message, String eventId) {
+    private void sendNotificationToUser(DocumentSnapshot userDoc, String title, String message, String eventId, String organizerId) {
+        // Default: determine UserType from recipient's role
+        String role = userDoc.getString("role");
+        String userType = (role != null && role.equals("organizer")) ? "organizer" : "entrant";
+        sendNotificationToUser(userDoc, title, message, eventId, organizerId, userType);
+    }
+
+    /**
+     * Actually sends a notification and logs it in Firestore with explicit UserType.
+     * Creates a notification document in the "Notifications" collection and prepares
+     * an FCM payload for push notification delivery.
+     * 
+     * @param userDoc the Firestore document snapshot of the user
+     * @param title the notification title
+     * @param message the notification message body
+     * @param eventId the ID of the event this notification is related to
+     * @param organizerId the ID of the organizer sending the notification (for admin logs)
+     * @param userType the type of notification: "entrant" or "organizer" (based on context, not recipient's role)
+     */
+    private void sendNotificationToUser(DocumentSnapshot userDoc, String title, String message, String eventId, String organizerId, String userType) {
         System.out.println("Notification.....");
 
         // 1. Make sure the user has an FCM token (device registered)
@@ -67,10 +91,6 @@ public class NotificationController {
 //        }
         System.out.println("Notification1111");
 
-        // 2. Determine UserType based on recipient's role
-        String role = userDoc.getString("role");
-        String userType = (role != null && role.equals("organizer")) ? "organizer" : "entrant";
-
         // 3. Build a notification object to save
         Map<String, Object> notifData = new HashMap<>();
         notifData.put("Message", message);
@@ -79,7 +99,11 @@ public class NotificationController {
         notifData.put("Type", "MESSAGE");
         notifData.put("TimeStamp", new Date());
         notifData.put("UserId", userDoc.getId());
-        notifData.put("UserType", userType); // Separate logs for entrants and organizers based on recipient's role
+        notifData.put("UserType", userType); // Separate logs for entrants and organizers based on notification context
+        // Store organizerId for admin review logs
+        if (organizerId != null && !organizerId.isEmpty()) {
+            notifData.put("OrganizerId", organizerId);
+        }
 
         // 3. Save into Firestore under /notifications
         db.collection("Notifications")
@@ -105,6 +129,32 @@ public class NotificationController {
     }
 
     /**
+     * Helper method to extract organizerId from event document.
+     * Handles both DocumentReference ("Organizer") and string ("organizerId") formats.
+     * 
+     * @param eventDoc the Firestore document snapshot of the event
+     * @return the organizer ID as a string, or null if not found
+     */
+    private String extractOrganizerId(com.google.firebase.firestore.DocumentSnapshot eventDoc) {
+        // Try to get organizerId as a string first
+        String organizerId = eventDoc.getString("organizerId");
+        
+        // If not found, try to get it from DocumentReference
+        if (organizerId == null || organizerId.isEmpty()) {
+            com.google.firebase.firestore.DocumentReference organizerRef = eventDoc.getDocumentReference("Organizer");
+            if (organizerRef != null) {
+                // Extract organizer ID from DocumentReference path
+                String path = organizerRef.getPath();
+                if (path != null && path.contains("/users/")) {
+                    organizerId = path.substring(path.lastIndexOf("/") + 1);
+                }
+            }
+        }
+        
+        return organizerId;
+    }
+
+    /**
      * Sends notifications to all entrants currently on the waiting list for an event.
      * 
      * @param eventId the ID of the event
@@ -114,7 +164,8 @@ public class NotificationController {
     public void sendToWaitingList(String eventId, String title, String message) {
         db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
             List<String> waitingList = (List<String>) eventDoc.get("waitingListEntrantIds");
-            sendBulkNotifications(waitingList, title, message, eventId);
+            String organizerId = extractOrganizerId(eventDoc);
+            sendBulkNotifications(waitingList, title, message, eventId, organizerId);
         });
     }
 
@@ -128,7 +179,8 @@ public class NotificationController {
     public void sendToSelectedEntrants(String eventId, String title, String message) {
         db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
             List<String> selected = (List<String>) eventDoc.get("selectedEntrantIds");
-            sendBulkNotifications(selected, title, message, eventId);
+            String organizerId = extractOrganizerId(eventDoc);
+            sendBulkNotifications(selected, title, message, eventId, organizerId);
         });
     }
 
@@ -142,7 +194,8 @@ public class NotificationController {
     public void sendToCancelledEntrants(String eventId, String title, String message) {
         db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
             List<String> cancelled = (List<String>) eventDoc.get("cancelledEntrantIds");
-            sendBulkNotifications(cancelled, title, message, eventId);
+            String organizerId = extractOrganizerId(eventDoc);
+            sendBulkNotifications(cancelled, title, message, eventId, organizerId);
         });
     }
 
@@ -150,13 +203,13 @@ public class NotificationController {
     public void sendToOrganizer(String eventId, String title, String message) {
         db.collection("Events").document(eventId).get().addOnSuccessListener(eventDoc -> {
             if (eventDoc.exists()) {
-                String organizerId = eventDoc.getString("organizerId");
+                String organizerId = extractOrganizerId(eventDoc);
                 if (organizerId != null && !organizerId.isEmpty()) {
                     db.collection("users").document(organizerId).get().addOnSuccessListener(organizerDoc -> {
                         Boolean notificationsEnabled = organizerDoc.getBoolean("notificationPreference");
                         if (notificationsEnabled == null || notificationsEnabled) {
                             System.out.println("Sending notification to organizer: " + organizerId);
-                            sendNotificationToUser(organizerDoc, title, message, eventId);
+                            sendNotificationToUser(organizerDoc, title, message, eventId, null);
                         }
                     });
                 }

@@ -25,6 +25,7 @@ public class AdminHomeActivity extends AppCompatActivity {
         Button browseEventsButton = findViewById(R.id.adminBrowseEventsButton);
         Button browseProfilesButton = findViewById(R.id.adminBrowseProfilesButton);
         Button browseImagesButton = findViewById(R.id.adminBrowseImagesButton);
+        Button notificationLogsButton = findViewById(R.id.adminNotificationLogsButton);
         Button logoutButton = findViewById(R.id.adminLogoutButton);
 
         /**
@@ -48,6 +49,14 @@ public class AdminHomeActivity extends AppCompatActivity {
          */
         browseImagesButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, AdminBrowseImagesActivity.class);
+            startActivity(intent);
+        });
+
+        /**
+         * Opens the page where the admin can review notification logs.
+         */
+        notificationLogsButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, AdminNotificationLogsActivity.class);
             startActivity(intent);
         });
 

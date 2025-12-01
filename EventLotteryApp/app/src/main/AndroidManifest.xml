@@ -89,6 +89,8 @@
             android:exported="false" />
         <activity android:name=".Admin.AdminBrowseImagesActivity" />
         <activity android:name=".Admin.AdminViewImageActivity" />
+        <activity android:name=".Admin.AdminNotificationLogsActivity"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
