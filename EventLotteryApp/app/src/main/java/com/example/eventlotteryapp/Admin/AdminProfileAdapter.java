@@ -3,7 +3,6 @@ package com.example.eventlotteryapp.Admin;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,16 +13,15 @@ import com.example.eventlotteryapp.R;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * RecyclerView adapter for displaying all user profiles in the admin panel.
+ * Supports two admin actions: delete profile & ban organizer mode.
+ */
 public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapter.ProfileViewHolder> {
 
-    public interface OnDeleteClick {
-        void onDelete(UserProfile user);
-    }
-
-    public interface OnBanClick {
-        void onBan(UserProfile user);
-    }
-
+    /**
+     * Local model representing one user's profile info.
+     */
     public static class UserProfile {
         public final String id;
         public final String name;
@@ -32,7 +30,8 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
         public final String phone;
         public final boolean organizerBanned;
 
-        public UserProfile(String id, String name, String email, String role, String phone, boolean organizerBanned) {
+        public UserProfile(String id, String name, String email, String role,
+                           String phone, boolean organizerBanned) {
             this.id = id;
             this.name = name;
             this.email = email;
@@ -42,19 +41,38 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
         }
     }
 
+    /**
+     * Listener for deleting a profile when the row is tapped.
+     */
+    public interface OnDeleteClickListener {
+        void onDelete(UserProfile profile);
+    }
+
+    /**
+     * Listener for banning/unbanning organizer mode.
+     */
+    public interface OnBanClickListener {
+        void onBan(UserProfile profile);
+    }
+
     private final List<UserProfile> profiles = new ArrayList<>();
-    private final OnDeleteClick deleteListener;
-    private final OnBanClick banListener;
+    private OnDeleteClickListener deleteListener;
+    private OnBanClickListener banListener;
 
+    /**
+     * Creates an adapter with initial list of profiles.
+     */
     public AdminProfileAdapter(List<UserProfile> initialProfiles,
-                               OnDeleteClick deleteListener,
-                               OnBanClick banListener) {
-
+                               OnDeleteClickListener deleteListener,
+                               OnBanClickListener banListener) {
         if (initialProfiles != null) profiles.addAll(initialProfiles);
         this.deleteListener = deleteListener;
         this.banListener = banListener;
     }
 
+    /**
+     * Updates displayed profiles.
+     */
     public void updateProfiles(List<UserProfile> newProfiles) {
         profiles.clear();
         if (newProfiles != null) profiles.addAll(newProfiles);
@@ -63,32 +81,39 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
 
     @NonNull
     @Override
-    public ProfileViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext())
+    public ProfileViewHolder onCreateViewHolder(@NonNull ViewGroup parent,
+                                                int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_admin_profile, parent, false);
-        return new ProfileViewHolder(v);
+        return new ProfileViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ProfileViewHolder h, int position) {
+    public void onBindViewHolder(@NonNull ProfileViewHolder holder,
+                                 int position) {
         UserProfile user = profiles.get(position);
 
-        h.name.setText(user.name);
-        h.email.setText(user.email);
-        h.role.setText("Role: " + user.role);
+        holder.name.setText(user.name);
+        holder.email.setText(user.email);
+        holder.role.setText("Role: " + user.role);
 
         if (user.phone == null || user.phone.isEmpty()) {
-            h.phone.setVisibility(View.GONE);
+            holder.phone.setVisibility(View.GONE);
         } else {
-            h.phone.setVisibility(View.VISIBLE);
-            h.phone.setText("Phone: " + user.phone);
+            holder.phone.setVisibility(View.VISIBLE);
+            holder.phone.setText("Phone: " + user.phone);
         }
 
-        h.status.setText(user.organizerBanned ? "Organizer BANNED" : "Organizer Active");
-        h.status.setTextColor(user.organizerBanned ? 0xFFFF4444 : 0xFF44DD44);
+        // Tap row → delete
+        holder.itemView.setOnClickListener(v -> {
+            if (deleteListener != null) deleteListener.onDelete(user);
+        });
 
-        h.itemView.setOnClickListener(v -> deleteListener.onDelete(user));
-        h.banButton.setOnClickListener(v -> banListener.onBan(user));
+        // Tap "Ban/Unban" button
+        holder.banButton.setText(user.organizerBanned ? "Unban Organizer" : "Ban Organizer");
+        holder.banButton.setOnClickListener(v -> {
+            if (banListener != null) banListener.onBan(user);
+        });
     }
 
     @Override
@@ -96,10 +121,12 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
         return profiles.size();
     }
 
+    /**
+     * Holds view references for one profile row.
+     */
     static class ProfileViewHolder extends RecyclerView.ViewHolder {
 
-        TextView name, email, role, phone, status;
-        Button banButton;
+        TextView name, email, role, phone, banButton;
 
         public ProfileViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -108,7 +135,6 @@ public class AdminProfileAdapter extends RecyclerView.Adapter<AdminProfileAdapte
             email = itemView.findViewById(R.id.adminProfileEmail);
             role = itemView.findViewById(R.id.adminProfileRole);
             phone = itemView.findViewById(R.id.adminProfilePhone);
-            status = itemView.findViewById(R.id.adminProfileBanStatus);
             banButton = itemView.findViewById(R.id.adminBanButton);
         }
     }
