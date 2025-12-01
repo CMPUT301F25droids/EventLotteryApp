@@ -28,6 +28,7 @@ import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.databinding.FragmentJoinConfirmationListDialogBinding;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.WriteBatch;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -292,44 +293,47 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
                             }
                         }
                         
-                        // Add user to waiting list
-                        event_ref.update("waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayUnion(userId))
-                                .addOnSuccessListener(aVoid -> {
-                                    Log.d("Firestore", "User added to waiting list");
-                                })
-                                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waiting list", e));
+                        // Add user to waiting list and remove from declined list (if they were declined)
+                        // Use batch update to ensure both operations succeed together
+                        WriteBatch batch = db.batch();
+                        batch.update(event_ref, "waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayUnion(userId));
+                        batch.update(event_ref, "declinedEntrantIds", com.google.firebase.firestore.FieldValue.arrayRemove(userId));
+                        batch.update(user_ref, "JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref));
                         
-                        // Update user's joined events
-                        user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref))
+                        batch.commit()
                                 .addOnSuccessListener(aVoid -> {
-                                    Log.d("Firestore", "Events added to users joined events");
-                                })
-                                .addOnFailureListener(e -> Log.e("Firestore", "Error adding user to waitlist", e));
+                                    Log.d("Firestore", "User added to waiting list and removed from declined list");
+                                    
+                                    // Store location if available
+                                    if (latitude != null && longitude != null) {
+                                        Map<String, Object> locationData = new HashMap<>();
+                                        locationData.put("latitude", latitude);
+                                        locationData.put("longitude", longitude);
+                                        locationData.put("timestamp", com.google.firebase.firestore.FieldValue.serverTimestamp());
+                                        
+                                        db.collection("Events").document(eventId)
+                                            .collection("joinLocations").document(userId)
+                                            .set(locationData)
+                                            .addOnSuccessListener(aVoid2 -> {
+                                                Log.d("Firestore", "Location saved for user");
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Log.e("Firestore", "Error saving location", e);
+                                            });
+                                    }
 
-                        // Store location if available
-                        if (latitude != null && longitude != null) {
-                            Map<String, Object> locationData = new HashMap<>();
-                            locationData.put("latitude", latitude);
-                            locationData.put("longitude", longitude);
-                            locationData.put("timestamp", com.google.firebase.firestore.FieldValue.serverTimestamp());
-                            
-                            db.collection("Events").document(eventId)
-                                .collection("joinLocations").document(userId)
-                                .set(locationData)
-                                .addOnSuccessListener(aVoid -> {
-                                    Log.d("Firestore", "Location saved for user");
+                                    // Handle join action
+                                    Intent intent = new Intent(getContext(), EntrantHomePageActivity.class);
+                                    intent.putExtra("open_tab", 1); // e.g. 0 = Home, 1 = MyEvents, 2 = Notifications
+                                    startActivity(intent);
+
+                                    dismiss(); // close modal
                                 })
                                 .addOnFailureListener(e -> {
-                                    Log.e("Firestore", "Error saving location", e);
+                                    Log.e("Firestore", "Error updating waitlist/declined status", e);
+                                    Toast.makeText(requireContext(), "Error joining waiting list. Please try again.", Toast.LENGTH_SHORT).show();
+                                    dismiss();
                                 });
-                        }
-
-                        // Handle join action
-                        Intent intent = new Intent(getContext(), EntrantHomePageActivity.class);
-                        intent.putExtra("open_tab", 1); // e.g. 0 = Home, 1 = MyEvents, 2 = Notifications
-                        startActivity(intent);
-
-                        dismiss(); // close modal
                     }
                 })
                 .addOnFailureListener(e -> {

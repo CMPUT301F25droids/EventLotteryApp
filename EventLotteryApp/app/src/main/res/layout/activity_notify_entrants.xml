@@ -111,112 +111,118 @@
                 android:paddingBottom="16dp" />
 
             <!-- Entrant Selection Tabs -->
-            <LinearLayout
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingHorizontal="16dp"
-                android:paddingBottom="16dp">
+                android:scrollbars="none"
+                android:fillViewport="false"
+                android:paddingVertical="16dp"
+                android:clipToPadding="false">
 
-                <!-- Selected Entrants Tab -->
                 <LinearLayout
-                    android:id="@+id/selected_tab"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="12dp"
-                    android:background="@drawable/chip_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:layout_marginEnd="4dp">
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
 
-                    <RadioButton
-                        android:id="@+id/selected_radio"
+                    <!-- Selected Entrants Tab -->
+                    <LinearLayout
+                        android:id="@+id/selected_tab"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="true"
-                        android:buttonTint="@color/selected_tab_color" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/chip_background"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="8dp">
 
-                    <TextView
-                        android:id="@+id/selected_text"
+                        <RadioButton
+                            android:id="@+id/selected_radio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true"
+                            android:buttonTint="@color/selected_tab_color" />
+
+                        <TextView
+                            android:id="@+id/selected_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Selected"
+                            android:textColor="@color/selected_tab_color"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:singleLine="true"
+                            android:ellipsize="none"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
+
+                    <!-- Waitlisted Entrants Tab -->
+                    <LinearLayout
+                        android:id="@+id/waitlisted_tab"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Selected"
-                        android:textColor="@color/selected_tab_color"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:singleLine="true"
-                        android:ellipsize="none"
-                        android:layout_marginStart="4dp" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/chip_background"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="8dp">
+
+                        <RadioButton
+                            android:id="@+id/waitlisted_radio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="false"
+                            android:buttonTint="@color/medium_grey" />
+
+                        <TextView
+                            android:id="@+id/waitlisted_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Waitlisted"
+                            android:textColor="@color/black"
+                            android:textSize="16sp"
+                            android:singleLine="true"
+                            android:ellipsize="none"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
+
+                    <!-- Cancelled Entrants Tab -->
+                    <LinearLayout
+                        android:id="@+id/cancelled_tab"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/chip_background"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <RadioButton
+                            android:id="@+id/cancelled_radio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="false"
+                            android:buttonTint="@color/medium_grey" />
+
+                        <TextView
+                            android:id="@+id/cancelled_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Cancelled"
+                            android:textColor="@color/black"
+                            android:textSize="16sp"
+                            android:singleLine="true"
+                            android:ellipsize="none"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
                 </LinearLayout>
-
-                <!-- Waitlisted Entrants Tab -->
-                <LinearLayout
-                    android:id="@+id/waitlisted_tab"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="12dp"
-                    android:background="@drawable/chip_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:layout_marginEnd="4dp">
-
-                    <RadioButton
-                        android:id="@+id/waitlisted_radio"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="false"
-                        android:buttonTint="@color/medium_grey" />
-
-                    <TextView
-                        android:id="@+id/waitlisted_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Waitlisted"
-                        android:textColor="@color/black"
-                        android:textSize="11sp"
-                        android:singleLine="true"
-                        android:ellipsize="none"
-                        android:layout_marginStart="4dp" />
-                </LinearLayout>
-
-                <!-- Cancelled Entrants Tab -->
-                <LinearLayout
-                    android:id="@+id/cancelled_tab"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="12dp"
-                    android:background="@drawable/chip_background"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <RadioButton
-                        android:id="@+id/cancelled_radio"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="false"
-                        android:buttonTint="@color/medium_grey" />
-
-                    <TextView
-                        android:id="@+id/cancelled_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Cancelled"
-                        android:textColor="@color/black"
-                        android:textSize="11sp"
-                        android:singleLine="true"
-                        android:ellipsize="none"
-                        android:layout_marginStart="4dp" />
-                </LinearLayout>
-            </LinearLayout>
+            </HorizontalScrollView>
 
             <!-- Message Input -->
             <TextView

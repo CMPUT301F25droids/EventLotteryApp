@@ -88,12 +88,22 @@ public class NotificationsFragment extends Fragment {
         progressBar = view.findViewById(R.id.progressBar);
         btnDeleteSelected = view.findViewById(R.id.btnDeleteSelected);
         
+        if (btnDeleteSelected == null) {
+            android.util.Log.e("NotificationsFragment", "Delete button not found in layout!");
+        } else {
+            android.util.Log.d("NotificationsFragment", "Delete button found and initialized");
+            // Ensure button starts as GONE (will be shown when items are selected)
+            btnDeleteSelected.setVisibility(View.GONE);
+        }
+        
         if (db == null) {
             db = FirebaseFirestore.getInstance();
         }
 
         // Set up delete selected button
-        btnDeleteSelected.setOnClickListener(v -> deleteSelectedNotifications());
+        if (btnDeleteSelected != null) {
+            btnDeleteSelected.setOnClickListener(v -> deleteSelectedNotifications());
+        }
 
         loadNotifications();
     }
@@ -228,20 +238,49 @@ public class NotificationsFragment extends Fragment {
         progressBar.setVisibility(View.GONE);
         notificationsList.setVisibility(View.VISIBLE);
 
+        // Create or update adapter
         if (notificationAdapter == null) {
+            notificationAdapter = new NotificationArrayAdapter(requireContext(), notificationsArray);
+            notificationsList.setAdapter(notificationAdapter);
+        } else {
+            // Recreate adapter to ensure data is in sync
+            // The array will be repopulated by loadNotifications, so we just need to notify
+            // But wait, we're in updateUI which is called after data is loaded, so we need to update
+            // Actually, since we're passing the same array reference, we should just notify
+            // But ArrayAdapter doesn't automatically sync, so we need to recreate or manually update
+            // For now, let's recreate to ensure data is in sync
             notificationAdapter = new NotificationArrayAdapter(requireContext(), notificationsArray);
             notificationsList.setAdapter(notificationAdapter);
         }
         
-        // Set up selection change listener
-        notificationAdapter.setOnSelectionChangeListener(selectedCount -> {
-            if (selectedCount > 0) {
-                btnDeleteSelected.setVisibility(View.VISIBLE);
-                btnDeleteSelected.setText("Delete Selected (" + selectedCount + ")");
-            } else {
-                btnDeleteSelected.setVisibility(View.GONE);
-            }
-        });
+        // Always set up selection change listener (in case adapter was recreated)
+        if (notificationAdapter != null) {
+            notificationAdapter.setOnSelectionChangeListener(selectedCount -> {
+                android.util.Log.d("NotificationsFragment", "Selection changed: " + selectedCount);
+                if (btnDeleteSelected == null) {
+                    android.util.Log.e("NotificationsFragment", "Delete button is null in listener!");
+                    return;
+                }
+                // Ensure we're on the UI thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (selectedCount > 0) {
+                            android.util.Log.d("NotificationsFragment", "Showing delete button, count: " + selectedCount);
+                            btnDeleteSelected.setVisibility(View.VISIBLE);
+                            btnDeleteSelected.setText("Delete Selected (" + selectedCount + ")");
+                            // Force a layout update
+                            btnDeleteSelected.requestLayout();
+                        } else {
+                            android.util.Log.d("NotificationsFragment", "Hiding delete button");
+                            btnDeleteSelected.setVisibility(View.GONE);
+                        }
+                    });
+                }
+            });
+            android.util.Log.d("NotificationsFragment", "Selection listener set up on adapter");
+        } else {
+            android.util.Log.e("NotificationsFragment", "Adapter is null when setting up listener!");
+        }
         
         notificationAdapter.notifyDataSetChanged();
 
@@ -259,6 +298,11 @@ public class NotificationsFragment extends Fragment {
     }
 
     private void deleteSelectedNotifications() {
+        if (notificationAdapter == null) {
+            Toast.makeText(getContext(), "Notifications not loaded yet", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
         Set<Notification> selected = notificationAdapter.getSelectedNotifications();
         
         if (selected.isEmpty()) {
@@ -266,17 +310,25 @@ public class NotificationsFragment extends Fragment {
             return;
         }
 
+        // Check if fragment is still attached
+        if (!isAdded() || getContext() == null) {
+            return;
+        }
+
         progressBar.setVisibility(View.VISIBLE);
         btnDeleteSelected.setEnabled(false);
         
-        AtomicInteger deletedCount = new AtomicInteger(0);
+        AtomicInteger completedCount = new AtomicInteger(0);
+        AtomicInteger skippedCount = new AtomicInteger(0);
         int totalToDelete = selected.size();
         
         for (Notification notification : selected) {
             String documentId = notification.getDocumentId();
             if (documentId == null || documentId.isEmpty()) {
-                if (deletedCount.incrementAndGet() == totalToDelete) {
-                    finishDeletion();
+                Log.w("NotificationsFragment", "Notification has no documentId, skipping deletion. Event: " + notification.getEventName());
+                skippedCount.incrementAndGet();
+                if (completedCount.incrementAndGet() == totalToDelete) {
+                    finishDeletionWithMessage(skippedCount.get());
                 }
                 continue;
             }
@@ -286,33 +338,49 @@ public class NotificationsFragment extends Fragment {
                     .document(documentId)
                     .delete()
                     .addOnSuccessListener(aVoid -> {
+                        Log.d("NotificationsFragment", "Successfully deleted notification: " + documentId);
                         // Remove from local array
                         notificationsArray.remove(notification);
                         
-                        if (deletedCount.incrementAndGet() == totalToDelete) {
-                            finishDeletion();
+                        if (completedCount.incrementAndGet() == totalToDelete) {
+                            finishDeletionWithMessage(skippedCount.get());
                         }
                     })
                     .addOnFailureListener(e -> {
                         Log.e("NotificationsFragment", "Error deleting notification: " + documentId, e);
-                        if (deletedCount.incrementAndGet() == totalToDelete) {
-                            finishDeletion();
+                        if (completedCount.incrementAndGet() == totalToDelete) {
+                            finishDeletionWithMessage(skippedCount.get());
                         }
                     });
         }
     }
 
     private void finishDeletion() {
+        finishDeletionWithMessage(0);
+    }
+
+    private void finishDeletionWithMessage(int skippedCount) {
+        // Check if fragment is still attached before accessing context
+        if (!isAdded() || getContext() == null) {
+            return;
+        }
+        
         progressBar.setVisibility(View.GONE);
         btnDeleteSelected.setEnabled(true);
         
         // Clear selection and update UI
-        notificationAdapter.clearSelection();
-        notificationAdapter.notifyDataSetChanged();
+        if (notificationAdapter != null) {
+            notificationAdapter.clearSelection();
+            notificationAdapter.notifyDataSetChanged();
+        }
         
         // Reload notifications to ensure sync
         loadNotifications();
         
-        Toast.makeText(getContext(), "Notifications deleted", Toast.LENGTH_SHORT).show();
+        String message = "Notifications deleted";
+        if (skippedCount > 0) {
+            message += " (" + skippedCount + " skipped - missing document ID)";
+        }
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
     }
 }

@@ -29,9 +29,7 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
 
     /** Listener for selection change events. */
     private OnSelectionChangeListener selectionChangeListener;
-    
-    /** Set of currently selected notifications. */
-    private Set<Notification> selectedNotifications = new HashSet<>();
+    private Set<String> selectedDocumentIds = new HashSet<>(); // Use documentId instead of Notification object
 
     /**
      * Interface for listening to selection changes in the adapter.
@@ -70,14 +68,18 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
      * @return a new HashSet containing the selected notifications
      */
     public Set<Notification> getSelectedNotifications() {
-        return new HashSet<>(selectedNotifications);
+        Set<Notification> selected = new HashSet<>();
+        for (int i = 0; i < getCount(); i++) {
+            Notification notification = getItem(i);
+            if (notification != null && selectedDocumentIds.contains(notification.getDocumentId())) {
+                selected.add(notification);
+            }
+        }
+        return selected;
     }
 
-    /**
-     * Clears all selected notifications and notifies the adapter and listener.
-     */
     public void clearSelection() {
-        selectedNotifications.clear();
+        selectedDocumentIds.clear();
         notifyDataSetChanged();
         if (selectionChangeListener != null) {
             selectionChangeListener.onSelectionChanged(0);
@@ -111,21 +113,42 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
         message.setText(notification.getMessage());
         title.setText(notification.getEventName());
 
-        // Set checkbox state
-        checkBox.setChecked(selectedNotifications.contains(notification));
+        // Set checkbox state - remove listener first to avoid triggering during state setting
+        checkBox.setOnCheckedChangeListener(null);
+        String docId = notification.getDocumentId();
+        boolean isSelected = docId != null && selectedDocumentIds.contains(docId);
+        checkBox.setChecked(isSelected);
         checkBox.setFocusable(false);
         checkBox.setClickable(true);
 
-        // Set up checkbox click listener
+        // Set up checkbox click listener - use documentId for reliable tracking
+        // Store documentId in tag for reliable retrieval during view recycling
+        checkBox.setTag(docId);
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                selectedNotifications.add(notification);
-            } else {
-                selectedNotifications.remove(notification);
+            String documentId = (String) buttonView.getTag();
+            if (documentId == null) {
+                documentId = notification.getDocumentId(); // Fallback to current notification's ID
             }
             
-            if (selectionChangeListener != null) {
-                selectionChangeListener.onSelectionChanged(selectedNotifications.size());
+            android.util.Log.d("NotificationAdapter", "Checkbox changed: isChecked=" + isChecked + ", docId=" + documentId);
+            
+            if (documentId != null && !documentId.isEmpty()) {
+                if (isChecked) {
+                    selectedDocumentIds.add(documentId);
+                } else {
+                    selectedDocumentIds.remove(documentId);
+                }
+                
+                int count = selectedDocumentIds.size();
+                android.util.Log.d("NotificationAdapter", "Selected count: " + count + ", listener null: " + (selectionChangeListener == null));
+                
+                if (selectionChangeListener != null) {
+                    selectionChangeListener.onSelectionChanged(count);
+                } else {
+                    android.util.Log.e("NotificationAdapter", "Selection change listener is null!");
+                }
+            } else {
+                android.util.Log.w("NotificationAdapter", "DocumentId is null or empty, cannot track selection");
             }
         });
 

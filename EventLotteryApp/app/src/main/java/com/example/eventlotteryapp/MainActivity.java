@@ -1,8 +1,6 @@
 package com.example.eventlotteryapp;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
 /**
@@ -29,10 +27,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        openSettingsButton = findViewById(R.id.openSettingsButton);
-        openSettingsButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-            startActivity(intent);
-        });
+        // Settings button removed - SettingsActivity is not used
+        // Users can manage notifications via ProfileFragment instead
     }
 }

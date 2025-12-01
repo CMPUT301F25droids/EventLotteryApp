@@ -268,7 +268,9 @@
                             android:textSize="14sp"
                             android:textColor="@color/black"
                             android:textStyle="bold"
-                            android:layout_marginStart="8dp" />
+                            android:layout_marginStart="8dp"
+                            android:singleLine="true"
+                            android:ellipsize="none" />
                     </LinearLayout>
 
                     <!-- Slots Available Chip -->
@@ -295,7 +297,9 @@
                             android:textSize="14sp"
                             android:textColor="@color/black"
                             android:textStyle="bold"
-                            android:layout_marginStart="8dp" />
+                            android:layout_marginStart="8dp"
+                            android:singleLine="true"
+                            android:ellipsize="none" />
                     </LinearLayout>
 
                     <!-- Days Left in Registration Chip -->
@@ -322,7 +326,9 @@
                             android:textSize="14sp"
                             android:textColor="@color/black"
                             android:textStyle="bold"
-                            android:layout_marginStart="8dp" />
+                            android:layout_marginStart="8dp"
+                            android:singleLine="true"
+                            android:ellipsize="none" />
                     </LinearLayout>
 
                     <!-- Lottery Draw Date Chip -->
@@ -348,7 +354,9 @@
                             android:textSize="14sp"
                             android:textColor="@color/black"
                             android:textStyle="bold"
-                            android:layout_marginStart="8dp" />
+                            android:layout_marginStart="8dp"
+                            android:singleLine="true"
+                            android:ellipsize="none" />
                     </LinearLayout>
 
                 </LinearLayout>

@@ -51,6 +51,7 @@ public class FinalizedListActivity extends AppCompatActivity {
     private Button filterDeclinedButton;
     private Button filterCancelledButton;
     private RecyclerView participantsRecyclerView;
+    private Button cancelButton;
     private Button drawReplacementButton;
     private Button exportCsvButton;
 
@@ -81,11 +82,11 @@ public class FinalizedListActivity extends AppCompatActivity {
         initializeViews();
         setupClickListeners();
         updateFilterButtons();
-
-        // Initialize draw replacement button as disabled (grey)
-        drawReplacementButton.setBackground(getResources().getDrawable(R.drawable.disabled_button_bg));
-        drawReplacementButton.setBackgroundTintList(null);
-        drawReplacementButton.setTextColor(getResources().getColor(R.color.white, null));
+        updateButtonVisibility();
+        
+        // Ensure cancel button is red
+        cancelButton.setBackground(getResources().getDrawable(R.drawable.delete_button_bg));
+        cancelButton.setBackgroundTintList(null);
 
         loadEventData();
     }
@@ -108,6 +109,7 @@ public class FinalizedListActivity extends AppCompatActivity {
         filterDeclinedButton = findViewById(R.id.filter_declined_button);
         filterCancelledButton = findViewById(R.id.filter_cancelled_button);
         participantsRecyclerView = findViewById(R.id.participants_recycler_view);
+        cancelButton = findViewById(R.id.cancel_button);
         drawReplacementButton = findViewById(R.id.draw_replacement_button);
         exportCsvButton = findViewById(R.id.export_csv_button);
 
@@ -161,8 +163,14 @@ public class FinalizedListActivity extends AppCompatActivity {
         filterDeclinedButton.setOnClickListener(v -> setFilter("declined"));
         filterCancelledButton.setOnClickListener(v -> setFilter("cancelled"));
 
+        cancelButton.setOnClickListener(v -> {
+            if (selectedParticipant != null) {
+                cancelParticipant(selectedParticipant);
+            }
+        });
+
         drawReplacementButton.setOnClickListener(v -> {
-            if (!drawReplacementButton.isEnabled()) {
+            if (selectedParticipant == null) {
                 Toast.makeText(this, "Please select a participant first", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -175,10 +183,7 @@ public class FinalizedListActivity extends AppCompatActivity {
         currentFilter = filter;
         // Clear selection when filter changes
         selectedParticipant = null;
-        drawReplacementButton.setEnabled(false);
-        drawReplacementButton.setBackground(getResources().getDrawable(R.drawable.disabled_button_bg));
-        drawReplacementButton.setBackgroundTintList(null);
-        drawReplacementButton.setTextColor(getResources().getColor(R.color.white, null));
+        updateButtonVisibility();
         updateFilterButtons();
         filterParticipants();
     }
@@ -433,6 +438,9 @@ public class FinalizedListActivity extends AppCompatActivity {
                                                 "cancelledEntrantIds", cancelledIds)
                                         .addOnSuccessListener(aVoid -> {
                                             Toast.makeText(this, participant.name + " has been cancelled", Toast.LENGTH_SHORT).show();
+                                            // Clear selection and update button visibility
+                                            selectedParticipant = null;
+                                            updateButtonVisibility();
                                             // Reload data
                                             loadEventData();
                                         })
@@ -522,20 +530,34 @@ public class FinalizedListActivity extends AppCompatActivity {
                 }
             }
             selectedParticipant = participant;
-            drawReplacementButton.setEnabled(true);
-            // Update button appearance to purple
-            drawReplacementButton.setBackground(getResources().getDrawable(R.drawable.notify_button_bg));
-            drawReplacementButton.setBackgroundTintList(null);
-            drawReplacementButton.setTextColor(getResources().getColor(R.color.white, null));
+            // Notify adapter to update checkbox state
+            int newIndex = filteredParticipants.indexOf(participant);
+            if (newIndex >= 0) {
+                adapter.notifyItemChanged(newIndex);
+            }
+            updateButtonVisibility();
         } else {
             if (selectedParticipant == participant) {
                 selectedParticipant = null;
-                drawReplacementButton.setEnabled(false);
-                // Update button appearance to grey
-                drawReplacementButton.setBackground(getResources().getDrawable(R.drawable.disabled_button_bg));
-                drawReplacementButton.setBackgroundTintList(null);
-                drawReplacementButton.setTextColor(getResources().getColor(R.color.white, null));
+                // Notify adapter to update checkbox state
+                int oldIndex = filteredParticipants.indexOf(participant);
+                if (oldIndex >= 0) {
+                    adapter.notifyItemChanged(oldIndex);
+                }
+                updateButtonVisibility();
             }
+        }
+    }
+
+    private void updateButtonVisibility() {
+        if (selectedParticipant != null && currentFilter.equals("accepted")) {
+            // Show both buttons when a participant is selected in accepted filter
+            cancelButton.setVisibility(View.VISIBLE);
+            drawReplacementButton.setVisibility(View.VISIBLE);
+        } else {
+            // Hide both buttons when no participant is selected or not in accepted filter
+            cancelButton.setVisibility(View.GONE);
+            drawReplacementButton.setVisibility(View.GONE);
         }
     }
 
@@ -583,13 +605,6 @@ public class FinalizedListActivity extends AppCompatActivity {
 
             holder.checkbox.setChecked(selectedParticipant == participant);
 
-            // US 02.06.04: Show cancel button only for accepted (selected) participants
-            if (currentFilter.equals("accepted")) {
-                holder.cancelButton.setVisibility(View.VISIBLE);
-            } else {
-                holder.cancelButton.setVisibility(View.GONE);
-            }
-
             holder.itemView.setOnClickListener(v -> {
                 boolean newState = !holder.checkbox.isChecked();
                 holder.checkbox.setChecked(newState);
@@ -598,11 +613,6 @@ public class FinalizedListActivity extends AppCompatActivity {
 
             holder.checkbox.setOnClickListener(v -> {
                 onParticipantSelected(participant, holder.checkbox.isChecked());
-            });
-
-            // US 02.06.04: Cancel button click handler
-            holder.cancelButton.setOnClickListener(v -> {
-                cancelParticipant(participant);
             });
         }
 
@@ -615,14 +625,12 @@ public class FinalizedListActivity extends AppCompatActivity {
             CheckBox checkbox;
             TextView nameText;
             TextView datesText;
-            Button cancelButton;
 
             ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 checkbox = itemView.findViewById(R.id.participant_checkbox);
                 nameText = itemView.findViewById(R.id.participant_name);
                 datesText = itemView.findViewById(R.id.participant_dates);
-                cancelButton = itemView.findViewById(R.id.cancel_button);
             }
         }
     }
