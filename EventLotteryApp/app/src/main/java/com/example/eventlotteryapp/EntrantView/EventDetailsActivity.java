@@ -72,11 +72,18 @@ public class EventDetailsActivity extends AppCompatActivity {
                     .addOnSuccessListener(documentSnapshot -> {
                         if (documentSnapshot.exists()) {
                             Date registrationCloseDate = documentSnapshot.getDate("registrationCloseDate");
+                            Date registrationOpenDate = documentSnapshot.getDate("registrationOpenDate");
                             Date now = new Date();
                             boolean isEventClosed = (registrationCloseDate != null && now.after(registrationCloseDate));
+                            boolean isRegistrationOpen = (registrationOpenDate == null || now.after(registrationOpenDate) || now.equals(registrationOpenDate));
                             
                             if (isEventClosed) {
                                 Toast.makeText(this, "Registration for this event is closed.", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                            
+                            if (!isRegistrationOpen) {
+                                Toast.makeText(this, "Registration for this event has not opened yet.", Toast.LENGTH_SHORT).show();
                                 return;
                             }
                             
@@ -235,8 +242,10 @@ public class EventDetailsActivity extends AppCompatActivity {
 
                         // Check if event is closed (registrationCloseDate has passed)
                         Date registrationCloseDate = documentSnapshot.getDate("registrationCloseDate");
+                        Date registrationOpenDate = documentSnapshot.getDate("registrationOpenDate");
                         Date now = new Date();
                         boolean isEventClosed = (registrationCloseDate != null && now.after(registrationCloseDate));
+                        boolean isRegistrationOpen = (registrationOpenDate == null || now.after(registrationOpenDate) || now.equals(registrationOpenDate));
 
                         Button join_button = findViewById(R.id.join_waitlist_button);
                         Button leave_button = findViewById(R.id.leave_waitlist_button);
@@ -324,7 +333,15 @@ public class EventDetailsActivity extends AppCompatActivity {
                                     }
                                 }
                                 
-                                join_button.setVisibility(canJoin ? Button.VISIBLE : Button.GONE);
+                                // Show button but disable it if registration hasn't opened yet
+                                // Hide button if waitlist is full
+                                if (!canJoin) {
+                                    join_button.setVisibility(Button.GONE);
+                                } else {
+                                    join_button.setVisibility(Button.VISIBLE);
+                                    // Disable button if registration hasn't opened yet
+                                    join_button.setEnabled(isRegistrationOpen);
+                                }
                             }
                             leave_button.setVisibility(Button.GONE);
                             acceptInvitationButton.setVisibility(Button.GONE);

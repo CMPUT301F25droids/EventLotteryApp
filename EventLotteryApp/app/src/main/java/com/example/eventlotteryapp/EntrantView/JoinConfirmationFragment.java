@@ -220,11 +220,19 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
                 .addOnSuccessListener(eventDoc -> {
                     if (eventDoc.exists()) {
                         Date registrationCloseDate = eventDoc.getDate("registrationCloseDate");
+                        Date registrationOpenDate = eventDoc.getDate("registrationOpenDate");
                         Date now = new Date();
                         boolean isEventClosed = (registrationCloseDate != null && now.after(registrationCloseDate));
+                        boolean isRegistrationOpen = (registrationOpenDate == null || now.after(registrationOpenDate) || now.equals(registrationOpenDate));
                         
                         if (isEventClosed) {
                             Toast.makeText(requireContext(), "Registration for this event is closed.", Toast.LENGTH_SHORT).show();
+                            dismiss();
+                            return;
+                        }
+                        
+                        if (!isRegistrationOpen) {
+                            Toast.makeText(requireContext(), "Registration for this event has not opened yet.", Toast.LENGTH_SHORT).show();
                             dismiss();
                             return;
                         }

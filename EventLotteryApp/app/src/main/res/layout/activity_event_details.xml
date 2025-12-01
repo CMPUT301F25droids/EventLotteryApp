@@ -332,41 +332,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- Notification Section -->
-            <LinearLayout
-                android:id="@+id/notification_section"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginTop="24dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="12dp"
-                android:background="@color/opaque_light_grey"
-                app:layout_constraintTop_toBottomOf="@+id/waitlist_count"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
-
-                <TextView
-                    android:id="@+id/notification_label"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Enable Notifications"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:fontFamily="sans-serif" />
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_notifications"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:thumbTint="@color/switch_thumb_tint"
-                    app:trackTint="@color/switch_track_tint"
-                    android:checked="true" />
-            </LinearLayout>
-
             <!-- Registration Info Text -->
             <TextView
                 android:id="@+id/registration_info"
@@ -381,7 +346,7 @@
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-medium"
                 android:gravity="center"
-                app:layout_constraintTop_toBottomOf="@+id/notification_section"
+                app:layout_constraintTop_toBottomOf="@+id/waitlist_count"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 

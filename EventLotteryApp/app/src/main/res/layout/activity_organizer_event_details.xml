@@ -68,6 +68,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
+        android:clipToPadding="false"
+        android:paddingBottom="24dp"
         app:layout_constraintTop_toBottomOf="@id/top_bar"
         app:layout_constraintBottom_toBottomOf="parent">
 
@@ -432,6 +434,7 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
                 android:layout_marginTop="12dp"
+                android:layout_marginBottom="24dp"
                 android:text="View Finalized List"
                 android:textSize="17sp"
                 android:textStyle="bold"
@@ -440,6 +443,7 @@
                 app:backgroundTint="@color/selected_tab_color"
                 app:cornerRadius="56dp"
                 app:layout_constraintTop_toBottomOf="@+id/notify_entrants_button"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
