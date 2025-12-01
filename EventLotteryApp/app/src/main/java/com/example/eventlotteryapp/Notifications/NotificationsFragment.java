@@ -79,16 +79,33 @@ public class NotificationsFragment extends Fragment {
         // Get current user's role to filter notifications by UserType
         db.collection("users").document(currentUserId).get()
                 .addOnSuccessListener(userDoc -> {
+                    // Check if user document exists
+                    if (!userDoc.exists()) {
+                        Log.e("notif", "User document does not exist");
+                        updateUI();
+                        return;
+                    }
+                    
                     String userRole = userDoc.getString("role");
                     String userType = (userRole != null && userRole.equals("organizer")) ? "organizer" : "entrant";
                     
                     // Filter notifications by both UserId and UserType to separate logs
+                    // Also include notifications without UserType for backward compatibility
                     notificationsRef.whereEqualTo("UserId", currentUserId)
-                            .whereEqualTo("UserType", userType)
                             .get()
                             .addOnCompleteListener((task) -> {
                                 if (task.isSuccessful()) {
-                                    int totalDocs = task.getResult().size();
+                                    // Filter by UserType in memory for backward compatibility with old notifications
+                                    ArrayList<DocumentSnapshot> filteredDocs = new ArrayList<>();
+                                    for (DocumentSnapshot doc : task.getResult()) {
+                                        String docUserType = doc.getString("UserType");
+                                        // Include if UserType matches, or if UserType is null (old notifications for backward compatibility)
+                                        if (docUserType == null || docUserType.equals(userType)) {
+                                            filteredDocs.add(doc);
+                                        }
+                                    }
+
+                                    int totalDocs = filteredDocs.size();
 
                                     if (totalDocs == 0) {
                                         updateUI();
@@ -97,7 +114,7 @@ public class NotificationsFragment extends Fragment {
 
                                     AtomicInteger loadedCount = new AtomicInteger(0);
 
-                                    for (DocumentSnapshot doc : task.getResult()) {
+                                    for (DocumentSnapshot doc : filteredDocs) {
                                         Notification.fromDocument(doc, notification -> {
                                             notificationsArray.add(notification);
 
