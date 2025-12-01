@@ -9,12 +9,16 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
+import android.content.res.ColorStateList;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.material.button.MaterialButton;
 import androidx.annotation.NonNull;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -70,15 +74,16 @@ public class EntrantListActivity extends AppCompatActivity {
     private boolean requiresGeolocation = false;
     
     // Filter tabs
-    private LinearLayout filterAllTab;
-    private LinearLayout filterPendingTab;
-    private LinearLayout filterSelectedTab;
-    private LinearLayout filterDeclinedTab;
+    private MaterialButton filterAllTab;
+    private MaterialButton filterPendingTab;
+    private MaterialButton filterSelectedTab;
+    private MaterialButton filterDeclinedTab;
     
     private String currentFilter = "all"; // all, pending, selected, declined
     private List<EntrantWithStatus> allEntrants = new ArrayList<>();
     private List<EntrantWithStatus> filteredEntrants = new ArrayList<>();
     private WaitingListAdapter adapter;
+    private java.util.Set<String> loadedEntrantIds = new java.util.HashSet<>(); // Track loaded IDs to prevent duplicates
     
     private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
     private SimpleDateFormat joinDateFormat = new SimpleDateFormat("MMM d", Locale.getDefault());
@@ -255,51 +260,42 @@ public class EntrantListActivity extends AppCompatActivity {
     }
     
     private void updateFilterTabs() {
-        // Reset all tabs
-        resetFilterTab(filterAllTab);
-        resetFilterTab(filterPendingTab);
-        resetFilterTab(filterSelectedTab);
-        resetFilterTab(filterDeclinedTab);
+        List<MaterialButton> buttons = java.util.Arrays.asList(
+            filterAllTab, filterPendingTab, filterSelectedTab, filterDeclinedTab
+        );
         
-        // Highlight selected tab
+        MaterialButton selectedButton = null;
         switch (currentFilter) {
             case "all":
-                highlightFilterTab(filterAllTab);
+                selectedButton = filterAllTab;
                 break;
             case "pending":
-                highlightFilterTab(filterPendingTab);
+                selectedButton = filterPendingTab;
                 break;
             case "selected":
-                highlightFilterTab(filterSelectedTab);
+                selectedButton = filterSelectedTab;
                 break;
             case "declined":
-                highlightFilterTab(filterDeclinedTab);
+                selectedButton = filterDeclinedTab;
                 break;
         }
+        
+        updateFilterButtonStyles(buttons, selectedButton);
     }
     
-    private void resetFilterTab(LinearLayout tab) {
-        for (int i = 0; i < tab.getChildCount(); i++) {
-            View child = tab.getChildAt(i);
-            if (child instanceof ImageView) {
-                ((ImageView) child).setColorFilter(getResources().getColor(R.color.medium_grey, null));
-            } else if (child instanceof TextView) {
-                TextView textView = (TextView) child;
-                textView.setTextColor(getResources().getColor(R.color.black, null));
-                textView.setTypeface(null, android.graphics.Typeface.NORMAL);
-            }
-        }
-    }
-    
-    private void highlightFilterTab(LinearLayout tab) {
-        for (int i = 0; i < tab.getChildCount(); i++) {
-            View child = tab.getChildAt(i);
-            if (child instanceof ImageView) {
-                ((ImageView) child).setColorFilter(getResources().getColor(R.color.selected_tab_color, null));
-            } else if (child instanceof TextView) {
-                TextView textView = (TextView) child;
-                textView.setTextColor(getResources().getColor(R.color.selected_tab_color, null));
-                textView.setTypeface(null, android.graphics.Typeface.BOLD);
+    private void updateFilterButtonStyles(List<MaterialButton> buttons, MaterialButton selected) {
+        int selectedBgColor = getResources().getColor(R.color.filter_selected_bg, null);
+        int selectedTextColor = getResources().getColor(R.color.filter_selected_text, null);
+        int unselectedBgColor = getResources().getColor(R.color.filter_unselected_bg, null);
+        int unselectedTextColor = getResources().getColor(R.color.filter_unselected_text, null);
+        
+        for (MaterialButton btn : buttons) {
+            if (btn == selected) {
+                btn.setBackgroundTintList(ColorStateList.valueOf(selectedBgColor));
+                btn.setTextColor(selectedTextColor);
+            } else {
+                btn.setBackgroundTintList(ColorStateList.valueOf(unselectedBgColor));
+                btn.setTextColor(unselectedTextColor);
             }
         }
     }
@@ -384,12 +380,25 @@ public class EntrantListActivity extends AppCompatActivity {
                 
                 allEntrants.clear();
                 filteredEntrants.clear();
+                loadedEntrantIds.clear(); // Reset loaded IDs tracking
                 
-                // Load all entrant details
-                List<String> allIds = new ArrayList<>();
-                if (waitingListIds != null) allIds.addAll(waitingListIds);
-                if (selectedIds != null) allIds.addAll(selectedIds);
-                if (cancelledIds != null) allIds.addAll(cancelledIds);
+                // Load all entrant details - use Set to avoid duplicates
+                java.util.Set<String> allIdsSet = new java.util.HashSet<>();
+                if (waitingListIds != null) {
+                    Log.d(TAG, "Waiting list size: " + waitingListIds.size());
+                    allIdsSet.addAll(waitingListIds);
+                }
+                if (selectedIds != null) {
+                    Log.d(TAG, "Selected list size: " + selectedIds.size());
+                    allIdsSet.addAll(selectedIds);
+                }
+                if (cancelledIds != null) {
+                    Log.d(TAG, "Cancelled list size: " + cancelledIds.size());
+                    allIdsSet.addAll(cancelledIds);
+                }
+                
+                Log.d(TAG, "Total unique IDs after deduplication: " + allIdsSet.size());
+                List<String> allIds = new ArrayList<>(allIdsSet);
                 
                 final int[] loaded = {0};
                 final int total = allIds.size();
@@ -401,6 +410,15 @@ public class EntrantListActivity extends AppCompatActivity {
                 }
                 
                 for (String entrantId : allIds) {
+                    // Skip if we've already loaded this entrant (prevent duplicates)
+                    if (loadedEntrantIds.contains(entrantId)) {
+                        loaded[0]++;
+                        if (loaded[0] == total) {
+                            filterEntrants();
+                        }
+                        continue;
+                    }
+                    
                     // Determine status
                     String status = "pending";
                     if (selectedIds != null && selectedIds.contains(entrantId)) {
@@ -414,6 +432,15 @@ public class EntrantListActivity extends AppCompatActivity {
                     firestore.collection("users").document(entrantId)
                         .get()
                         .addOnSuccessListener(userDoc -> {
+                            // Double-check to prevent race condition duplicates
+                            if (loadedEntrantIds.contains(entrantId)) {
+                                loaded[0]++;
+                                if (loaded[0] == total) {
+                                    filterEntrants();
+                                }
+                                return;
+                            }
+                            
                             if (userDoc.exists()) {
                                 String name = userDoc.getString("name");
                                 String email = userDoc.getString("email");
@@ -429,6 +456,7 @@ public class EntrantListActivity extends AppCompatActivity {
                                     joinedDate
                                 );
                                 
+                                loadedEntrantIds.add(entrantId); // Mark as loaded
                                 allEntrants.add(entrant);
                                 
                                 loaded[0]++;
@@ -436,6 +464,7 @@ public class EntrantListActivity extends AppCompatActivity {
                                     filterEntrants();
                                 }
                             } else {
+                                loadedEntrantIds.add(entrantId); // Mark as processed even if user doesn't exist
                                 loaded[0]++;
                                 if (loaded[0] == total) {
                                     filterEntrants();
@@ -444,6 +473,7 @@ public class EntrantListActivity extends AppCompatActivity {
                         })
                         .addOnFailureListener(e -> {
                             Log.e(TAG, "Error loading entrant: " + entrantId, e);
+                            loadedEntrantIds.add(entrantId); // Mark as processed even on error
                             loaded[0]++;
                             if (loaded[0] == total) {
                                 filterEntrants();
@@ -459,6 +489,27 @@ public class EntrantListActivity extends AppCompatActivity {
     
     private void filterEntrants() {
         filteredEntrants.clear();
+        
+        // Remove any duplicates from allEntrants before filtering
+        java.util.Map<String, EntrantWithStatus> uniqueEntrants = new java.util.HashMap<>();
+        for (EntrantWithStatus entrant : allEntrants) {
+            // Keep the first occurrence, or prefer selected/declined over pending
+            if (!uniqueEntrants.containsKey(entrant.id)) {
+                uniqueEntrants.put(entrant.id, entrant);
+            } else {
+                // If duplicate exists, prefer selected or declined status over pending
+                EntrantWithStatus existing = uniqueEntrants.get(entrant.id);
+                if (entrant.status.equals("selected") || entrant.status.equals("declined")) {
+                    if (existing.status.equals("pending")) {
+                        uniqueEntrants.put(entrant.id, entrant);
+                    }
+                }
+            }
+        }
+        
+        // Update allEntrants to only contain unique entrants
+        allEntrants.clear();
+        allEntrants.addAll(uniqueEntrants.values());
         
         String searchQuery = searchEditText.getText().toString().toLowerCase();
         

@@ -69,6 +69,43 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- Available Slots Info -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/edit_text_custom_bg"
+                android:layout_marginBottom="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Available Slots"
+                    android:textSize="14sp"
+                    android:textColor="@color/medium_grey"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/available_slots_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 / 0"
+                    android:textSize="24sp"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/slots_info_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="slots available to draw"
+                    android:textSize="14sp"
+                    android:textColor="@color/medium_grey"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
             <!-- Input Field -->
             <TextView
                 android:layout_width="wrap_content"

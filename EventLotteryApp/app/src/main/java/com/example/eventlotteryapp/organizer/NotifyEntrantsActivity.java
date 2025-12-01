@@ -43,6 +43,8 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
     private LinearLayout waitlistedTab;
     private RadioButton selectedRadio;
     private RadioButton waitlistedRadio;
+    private TextView selectedText;
+    private TextView waitlistedText;
     private TextView messageLabel;
     private EditText messageEditText;
     private LinearLayout recipientsContainer;
@@ -83,6 +85,8 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
         waitlistedTab = findViewById(R.id.waitlisted_tab);
         selectedRadio = findViewById(R.id.selected_radio);
         waitlistedRadio = findViewById(R.id.waitlisted_radio);
+        selectedText = findViewById(R.id.selected_text);
+        waitlistedText = findViewById(R.id.waitlisted_text);
         messageLabel = findViewById(R.id.message_label);
         messageEditText = findViewById(R.id.message_edit_text);
         recipientsContainer = findViewById(R.id.recipients_container);
@@ -147,45 +151,27 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
         selectedRadio.setChecked(selected);
         waitlistedRadio.setChecked(!selected);
         
-        // Update tab styling
-        TextView selectedText = null;
-        TextView waitlistedText = null;
-        
-        for (int i = 0; i < selectedTab.getChildCount(); i++) {
-            if (selectedTab.getChildAt(i) instanceof TextView) {
-                selectedText = (TextView) selectedTab.getChildAt(i);
-                break;
-            }
-        }
-        
-        for (int i = 0; i < waitlistedTab.getChildCount(); i++) {
-            if (waitlistedTab.getChildAt(i) instanceof TextView) {
-                waitlistedText = (TextView) waitlistedTab.getChildAt(i);
-                break;
-            }
-        }
-        
         if (selected) {
-            if (selectedText != null) {
-                selectedText.setTextColor(getResources().getColor(R.color.selected_tab_color, null));
-                selectedText.setTypeface(null, android.graphics.Typeface.BOLD);
-            }
-            if (waitlistedText != null) {
-                waitlistedText.setTextColor(getResources().getColor(R.color.black, null));
-                waitlistedText.setTypeface(null, android.graphics.Typeface.NORMAL);
-            }
+            // Selected Entrants is active
+            selectedText.setTextColor(getResources().getColor(R.color.selected_tab_color, null));
+            selectedText.setTypeface(null, android.graphics.Typeface.BOLD);
+            selectedRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.selected_tab_color, null)));
+            
+            waitlistedText.setTextColor(getResources().getColor(R.color.black, null));
+            waitlistedText.setTypeface(null, android.graphics.Typeface.NORMAL);
+            waitlistedRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.medium_grey, null)));
             
             messageLabel.setText("Message to Selected Entrants");
             messageEditText.setHint("Congratulations! You've been selected to...");
         } else {
-            if (waitlistedText != null) {
-                waitlistedText.setTextColor(getResources().getColor(R.color.selected_tab_color, null));
-                waitlistedText.setTypeface(null, android.graphics.Typeface.BOLD);
-            }
-            if (selectedText != null) {
-                selectedText.setTextColor(getResources().getColor(R.color.black, null));
-                selectedText.setTypeface(null, android.graphics.Typeface.NORMAL);
-            }
+            // Waitlisted Entrants is active
+            waitlistedText.setTextColor(getResources().getColor(R.color.selected_tab_color, null));
+            waitlistedText.setTypeface(null, android.graphics.Typeface.BOLD);
+            waitlistedRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.selected_tab_color, null)));
+            
+            selectedText.setTextColor(getResources().getColor(R.color.black, null));
+            selectedText.setTypeface(null, android.graphics.Typeface.NORMAL);
+            selectedRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.medium_grey, null)));
             
             messageLabel.setText("Message to Waitlisted Entrants");
             messageEditText.setHint("Thank you for your interest. The lottery draw has been completed...");

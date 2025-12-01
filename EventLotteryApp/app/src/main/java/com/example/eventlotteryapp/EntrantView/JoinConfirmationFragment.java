@@ -29,6 +29,7 @@ import com.example.eventlotteryapp.databinding.FragmentJoinConfirmationListDialo
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Date;
 
@@ -226,6 +227,30 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
                             Toast.makeText(requireContext(), "Registration for this event is closed.", Toast.LENGTH_SHORT).show();
                             dismiss();
                             return;
+                        }
+                        
+                        // Check waiting list limit
+                        Boolean limitWaitingList = eventDoc.getBoolean("limitWaitingList");
+                        boolean isLimitEnabled = (limitWaitingList != null && limitWaitingList);
+                        
+                        if (isLimitEnabled) {
+                            Long waitingListSizeLong = eventDoc.getLong("waitingListSize");
+                            int waitingListLimit = (waitingListSizeLong != null) ? waitingListSizeLong.intValue() : 0;
+                            
+                            // If limit is 0 or not set, treat as infinite (no limit)
+                            if (waitingListLimit > 0) {
+                                List<String> waitingListEntrantIds = (List<String>) eventDoc.get("waitingListEntrantIds");
+                                int currentWaitingListSize = (waitingListEntrantIds != null) ? waitingListEntrantIds.size() : 0;
+                                
+                                // Check if user is already in the waiting list
+                                boolean userAlreadyInList = (waitingListEntrantIds != null && waitingListEntrantIds.contains(userId));
+                                
+                                if (!userAlreadyInList && currentWaitingListSize >= waitingListLimit) {
+                                    Toast.makeText(requireContext(), "The waiting list is full. Maximum " + waitingListLimit + " entrants allowed.", Toast.LENGTH_LONG).show();
+                                    dismiss();
+                                    return;
+                                }
+                            }
                         }
                         
                         // Add user to waiting list

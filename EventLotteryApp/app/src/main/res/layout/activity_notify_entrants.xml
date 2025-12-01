@@ -140,6 +140,7 @@
                         android:buttonTint="@color/selected_tab_color" />
 
                     <TextView
+                        android:id="@+id/selected_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Selected Entrants"
@@ -170,6 +171,7 @@
                         android:buttonTint="@color/medium_grey" />
 
                     <TextView
+                        android:id="@+id/waitlisted_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Waitlisted Entrants"
@@ -258,17 +260,19 @@
             </HorizontalScrollView>
 
             <!-- Send Notifications Button -->
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/send_notifications_button"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="50dp"
                 android:text="Send Notifications"
-                android:textColor="@color/black"
-                android:background="@drawable/export_csv_button_bg"
-                android:backgroundTint="@null"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="@color/selected_tab_color"
+                app:cornerRadius="56dp"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="24dp"
-                android:padding="16dp" />
+                android:layout_marginBottom="24dp" />
 
         </LinearLayout>
     </ScrollView>

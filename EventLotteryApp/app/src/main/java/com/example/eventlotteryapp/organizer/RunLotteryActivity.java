@@ -7,6 +7,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -35,6 +36,8 @@ public class RunLotteryActivity extends AppCompatActivity {
     private EditText participantsCountEditText;
     private SwitchMaterial autoNotifySwitch;
     private Button runDrawButton;
+    private TextView availableSlotsText;
+    private TextView slotsInfoText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,10 +64,15 @@ public class RunLotteryActivity extends AppCompatActivity {
         participantsCountEditText = findViewById(R.id.participants_count_edit_text);
         autoNotifySwitch = findViewById(R.id.auto_notify_switch);
         runDrawButton = findViewById(R.id.run_draw_button);
+        availableSlotsText = findViewById(R.id.available_slots_text);
+        slotsInfoText = findViewById(R.id.slots_info_text);
         
         // Back button
         ImageView backButton = findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> finish());
+        
+        // Load event data to show available slots
+        loadEventData();
         
         // Bottom navigation
         TabLayout bottomNav = findViewById(R.id.bottom_navigation);
@@ -108,6 +116,41 @@ public class RunLotteryActivity extends AppCompatActivity {
     
     private void setupClickListeners() {
         runDrawButton.setOnClickListener(v -> runDraw());
+    }
+    
+    private void loadEventData() {
+        firestore.collection("Events").document(eventId)
+            .get()
+            .addOnSuccessListener(document -> {
+                if (!document.exists()) {
+                    return;
+                }
+                
+                Long maxParticipantsLong = document.getLong("maxParticipants");
+                int maxParticipants = (maxParticipantsLong != null) ? maxParticipantsLong.intValue() : 0;
+                
+                List<String> selectedEntrants = (List<String>) document.get("selectedEntrantIds");
+                int selectedCount = (selectedEntrants != null) ? selectedEntrants.size() : 0;
+                
+                int availableSlots = Math.max(0, maxParticipants - selectedCount);
+                
+                // Update UI
+                availableSlotsText.setText(availableSlots + " / " + maxParticipants);
+                
+                if (availableSlots == 0) {
+                    slotsInfoText.setText("No slots available");
+                    slotsInfoText.setTextColor(getResources().getColor(android.R.color.holo_red_dark, null));
+                } else if (availableSlots == 1) {
+                    slotsInfoText.setText("slot available to draw");
+                    slotsInfoText.setTextColor(getResources().getColor(R.color.medium_grey, null));
+                } else {
+                    slotsInfoText.setText("slots available to draw");
+                    slotsInfoText.setTextColor(getResources().getColor(R.color.medium_grey, null));
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error loading event data", e);
+            });
     }
     
     private void runDraw() {

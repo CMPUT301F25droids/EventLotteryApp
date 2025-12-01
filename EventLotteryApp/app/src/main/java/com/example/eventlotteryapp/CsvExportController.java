@@ -16,21 +16,37 @@ public class CsvExportController {
 
     /**
      * Exports final enrolled entrants to CSV format.
+     * Saves the file to the Downloads folder.
      */
     public File exportFinalListToCSV(Context context, String eventName, List<Entrant> entrants) {
-        File exportDir = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "exports");
-        if (!exportDir.exists()) exportDir.mkdirs();
+        // Get the Downloads directory
+        File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        
+        // Check if external storage is available and writable
+        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            Toast.makeText(context, "External storage not available", Toast.LENGTH_LONG).show();
+            return null;
+        }
+        
+        // Create Downloads directory if it doesn't exist
+        if (!downloadsDir.exists()) {
+            downloadsDir.mkdirs();
+        }
 
-        File file = new File(exportDir, eventName.replace(" ", "_") + "_final_list.csv");
+        // Create the CSV file in Downloads folder
+        String fileName = eventName.replace(" ", "_") + "_final_list.csv";
+        File file = new File(downloadsDir, fileName);
 
         try (FileWriter writer = new FileWriter(file)) {
             writer.append("Entrant Name,Email\n");
             for (Entrant e : entrants) {
                 writer.append(e.getName()).append(",").append(e.getEmail()).append("\n");
             }
-            Toast.makeText(context, "CSV Exported: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
+            writer.flush();
+            Toast.makeText(context, "CSV exported to Downloads: " + fileName, Toast.LENGTH_LONG).show();
         } catch (IOException e) {
             Toast.makeText(context, "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            return null;
         }
         return file;
     }

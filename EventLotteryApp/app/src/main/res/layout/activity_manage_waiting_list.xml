@@ -74,33 +74,19 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="16dp"
-                android:background="@color/opaque_light_grey">
+                android:background="@color/white">
 
                 <!-- Event Name -->
-                <LinearLayout
+                <TextView
+                    android:id="@+id/event_name_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="12dp">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_calendar"
-                        app:tint="@color/medium_grey" />
-
-                    <TextView
-                        android:id="@+id/event_name_text"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Beginner Swim Lessons"
-                        android:textSize="16sp"
-                        android:textColor="@color/black"
-                        android:textStyle="bold"
-                        android:layout_marginStart="8dp" />
-                </LinearLayout>
+                    android:text="Beginner Swim Lessons"
+                    android:textSize="20sp"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginBottom="16dp" />
 
                 <!-- Registration Ends -->
                 <LinearLayout
@@ -111,19 +97,20 @@
                     android:layout_marginBottom="8dp">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_calendar"
-                        app:tint="@color/medium_grey" />
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/ic_clock"
+                        android:tint="@color/calendar_weekday_text"
+                        android:layout_marginEnd="6dp" />
 
                     <TextView
                         android:id="@+id/registration_ends_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Registration Ends: Dec 15 2024"
-                        android:textSize="14sp"
-                        android:textColor="@color/black"
-                        android:layout_marginStart="8dp" />
+                        android:text="Registration Ends: Dec 15, 2024"
+                        android:textColor="@color/calendar_weekday_text"
+                        android:textSize="17sp"
+                        android:fontFamily="sans-serif" />
                 </LinearLayout>
 
                 <!-- Total Entrants -->
@@ -135,19 +122,20 @@
                     android:layout_marginBottom="8dp">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_grid"
-                        app:tint="@color/medium_grey" />
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/ic_profile"
+                        android:tint="@color/calendar_weekday_text"
+                        android:layout_marginEnd="6dp" />
 
                     <TextView
                         android:id="@+id/total_entrants_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Total Entrants: 45"
-                        android:textSize="14sp"
-                        android:textColor="@color/black"
-                        android:layout_marginStart="8dp" />
+                        android:textColor="@color/calendar_weekday_text"
+                        android:textSize="17sp"
+                        android:fontFamily="sans-serif" />
                 </LinearLayout>
 
                 <!-- Slots Available -->
@@ -158,19 +146,20 @@
                     android:gravity="center_vertical">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
                         android:src="@drawable/ic_calendar"
-                        app:tint="@color/medium_grey" />
+                        android:tint="@color/calendar_weekday_text"
+                        android:layout_marginEnd="6dp" />
 
                     <TextView
                         android:id="@+id/slots_available_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Slots Available: 20"
-                        android:textSize="14sp"
-                        android:textColor="@color/black"
-                        android:layout_marginStart="8dp" />
+                        android:textColor="@color/calendar_weekday_text"
+                        android:textSize="17sp"
+                        android:fontFamily="sans-serif" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -223,7 +212,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:scrollbars="none"
-                android:fillViewport="false">
+                android:fillViewport="false"
+                android:paddingVertical="12dp"
+                android:clipToPadding="false">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -233,116 +224,100 @@
                     android:paddingEnd="16dp">
 
                     <!-- All Tab -->
-                    <LinearLayout
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/filter_all_tab"
+                        android:tag="all"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp"
+                        android:layout_height="38dp"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/chip_background"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/ic_menu"
-                            app:tint="@color/selected_tab_color" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="All"
-                            android:textSize="14sp"
-                            android:textColor="@color/selected_tab_color"
-                            android:textStyle="bold"
-                            android:layout_marginStart="6dp" />
-                    </LinearLayout>
+                        android:text="All"
+                        android:textAllCaps="false"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="32dp"
+                        app:strokeColor="#1F000000"
+                        app:strokeWidth="1dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        android:minHeight="0dp"
+                        android:minWidth="0dp"
+                        android:paddingVertical="0dp"
+                        android:paddingHorizontal="16dp" />
 
                     <!-- Pending Tab -->
-                    <LinearLayout
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/filter_pending_tab"
+                        android:tag="pending"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp"
+                        android:layout_height="38dp"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/chip_background"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/ic_pending"
-                            app:tint="@color/medium_grey" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Pending"
-                            android:textSize="14sp"
-                            android:textColor="@color/black"
-                            android:layout_marginStart="6dp" />
-                    </LinearLayout>
+                        android:text="Pending"
+                        android:textAllCaps="false"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="32dp"
+                        app:strokeColor="#1F000000"
+                        app:strokeWidth="1dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        android:minHeight="0dp"
+                        android:minWidth="0dp"
+                        android:paddingVertical="0dp"
+                        android:paddingHorizontal="16dp" />
 
                     <!-- Selected Tab -->
-                    <LinearLayout
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/filter_selected_tab"
+                        android:tag="selected"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp"
+                        android:layout_height="38dp"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/chip_background"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/ic_check_circle"
-                            app:tint="@color/medium_grey" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Selected"
-                            android:textSize="14sp"
-                            android:textColor="@color/black"
-                            android:layout_marginStart="6dp" />
-                    </LinearLayout>
+                        android:text="Selected"
+                        android:textAllCaps="false"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="32dp"
+                        app:strokeColor="#1F000000"
+                        app:strokeWidth="1dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        android:minHeight="0dp"
+                        android:minWidth="0dp"
+                        android:paddingVertical="0dp"
+                        android:paddingHorizontal="16dp" />
 
                     <!-- Declined Tab -->
-                    <LinearLayout
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/filter_declined_tab"
+                        android:tag="declined"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp"
-                        android:background="@drawable/chip_background"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/ic_declined"
-                            app:tint="@color/medium_grey" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Declined"
-                            android:textSize="14sp"
-                            android:textColor="@color/black"
-                            android:layout_marginStart="6dp" />
-                    </LinearLayout>
+                        android:layout_height="38dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="Declined"
+                        android:textAllCaps="false"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="32dp"
+                        app:strokeColor="#1F000000"
+                        app:strokeWidth="1dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        android:minHeight="0dp"
+                        android:minWidth="0dp"
+                        android:paddingVertical="0dp"
+                        android:paddingHorizontal="16dp" />
 
                 </LinearLayout>
             </HorizontalScrollView>
@@ -356,17 +331,19 @@
                 android:nestedScrollingEnabled="false" />
 
             <!-- Action Buttons -->
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/run_lottery_button"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="50dp"
                 android:text="Run Lottery"
-                android:textColor="@color/black"
-                android:background="@drawable/export_csv_button_bg"
-                android:backgroundTint="@null"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="@color/selected_tab_color"
+                app:cornerRadius="56dp"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="24dp"
-                android:padding="16dp" />
+                android:layout_marginTop="24dp" />
 
             <Button
                 android:id="@+id/export_csv_button"

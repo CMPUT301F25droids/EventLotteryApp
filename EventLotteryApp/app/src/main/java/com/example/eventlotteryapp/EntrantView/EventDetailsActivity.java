@@ -66,7 +66,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         // Join button click
         Button join_button = findViewById(R.id.join_waitlist_button);
         join_button.setOnClickListener(v -> {
-            // Check if event is closed before showing join dialog
+            // Check if event is closed and waiting list limit before showing join dialog
             db.collection("Events").document(eventId)
                     .get()
                     .addOnSuccessListener(documentSnapshot -> {
@@ -78,6 +78,26 @@ public class EventDetailsActivity extends AppCompatActivity {
                             if (isEventClosed) {
                                 Toast.makeText(this, "Registration for this event is closed.", Toast.LENGTH_SHORT).show();
                                 return;
+                            }
+                            
+                            // Check waiting list limit
+                            Boolean limitWaitingList = documentSnapshot.getBoolean("limitWaitingList");
+                            boolean isLimitEnabled = (limitWaitingList != null && limitWaitingList);
+                            
+                            if (isLimitEnabled) {
+                                Long waitingListSizeLong = documentSnapshot.getLong("waitingListSize");
+                                int waitingListLimit = (waitingListSizeLong != null) ? waitingListSizeLong.intValue() : 0;
+                                
+                                // If limit is 0 or not set, treat as infinite (no limit)
+                                if (waitingListLimit > 0) {
+                                    List<String> waitingListEntrantIds = (List<String>) documentSnapshot.get("waitingListEntrantIds");
+                                    int currentWaitingListSize = (waitingListEntrantIds != null) ? waitingListEntrantIds.size() : 0;
+                                    
+                                    if (currentWaitingListSize >= waitingListLimit) {
+                                        Toast.makeText(this, "The waiting list is full. Maximum " + waitingListLimit + " entrants allowed.", Toast.LENGTH_LONG).show();
+                                        return;
+                                    }
+                                }
                             }
                             
                             JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
@@ -282,11 +302,29 @@ public class EventDetailsActivity extends AppCompatActivity {
                             acceptInvitationButton.setVisibility(Button.GONE);
                             declineInvitationButton.setVisibility(Button.GONE);
                         } else {
-                            // User is NOT enrolled - show Join button (only if event is not closed)
+                            // User is NOT enrolled - show Join button (only if event is not closed and waiting list not full)
                             if (isEventClosed) {
                                 join_button.setVisibility(Button.GONE);
                             } else {
-                                join_button.setVisibility(Button.VISIBLE);
+                                // Check waiting list limit
+                                Boolean limitWaitingList = documentSnapshot.getBoolean("limitWaitingList");
+                                boolean isLimitEnabled = (limitWaitingList != null && limitWaitingList);
+                                boolean canJoin = true;
+                                
+                                if (isLimitEnabled) {
+                                    Long waitingListSizeLong = documentSnapshot.getLong("waitingListSize");
+                                    int waitingListLimit = (waitingListSizeLong != null) ? waitingListSizeLong.intValue() : 0;
+                                    
+                                    // If limit is 0 or not set, treat as infinite (no limit)
+                                    if (waitingListLimit > 0) {
+                                        int currentWaitingListSize = (waitingListEntrantIds != null) ? waitingListEntrantIds.size() : 0;
+                                        if (currentWaitingListSize >= waitingListLimit) {
+                                            canJoin = false;
+                                        }
+                                    }
+                                }
+                                
+                                join_button.setVisibility(canJoin ? Button.VISIBLE : Button.GONE);
                             }
                             leave_button.setVisibility(Button.GONE);
                             acceptInvitationButton.setVisibility(Button.GONE);

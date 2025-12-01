@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
@@ -56,9 +57,7 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
     
     private Button manageWaitingListButton;
     private Button notifyEntrantsButton;
-    private Button shareQrCodeButton;
-    private LinearLayout finalizedListButton;
-    private LinearLayout cancelEventButton;
+    private Button finalizedListButton;
     
     private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d", Locale.getDefault());
     private SimpleDateFormat dateFormatWithYear = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
@@ -101,32 +100,15 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
         
         manageWaitingListButton = findViewById(R.id.manage_waiting_list_button);
         notifyEntrantsButton = findViewById(R.id.notify_entrants_button);
-        shareQrCodeButton = findViewById(R.id.share_qr_code_button);
         finalizedListButton = findViewById(R.id.finalized_list_button);
-        cancelEventButton = findViewById(R.id.cancel_event_button);
-        
-        // Debug buttons for testing
-        Button debugAddUsersButton = findViewById(R.id.debug_add_users_button);
-        if (debugAddUsersButton != null) {
-            debugAddUsersButton.setOnClickListener(v -> addTestUsersToWaitingList());
-        }
-        
-        Button debugRemoveUsersButton = findViewById(R.id.debug_remove_users_button);
-        if (debugRemoveUsersButton != null) {
-            debugRemoveUsersButton.setOnClickListener(v -> removeTestUsersFromWaitingList());
-        }
         
         // Back button
         ImageView backButton = findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> finish());
         
-        // Edit button
-        ImageView editButton = findViewById(R.id.edit_button);
-        editButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, CreateEventActivity.class);
-            intent.putExtra("eventId", eventId);
-            startActivity(intent);
-        });
+        // Menu button (3 dots)
+        ImageView menuButton = findViewById(R.id.menu_button);
+        menuButton.setOnClickListener(v -> showMenu(v));
     }
     
     private void setupClickListeners() {
@@ -142,19 +124,37 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
         
-        shareQrCodeButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ShareQrCodeActivity.class);
-            intent.putExtra(ShareQrCodeActivity.EXTRA_EVENT_ID, eventId);
-            startActivity(intent);
-        });
-        
         finalizedListButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, FinalizedListActivity.class);
             intent.putExtra("eventId", eventId);
             startActivity(intent);
         });
+    }
+    
+    private void showMenu(View anchor) {
+        PopupMenu popupMenu = new PopupMenu(this, anchor);
+        popupMenu.getMenuInflater().inflate(R.menu.event_details_menu, popupMenu.getMenu());
         
-        cancelEventButton.setOnClickListener(v -> showCancelEventDialog());
+        popupMenu.setOnMenuItemClickListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.menu_edit_event) {
+                Intent intent = new Intent(this, CreateEventActivity.class);
+                intent.putExtra("eventId", eventId);
+                startActivity(intent);
+                return true;
+            } else if (itemId == R.id.menu_cancel_event) {
+                showCancelEventDialog();
+                return true;
+            } else if (itemId == R.id.menu_share_event) {
+                Intent intent = new Intent(this, ShareQrCodeActivity.class);
+                intent.putExtra(ShareQrCodeActivity.EXTRA_EVENT_ID, eventId);
+                startActivity(intent);
+                return true;
+            }
+            return false;
+        });
+        
+        popupMenu.show();
     }
     
     private void loadEventData() {
@@ -431,183 +431,6 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
         if (eventId != null) {
             updateStatistics();
         }
-    }
-    
-    /**
-     * Debug helper: Adds test users to the waiting list for testing purposes.
-     * Creates test user documents if they don't exist, then adds them to the waiting list.
-     */
-    private void addTestUsersToWaitingList() {
-        // Test user data
-        String[] testNames = {"Sarah Nguyen", "John Doe", "Emily Chen", "Michael Johnson", 
-                              "Jessica Williams", "David Brown", "Amanda Davis", "Chris Martinez",
-                              "Lisa Anderson", "Robert Taylor", "Maria Garcia", "James Wilson",
-                              "Jennifer Lee", "Daniel Moore", "Ashley Jackson", "Matthew White",
-                              "Nicole Harris", "Andrew Martin", "Stephanie Thompson", "Kevin Young"};
-        
-        firestore.collection("Events").document(eventId)
-            .get()
-            .addOnSuccessListener(eventDoc -> {
-                List<String> tempWaitingList = (List<String>) eventDoc.get("waitingListEntrantIds");
-                final List<String> waitingList = (tempWaitingList != null) ? new ArrayList<>(tempWaitingList) : new ArrayList<>();
-                
-                final int[] created = {0};
-                final int totalUsers = testNames.length;
-                final List<String> newUserIds = new ArrayList<>();
-                
-                // Create test users and add to waiting list
-                for (int i = 0; i < testNames.length; i++) {
-                    final String testName = testNames[i];
-                    final String testEmail = testName.toLowerCase().replace(" ", ".") + "@test.com";
-                    final String userId = "test_user_" + i + "_" + System.currentTimeMillis();
-                    
-                    // Generate random location around a central point (e.g., Toronto area)
-                    // Spread locations in a ~50km radius
-                    double baseLat = 43.6532; // Toronto latitude
-                    double baseLng = -79.3832; // Toronto longitude
-                    double latOffset = (Math.random() - 0.5) * 0.5; // ~50km spread
-                    double lngOffset = (Math.random() - 0.5) * 0.5; // ~50km spread
-                    final double latitude = baseLat + latOffset;
-                    final double longitude = baseLng + lngOffset;
-                    
-                    // Create user document
-                    firestore.collection("users").document(userId)
-                        .set(new HashMap<String, Object>() {{
-                            put("Name", testName);
-                            put("email", testEmail);
-                            put("createdAt", new Date());
-                        }})
-                        .addOnSuccessListener(aVoid -> {
-                            newUserIds.add(userId);
-                            created[0]++;
-                            
-                            // Save location data for this test user
-                            Map<String, Object> locationData = new HashMap<>();
-                            locationData.put("latitude", latitude);
-                            locationData.put("longitude", longitude);
-                            locationData.put("timestamp", com.google.firebase.firestore.FieldValue.serverTimestamp());
-                            
-                            firestore.collection("Events").document(eventId)
-                                .collection("joinLocations").document(userId)
-                                .set(locationData)
-                                .addOnSuccessListener(aVoid3 -> {
-                                    Log.d(TAG, "Location saved for test user: " + testName);
-                                })
-                                .addOnFailureListener(e -> {
-                                    Log.e(TAG, "Error saving location for test user: " + testName, e);
-                                });
-                            
-                            // When all users are created, add them to waiting list
-                            if (created[0] == totalUsers) {
-                                waitingList.addAll(newUserIds);
-                                
-                                firestore.collection("Events").document(eventId)
-                                    .update("waitingListEntrantIds", waitingList)
-                                    .addOnSuccessListener(aVoid2 -> {
-                                        Toast.makeText(this, "Added " + totalUsers + " test users to waiting list with locations", Toast.LENGTH_SHORT).show();
-                                        updateStatistics();
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Log.e(TAG, "Error updating waiting list", e);
-                                        Toast.makeText(this, "Error updating waiting list", Toast.LENGTH_SHORT).show();
-                                    });
-                            }
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e(TAG, "Error creating test user: " + testName, e);
-                            created[0]++;
-                            if (created[0] == totalUsers) {
-                                if (!newUserIds.isEmpty()) {
-                                    waitingList.addAll(newUserIds);
-                                    firestore.collection("Events").document(eventId)
-                                        .update("waitingListEntrantIds", waitingList)
-                                        .addOnSuccessListener(aVoid -> {
-                                            Toast.makeText(this, "Added " + newUserIds.size() + " test users to waiting list", Toast.LENGTH_SHORT).show();
-                                            updateStatistics();
-                                        });
-                                }
-                            }
-                        });
-                }
-            })
-            .addOnFailureListener(e -> {
-                Log.e(TAG, "Error loading event", e);
-                Toast.makeText(this, "Error loading event", Toast.LENGTH_SHORT).show();
-            });
-    }
-    
-    /**
-     * Debug helper: Removes all test users from the waiting list, selected list, and cancelled list.
-     */
-    private void removeTestUsersFromWaitingList() {
-        firestore.collection("Events").document(eventId)
-            .get()
-            .addOnSuccessListener(eventDoc -> {
-                List<String> waitingList = (List<String>) eventDoc.get("waitingListEntrantIds");
-                List<String> selectedList = (List<String>) eventDoc.get("selectedEntrantIds");
-                List<String> cancelledList = (List<String>) eventDoc.get("cancelledEntrantIds");
-                
-                if (waitingList == null) waitingList = new ArrayList<>();
-                if (selectedList == null) selectedList = new ArrayList<>();
-                if (cancelledList == null) cancelledList = new ArrayList<>();
-                
-                // Filter out test users (those starting with "test_user_")
-                List<String> filteredWaitingList = new ArrayList<>();
-                List<String> filteredSelectedList = new ArrayList<>();
-                List<String> filteredCancelledList = new ArrayList<>();
-                final int[] removedCount = {0};
-                
-                // Remove from waiting list
-                for (String userId : waitingList) {
-                    if (userId != null && userId.startsWith("test_user_")) {
-                        removedCount[0]++;
-                        // Also delete the test user document
-                        firestore.collection("users").document(userId).delete();
-                    } else {
-                        filteredWaitingList.add(userId);
-                    }
-                }
-                
-                // Remove from selected list
-                for (String userId : selectedList) {
-                    if (userId != null && userId.startsWith("test_user_")) {
-                        removedCount[0]++;
-                        firestore.collection("users").document(userId).delete();
-                    } else {
-                        filteredSelectedList.add(userId);
-                    }
-                }
-                
-                // Remove from cancelled list
-                for (String userId : cancelledList) {
-                    if (userId != null && userId.startsWith("test_user_")) {
-                        removedCount[0]++;
-                        firestore.collection("users").document(userId).delete();
-                    } else {
-                        filteredCancelledList.add(userId);
-                    }
-                }
-                
-                // Update all lists
-                firestore.collection("Events").document(eventId)
-                    .update("waitingListEntrantIds", filteredWaitingList,
-                            "selectedEntrantIds", filteredSelectedList,
-                            "cancelledEntrantIds", filteredCancelledList)
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(this, "Removed " + removedCount[0] + " test user(s) from all lists", Toast.LENGTH_SHORT).show();
-                        updateStatistics();
-                        // Force refresh if EntrantListActivity is open
-                        // This will be handled by onResume when user navigates back
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Error removing test users", e);
-                        Toast.makeText(this, "Error removing test users", Toast.LENGTH_SHORT).show();
-                    });
-            })
-            .addOnFailureListener(e -> {
-                Log.e(TAG, "Error loading event", e);
-                Toast.makeText(this, "Error loading event", Toast.LENGTH_SHORT).show();
-            });
     }
 }
 

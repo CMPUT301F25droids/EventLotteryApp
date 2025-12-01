@@ -46,13 +46,13 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
 
-        <!-- Edit Button -->
+        <!-- Menu Button (3 dots) -->
         <ImageView
-            android:id="@+id/edit_button"
+            android:id="@+id/menu_button"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_edit"
-            android:contentDescription="Edit"
+            android:src="@android:drawable/ic_menu_more"
+            android:contentDescription="Menu"
             android:clickable="true"
             android:focusable="true"
             app:tint="@color/black"
@@ -424,14 +424,15 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
+            <!-- View Finalized List Button -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/share_qr_code_button"
+                android:id="@+id/finalized_list_button"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
                 android:layout_marginTop="12dp"
-                android:text="Share QR Code"
+                android:text="View Finalized List"
                 android:textSize="17sp"
                 android:textStyle="bold"
                 android:textColor="@color/white"
@@ -439,116 +440,6 @@
                 app:backgroundTint="@color/selected_tab_color"
                 app:cornerRadius="56dp"
                 app:layout_constraintTop_toBottomOf="@+id/notify_entrants_button"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-            <!-- Secondary Action Buttons -->
-            <LinearLayout
-                android:id="@+id/secondary_actions"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginTop="24dp"
-                android:orientation="horizontal"
-                android:gravity="center"
-                app:layout_constraintTop_toBottomOf="@+id/share_qr_code_button"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
-
-                <!-- Finalized List -->
-                <LinearLayout
-                    android:id="@+id/finalized_list_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/ic_profile"
-                        app:tint="@color/button_background" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Finalized List"
-                        android:textSize="12sp"
-                        android:textColor="@color/black"
-                        android:layout_marginTop="8dp"
-                        android:gravity="center" />
-                </LinearLayout>
-
-                <!-- Cancel Event -->
-                <LinearLayout
-                    android:id="@+id/cancel_event_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/ic_close_circle"
-                        app:tint="@color/button_background" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Cancel Event"
-                        android:textSize="12sp"
-                        android:textColor="@color/black"
-                        android:layout_marginTop="8dp"
-                        android:gravity="center" />
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- Debug Buttons (for testing only - can be removed in production) -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/debug_add_users_button"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginTop="12dp"
-                android:text="[DEBUG] Add 20 Test Users"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:textColor="@color/white"
-                android:fontFamily="sans-serif-medium"
-                app:backgroundTint="#FF6B6B"
-                app:cornerRadius="56dp"
-                app:layout_constraintTop_toBottomOf="@+id/secondary_actions"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/debug_remove_users_button"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="24dp"
-                android:text="[DEBUG] Remove All Test Users"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:textColor="@color/white"
-                android:fontFamily="sans-serif-medium"
-                app:backgroundTint="#FF6B6B"
-                app:cornerRadius="56dp"
-                app:layout_constraintTop_toBottomOf="@+id/debug_add_users_button"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 

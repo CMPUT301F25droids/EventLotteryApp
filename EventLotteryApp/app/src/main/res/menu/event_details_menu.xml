@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_edit_event"
+        android:title="Edit Event" />
+    <item
+        android:id="@+id/menu_cancel_event"
+        android:title="Cancel Event" />
+    <item
+        android:id="@+id/menu_share_event"
+        android:title="Share Event" />
+</menu>
+
