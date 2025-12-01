@@ -57,6 +57,8 @@ public class NotificationsFragment extends Fragment {
             android.util.Log.e("NotificationsFragment", "Delete button not found in layout!");
         } else {
             android.util.Log.d("NotificationsFragment", "Delete button found and initialized");
+            // Ensure button starts as GONE (will be shown when items are selected)
+            btnDeleteSelected.setVisibility(View.GONE);
         }
         
         if (db == null) {
