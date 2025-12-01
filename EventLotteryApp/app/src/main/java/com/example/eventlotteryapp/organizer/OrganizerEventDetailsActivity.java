@@ -262,14 +262,15 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 int entrantsJoined = (waitingList != null) ? waitingList.size() : 0;
                 entrantsJoinedText.setText("Entrants Joined: " + entrantsJoined);
                 
-                // Slots Available (maxParticipants - selectedEntrantIds count)
+                // Slots Available (maxParticipants - acceptedEntrantIds count)
+                // Use acceptedEntrantIds as the finalized count since those are users who accepted invitations
                 Long maxParticipantsLong = document.getLong("maxParticipants");
                 int maxParticipants = (maxParticipantsLong != null) ? maxParticipantsLong.intValue() : 0;
                 
-                List<String> selectedEntrants = (List<String>) document.get("selectedEntrantIds");
-                int selectedCount = (selectedEntrants != null) ? selectedEntrants.size() : 0;
+                List<String> acceptedEntrants = (List<String>) document.get("acceptedEntrantIds");
+                int acceptedCount = (acceptedEntrants != null) ? acceptedEntrants.size() : 0;
                 
-                int slotsAvailable = Math.max(0, maxParticipants - selectedCount);
+                int slotsAvailable = Math.max(0, maxParticipants - acceptedCount);
                 slotsAvailableText.setText("Slots Available: " + slotsAvailable);
                 
                 // Days Left in Registration
@@ -370,8 +371,20 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
         firestore.collection("Events").document(eventId)
             .get()
             .addOnSuccessListener(document -> {
+                // Export accepted entrants (finalized list) and selected entrants (pending acceptance)
+                List<String> acceptedIds = (List<String>) document.get("acceptedEntrantIds");
                 List<String> selectedIds = (List<String>) document.get("selectedEntrantIds");
-                if (selectedIds == null || selectedIds.isEmpty()) {
+                
+                if (acceptedIds == null) acceptedIds = new ArrayList<>();
+                if (selectedIds == null) selectedIds = new ArrayList<>();
+                
+                // Combine accepted and selected (remove duplicates)
+                java.util.Set<String> allFinalizedIds = new java.util.LinkedHashSet<>();
+                allFinalizedIds.addAll(acceptedIds);
+                allFinalizedIds.addAll(selectedIds);
+                List<String> finalizedIds = new ArrayList<>(allFinalizedIds);
+                
+                if (finalizedIds.isEmpty()) {
                     Toast.makeText(this, "No finalized entrants to export", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -385,18 +398,19 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 List<Entrant> entrants = new ArrayList<>();
                 final int[] loaded = {0};
                 
-                for (String entrantId : selectedIds) {
+                for (String entrantId : finalizedIds) {
                     firestore.collection("users").document(entrantId)
                         .get()
                         .addOnSuccessListener(userDoc -> {
                             String name = userDoc.getString("Name");
+                            if (name == null) name = userDoc.getString("name");
                             String email = userDoc.getString("email");
                             if (name != null && email != null) {
                                 entrants.add(new Entrant(entrantId, name, email));
                             }
                             
                             loaded[0]++;
-                            if (loaded[0] == selectedIds.size()) {
+                            if (loaded[0] == finalizedIds.size()) {
                                 // All loaded, export CSV
                                 csvExportController.exportFinalListToCSV(this, eventTitle, entrants);
                             }
@@ -404,7 +418,7 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                         .addOnFailureListener(e -> {
                             Log.e(TAG, "Error loading entrant: " + entrantId, e);
                             loaded[0]++;
-                            if (loaded[0] == selectedIds.size()) {
+                            if (loaded[0] == finalizedIds.size()) {
                                 csvExportController.exportFinalListToCSV(this, eventTitle, entrants);
                             }
                         });

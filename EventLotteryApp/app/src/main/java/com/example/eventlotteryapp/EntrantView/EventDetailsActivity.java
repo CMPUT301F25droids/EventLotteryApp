@@ -25,6 +25,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Source;
 import com.example.eventlotteryapp.NotificationController;
 
 import java.text.SimpleDateFormat;
@@ -227,12 +228,17 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     /**
      * Public method to refresh the waiting list status - can be called from fragments
+     * Forces a server read to avoid cache issues after updates
      */
     public void refreshWaitingListStatus() {
-        userInWaitlist();
+        userInWaitlist(true);
     }
     
     protected void userInWaitlist() {
+        userInWaitlist(false);
+    }
+    
+    protected void userInWaitlist(boolean forceServerRead) {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() == null) {
             return;
@@ -240,9 +246,11 @@ public class EventDetailsActivity extends AppCompatActivity {
         String userId = auth.getCurrentUser().getUid();
         Log.d("Firestore", "Checking waitlist for eventId=" + eventId + ", userId=" + userId);
 
-        db.collection("Events").document(eventId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
+        // Use server source if forcing a fresh read, otherwise use default (cache first)
+        if (forceServerRead) {
+            db.collection("Events").document(eventId)
+                    .get(Source.SERVER)
+                    .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         // Check all status arrays
                         List<String> waitingListEntrantIds = (List<String>) documentSnapshot.get("waitingListEntrantIds");
@@ -426,8 +434,198 @@ public class EventDetailsActivity extends AppCompatActivity {
                             }
                         }
                     }
-                })
-                .addOnFailureListener(e -> Log.e("Firestore", "Error reading waitlist", e));
+                    })
+                    .addOnFailureListener(e -> Log.e("Firestore", "Error reading waitlist", e));
+        } else {
+            db.collection("Events").document(eventId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            // Check all status arrays
+                            List<String> waitingListEntrantIds = (List<String>) documentSnapshot.get("waitingListEntrantIds");
+                            List<String> selectedEntrantIds = (List<String>) documentSnapshot.get("selectedEntrantIds");
+                            List<String> acceptedEntrantIds = (List<String>) documentSnapshot.get("acceptedEntrantIds");
+                            List<String> cancelledEntrantIds = (List<String>) documentSnapshot.get("cancelledEntrantIds");
+                            List<String> declinedEntrantIds = (List<String>) documentSnapshot.get("declinedEntrantIds");
+
+                            // Check if event is closed (registrationCloseDate has passed)
+                            Date registrationCloseDate = documentSnapshot.getDate("registrationCloseDate");
+                            Date registrationOpenDate = documentSnapshot.getDate("registrationOpenDate");
+                            Date now = new Date();
+                            boolean isEventClosed = (registrationCloseDate != null && now.after(registrationCloseDate));
+                            boolean isRegistrationOpen = (registrationOpenDate == null || now.after(registrationOpenDate) || now.equals(registrationOpenDate));
+
+                            Button join_button = findViewById(R.id.join_waitlist_button);
+                            Button leave_button = findViewById(R.id.leave_waitlist_button);
+
+                            // Check user status
+                            boolean isInWaitingList = (waitingListEntrantIds != null && waitingListEntrantIds.contains(userId));
+                            boolean isSelected = (selectedEntrantIds != null && selectedEntrantIds.contains(userId));
+                            boolean isAccepted = (acceptedEntrantIds != null && acceptedEntrantIds.contains(userId));
+                            boolean isCancelled = (cancelledEntrantIds != null && cancelledEntrantIds.contains(userId));
+                            boolean isDeclined = (declinedEntrantIds != null && declinedEntrantIds.contains(userId));
+
+                            // Check if lottery has run and user was selected (cannot leave waitlist)
+                            boolean lotteryRanAndUserSelected = isEventClosed && isSelected;
+                            
+                            // Check if lottery has run and user was NOT selected (rejected)
+                            boolean lotteryRanAndUserNotSelected = isEventClosed && isInWaitingList && !isSelected && !isAccepted && !isCancelled && !isDeclined;
+
+                            Log.d("Firestore", "Status check - waiting: " + isInWaitingList +
+                                    ", selected: " + isSelected +
+                                    ", accepted: " + isAccepted +
+                                    ", cancelled: " + isCancelled +
+                                    ", declined: " + isDeclined +
+                                    ", eventClosed: " + isEventClosed +
+                                    ", lotteryRanAndUserSelected: " + lotteryRanAndUserSelected +
+                                    ", lotteryRanAndUserNotSelected: " + lotteryRanAndUserNotSelected);
+                            
+                            // Update status message to show rejection if applicable
+                            updateStatusMessage(isEventClosed, isSelected, isAccepted, isInWaitingList, isCancelled, isDeclined);
+
+                            // Show appropriate buttons based on status
+                            if (isSelected) {
+                                // User is SELECTED - show Accept/Decline buttons
+                                join_button.setVisibility(Button.GONE);
+                                leave_button.setVisibility(Button.GONE);
+                                acceptInvitationButton.setVisibility(Button.VISIBLE);
+                                declineInvitationButton.setVisibility(Button.VISIBLE);
+                                // Show "You've Been Selected!" status text
+                                if (tvSelectedStatus != null) {
+                                    tvSelectedStatus.setVisibility(View.VISIBLE);
+                                }
+                                // Adjust event name margin when selected status is visible
+                                TextView eventName = findViewById(R.id.event_name);
+                                if (eventName != null && eventName.getLayoutParams() instanceof ConstraintLayout.LayoutParams) {
+                                    ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) eventName.getLayoutParams();
+                                    params.topMargin = (int) (4 * getResources().getDisplayMetrics().density); // 4dp
+                                    eventName.setLayoutParams(params);
+                                }
+                            } else if (isAccepted) {
+                                // User has ACCEPTED - show confirmation message
+                                join_button.setVisibility(Button.GONE);
+                                leave_button.setVisibility(Button.GONE);
+                                acceptInvitationButton.setVisibility(Button.GONE);
+                                declineInvitationButton.setVisibility(Button.GONE);
+                                // Hide selected status text
+                                if (tvSelectedStatus != null) {
+                                    tvSelectedStatus.setVisibility(View.GONE);
+                                }
+                                // Reset event name margin when selected status is hidden
+                                TextView eventName = findViewById(R.id.event_name);
+                                if (eventName != null && eventName.getLayoutParams() instanceof ConstraintLayout.LayoutParams) {
+                                    ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) eventName.getLayoutParams();
+                                    params.topMargin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp
+                                    eventName.setLayoutParams(params);
+                                }
+                                // Optionally show a "You're registered!" message
+                            } else if (isDeclined) {
+                                // User has DECLINED - show Leave button to rejoin waiting list (only if event not closed)
+                                join_button.setVisibility(Button.GONE);
+                                if (isEventClosed) {
+                                    leave_button.setVisibility(Button.GONE);
+                                } else {
+                                    leave_button.setVisibility(Button.VISIBLE);
+                                }
+                                acceptInvitationButton.setVisibility(Button.GONE);
+                                declineInvitationButton.setVisibility(Button.GONE);
+                                // Hide selected status text
+                                if (tvSelectedStatus != null) {
+                                    tvSelectedStatus.setVisibility(View.GONE);
+                                }
+                                // Reset event name margin when selected status is hidden
+                                TextView eventName = findViewById(R.id.event_name);
+                                if (eventName != null && eventName.getLayoutParams() instanceof ConstraintLayout.LayoutParams) {
+                                    ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) eventName.getLayoutParams();
+                                    params.topMargin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp
+                                    eventName.setLayoutParams(params);
+                                }
+                            } else if (isInWaitingList || isCancelled) {
+                                // User is in waiting list - show Leave button (only if lottery hasn't run or user wasn't selected)
+                                join_button.setVisibility(Button.GONE);
+                                if (lotteryRanAndUserSelected) {
+                                    // Cannot leave if lottery ran and user was selected
+                                    leave_button.setVisibility(Button.GONE);
+                                } else {
+                                    leave_button.setVisibility(Button.VISIBLE);
+                                }
+                                acceptInvitationButton.setVisibility(Button.GONE);
+                                declineInvitationButton.setVisibility(Button.GONE);
+                                // Hide selected status text
+                                if (tvSelectedStatus != null) {
+                                    tvSelectedStatus.setVisibility(View.GONE);
+                                }
+                                // Reset event name margin when selected status is hidden
+                                TextView eventName = findViewById(R.id.event_name);
+                                if (eventName != null && eventName.getLayoutParams() instanceof ConstraintLayout.LayoutParams) {
+                                    ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) eventName.getLayoutParams();
+                                    params.topMargin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp
+                                    eventName.setLayoutParams(params);
+                                }
+                            } else {
+                                // User is NOT enrolled - show Join button (only if event is not closed and waiting list not full)
+                                if (isEventClosed) {
+                                    join_button.setVisibility(Button.GONE);
+                                } else {
+                                    // Check waiting list limit
+                                    Boolean limitWaitingList = documentSnapshot.getBoolean("limitWaitingList");
+                                    boolean isLimitEnabled = (limitWaitingList != null && limitWaitingList);
+                                    boolean canJoin = true;
+                                    
+                                    if (isLimitEnabled) {
+                                        Long waitingListSizeLong = documentSnapshot.getLong("waitingListSize");
+                                        int waitingListLimit = (waitingListSizeLong != null) ? waitingListSizeLong.intValue() : 0;
+                                        
+                                        // If limit is 0 or not set, treat as infinite (no limit)
+                                        if (waitingListLimit > 0) {
+                                            int currentWaitingListSize = (waitingListEntrantIds != null) ? waitingListEntrantIds.size() : 0;
+                                            if (currentWaitingListSize >= waitingListLimit) {
+                                                canJoin = false;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Show button but disable it if registration hasn't opened yet
+                                    // Hide button if waitlist is full
+                                    if (!canJoin) {
+                                        join_button.setVisibility(Button.GONE);
+                                    } else {
+                                        join_button.setVisibility(Button.VISIBLE);
+                                        // Disable button if registration hasn't opened yet
+                                        join_button.setEnabled(isRegistrationOpen);
+                                        // Update button text and background color based on registration status
+                                        if (!isRegistrationOpen) {
+                                            join_button.setText("Registration is not open");
+                                            // Set button background to grey when registration is not open
+                                            join_button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                                                    ContextCompat.getColor(this, R.color.medium_grey)));
+                                        } else {
+                                            join_button.setText("Join Waiting List");
+                                            // Set button background to purple when registration is open
+                                            join_button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                                                    ContextCompat.getColor(this, R.color.selected_tab_color)));
+                                        }
+                                    }
+                                }
+                                leave_button.setVisibility(Button.GONE);
+                                acceptInvitationButton.setVisibility(Button.GONE);
+                                declineInvitationButton.setVisibility(Button.GONE);
+                                // Hide selected status text
+                                if (tvSelectedStatus != null) {
+                                    tvSelectedStatus.setVisibility(View.GONE);
+                                }
+                                // Reset event name margin when selected status is hidden
+                                TextView eventName = findViewById(R.id.event_name);
+                                if (eventName != null && eventName.getLayoutParams() instanceof ConstraintLayout.LayoutParams) {
+                                    ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) eventName.getLayoutParams();
+                                    params.topMargin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp
+                                    eventName.setLayoutParams(params);
+                                }
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> Log.e("Firestore", "Error reading waitlist", e));
+        }
     }
     protected void populateUI() {
         if (eventId != null) {

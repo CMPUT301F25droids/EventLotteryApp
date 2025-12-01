@@ -21,6 +21,7 @@ import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.databinding.FragmentJoinConfirmationListDialogBinding;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.WriteBatch;
 import java.util.Date;
 import java.util.List;
 
@@ -115,12 +116,33 @@ public class LeaveConfirmationFragment extends BottomSheetDialogFragment {
                                 return;
                             }
                             
-                            // Remove user from waiting list
-                            event_ref.update("waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayRemove(userId))
+                            // Remove user from waiting list and also from declined list if they're in it
+                            // Use a batch update to ensure both operations succeed together
+                            WriteBatch batch = db.batch();
+                            batch.update(event_ref, "waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayRemove(userId));
+                            batch.update(event_ref, "declinedEntrantIds", com.google.firebase.firestore.FieldValue.arrayRemove(userId));
+                            
+                            batch.commit()
                                     .addOnSuccessListener(aVoid -> {
-                                        Log.d("Firestore", "User removed from waiting list");
+                                        Log.d("Firestore", "User removed from waiting list and declined list");
+                                        
+                                        Toast.makeText(requireContext(), "Left waiting list", Toast.LENGTH_SHORT).show();
+                                        dismiss(); // close modal
+                                        
+                                        // Refresh the parent activity UI after the update completes
+                                        // Add a small delay to ensure Firestore cache is updated
+                                        if (getActivity() != null && getActivity() instanceof EventDetailsActivity) {
+                                            EventDetailsActivity activity = (EventDetailsActivity) getActivity();
+                                            // Post a delayed refresh to allow Firestore to propagate the change
+                                            activity.getWindow().getDecorView().postDelayed(() -> {
+                                                activity.refreshWaitingListStatus();
+                                            }, 1000); // 1 second delay to ensure cache update
+                                        }
                                     })
-                                    .addOnFailureListener(e -> Log.e("Firestore", "Error removing user from waiting list", e));
+                                    .addOnFailureListener(e -> {
+                                        Log.e("Firestore", "Error removing user from waiting list", e);
+                                        Toast.makeText(requireContext(), "Error leaving waiting list. Please try again.", Toast.LENGTH_SHORT).show();
+                                    });
                             
                             // Remove from user's JoinedEvents (if user document exists)
                             user_ref.update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayRemove(event_ref))
@@ -131,18 +153,6 @@ public class LeaveConfirmationFragment extends BottomSheetDialogFragment {
                                         // It's okay if user document doesn't exist - that's expected for some users
                                         Log.d("Firestore", "Could not remove from JoinedEvents (user doc may not exist): " + e.getMessage());
                                     });
-
-                            Toast.makeText(requireContext(), "Left waiting list", Toast.LENGTH_SHORT).show();
-                            dismiss(); // close modal
-                            
-                            // Refresh the parent activity UI instead of finishing it
-                            if (getActivity() != null && getActivity() instanceof EventDetailsActivity) {
-                                EventDetailsActivity activity = (EventDetailsActivity) getActivity();
-                                // Refresh the UI after a short delay to ensure Firestore update is complete
-                                activity.getWindow().getDecorView().postDelayed(() -> {
-                                    activity.refreshWaitingListStatus();
-                                }, 500);
-                            }
                         }
                     })
                     .addOnFailureListener(e -> {
