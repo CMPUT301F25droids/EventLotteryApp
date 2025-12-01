@@ -180,6 +180,17 @@
 
             <!-- Action Buttons -->
             <Button
+                android:id="@+id/cancel_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cancel"
+                android:textColor="@color/white"
+                android:backgroundTint="@android:color/holo_red_light"
+                android:layout_marginBottom="12dp"
+                android:padding="16dp"
+                android:visibility="gone" />
+
+            <Button
                 android:id="@+id/draw_replacement_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -189,7 +200,7 @@
                 android:backgroundTint="@null"
                 android:layout_marginBottom="12dp"
                 android:padding="16dp"
-                android:enabled="false" />
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/export_csv_button"
