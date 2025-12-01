@@ -65,6 +65,8 @@ public class CreateEventStep6Fragment extends Fragment {
         // Publish Event button - calls the activity's saveEvent method
         binding.publishEventButton.setOnClickListener(v -> {
             if (getActivity() instanceof CreateEventActivity) {
+                // Disable buttons immediately to prevent multiple clicks
+                setPublishButtonsEnabled(false);
                 ((CreateEventActivity) getActivity()).saveEvent();
             }
         });
@@ -72,6 +74,8 @@ public class CreateEventStep6Fragment extends Fragment {
         // Generate QR Code button - publishes event and navigates to QR code screen
         binding.generateQrButton.setOnClickListener(v -> {
             if (getActivity() instanceof CreateEventActivity) {
+                // Disable buttons immediately to prevent multiple clicks
+                setPublishButtonsEnabled(false);
                 CreateEventActivity activity = (CreateEventActivity) getActivity();
                 activity.saveEvent(eventId -> {
                     // Navigate to Share QR Code activity with the event ID
@@ -172,6 +176,20 @@ public class CreateEventStep6Fragment extends Fragment {
             binding.geolocationText.setText("Geolocation Verification: Enabled");
         } else {
             binding.geolocationText.setText("Geolocation Verification: Disabled");
+        }
+    }
+
+    /**
+     * Enable or disable the publish buttons
+     * Called by CreateEventActivity to prevent multiple clicks while saving
+     */
+    public void setPublishButtonsEnabled(boolean enabled) {
+        if (binding != null) {
+            binding.publishEventButton.setEnabled(enabled);
+            binding.generateQrButton.setEnabled(enabled);
+            // Optionally change alpha to show disabled state
+            binding.publishEventButton.setAlpha(enabled ? 1.0f : 0.5f);
+            binding.generateQrButton.setAlpha(enabled ? 1.0f : 0.5f);
         }
     }
 

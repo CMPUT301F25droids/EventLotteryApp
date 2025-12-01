@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.data.Event;
@@ -34,7 +34,7 @@ public class MyEventsFragment extends Fragment {
     private FirebaseAuth auth;
     private EventAdapter eventAdapter;
     private final List<EventWithId> allEvents = new ArrayList<>();
-    private String currentFilter = "active"; // active, upcoming, closed
+    private String currentFilter = "all"; // all, active, upcoming, closed
 
     @Nullable
     @Override
@@ -72,22 +72,23 @@ public class MyEventsFragment extends Fragment {
             intent.putExtra("eventId", eventId);
             startActivity(intent);
         });
-        binding.eventsRecyclerView.setLayoutManager(
-                new LinearLayoutManager(getContext(),
-                        LinearLayoutManager.HORIZONTAL,
-                        false)
-        );
+        binding.eventsRecyclerView.setHasFixedSize(true);
+        int spanCount = getResources().getConfiguration().smallestScreenWidthDp >= 600 ? 3 : 2;
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), spanCount);
+        binding.eventsRecyclerView.setLayoutManager(gridLayoutManager);
         binding.eventsRecyclerView.setAdapter(eventAdapter);
     }
 
     private void setupFilterButtons() {
+        MaterialButton allBtn = binding.allFilterButton;
         MaterialButton activeBtn = binding.activeFilterButton;
         MaterialButton upcomingBtn = binding.upcomingFilterButton;
         MaterialButton closedBtn = binding.closedFilterButton;
 
-        List<MaterialButton> buttons = List.of(activeBtn, upcomingBtn, closedBtn);
+        List<MaterialButton> buttons = List.of(allBtn, activeBtn, upcomingBtn, closedBtn);
 
         // Tag each button so we know which filter it represents
+        allBtn.setTag("all");
         activeBtn.setTag("active");
         upcomingBtn.setTag("upcoming");
         closedBtn.setTag("closed");
@@ -100,12 +101,13 @@ public class MyEventsFragment extends Fragment {
             updateFilterButtonStyles(buttons, selected);  // Update colors
         };
 
+        allBtn.setOnClickListener(listener);
         activeBtn.setOnClickListener(listener);
         upcomingBtn.setOnClickListener(listener);
         closedBtn.setOnClickListener(listener);
 
         // Default selection
-        updateFilterButtonStyles(buttons, activeBtn);
+        updateFilterButtonStyles(buttons, allBtn);
     }
 
     private void setFilter(String filter) {
@@ -259,6 +261,13 @@ public class MyEventsFragment extends Fragment {
     private void filterEvents() {
         Date now = new Date();
         List<EventWithId> filtered = new ArrayList<>();
+
+        // If "all" filter, return all events
+        if (currentFilter.equals("all")) {
+            filtered.addAll(allEvents);
+            eventAdapter.updateEvents(filtered);
+            return;
+        }
 
         for (EventWithId eventWithId : allEvents) {
             Event event = eventWithId.event;

@@ -75,14 +75,43 @@ public class CreateEventStep1Fragment extends Fragment {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString().trim();
+                if (text.isEmpty()) {
+                    // Don't update ViewModel while user is typing - prevents cursor reset
+                    return;
+                }
                 try {
-                    viewModel.price.setValue(Double.parseDouble(s.toString()));
+                    double value = Double.parseDouble(text);
+                    // Only update if the value actually changed to prevent feedback loops
+                    Double currentValue = viewModel.price.getValue();
+                    if (currentValue == null || Math.abs(currentValue - value) > 0.001) {
+                        viewModel.price.setValue(value);
+                    }
                 } catch (NumberFormatException e) {
-                    viewModel.price.setValue(0.0);
+                    // Invalid input, but don't set to 0.0 as user might still be typing
                 }
             }
             @Override
             public void afterTextChanged(Editable s) {}
+        });
+        
+        // Handle empty field when user finishes editing
+        binding.eventPriceEditText.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) {
+                // Field lost focus - validate and update ViewModel if empty
+                String text = binding.eventPriceEditText.getText().toString().trim();
+                if (text.isEmpty()) {
+                    viewModel.price.setValue(0.0);
+                } else {
+                    try {
+                        double value = Double.parseDouble(text);
+                        viewModel.price.setValue(value);
+                    } catch (NumberFormatException e) {
+                        // Invalid number - set to 0.0
+                        viewModel.price.setValue(0.0);
+                    }
+                }
+            }
         });
 
         // Observe LiveData
@@ -105,16 +134,45 @@ public class CreateEventStep1Fragment extends Fragment {
         });
 
         viewModel.price.observe(getViewLifecycleOwner(), aDouble -> {
+            // Don't update text if user is currently typing in the field to prevent cursor reset
+            if (binding.eventPriceEditText.hasFocus()) {
+                return;
+            }
+            
             // Only set text if price is not 0.0, otherwise keep it empty to show hint
             if (aDouble != null && aDouble != 0.0) {
-                String priceString = String.valueOf(aDouble);
-                if (!binding.eventPriceEditText.getText().toString().equals(priceString)) {
-                    binding.eventPriceEditText.setText(priceString);
+                String priceString = formatPriceString(aDouble);
+                String currentText = binding.eventPriceEditText.getText().toString();
+                
+                // Only update if the text is actually different (ignore formatting differences)
+                if (!currentText.equals(priceString)) {
+                    try {
+                        double currentValue = currentText.isEmpty() ? 0.0 : Double.parseDouble(currentText);
+                        // Only update if the numeric value is actually different
+                        if (Math.abs(currentValue - aDouble) > 0.001) {
+                            binding.eventPriceEditText.setText(priceString);
+                        }
+                    } catch (NumberFormatException e) {
+                        binding.eventPriceEditText.setText(priceString);
+                    }
                 }
-            } else if (binding.eventPriceEditText.getText().toString().equals("0.0")) {
+            } else if (!binding.eventPriceEditText.getText().toString().isEmpty() && 
+                       binding.eventPriceEditText.getText().toString().equals("0.0")) {
                 binding.eventPriceEditText.setText("");
             }
         });
+    }
+
+    /**
+     * Format price as string, removing unnecessary decimal points and zeros
+     * e.g., 1.0 -> "1", 1.5 -> "1.5", 10.00 -> "10"
+     */
+    private String formatPriceString(double price) {
+        if (price == (long) price) {
+            return String.valueOf((long) price);
+        } else {
+            return String.valueOf(price);
+        }
     }
 
     @Override

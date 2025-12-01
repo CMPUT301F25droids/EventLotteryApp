@@ -10,6 +10,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
 import com.example.eventlotteryapp.OrganizerHomePage;
@@ -31,6 +32,7 @@ public class CreateEventActivity extends AppCompatActivity {
     private CreateEventViewModel viewModel;
     private CreateEventPagerAdapter pagerAdapter;
     private String eventId; // null for create mode, non-null for edit mode
+    private boolean isSaving = false; // Flag to prevent multiple simultaneous save operations
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -215,6 +217,15 @@ public class CreateEventActivity extends AppCompatActivity {
     }
 
     public void saveEvent(OnEventSavedListener listener) {
+        // Prevent multiple simultaneous save operations
+        if (isSaving) {
+            android.util.Log.d("CreateEventActivity", "Save already in progress, ignoring duplicate click");
+            return;
+        }
+        
+        isSaving = true;
+        disablePublishButtons();
+        
         String title = viewModel.title.getValue();
         String description = viewModel.description.getValue();
         String location = viewModel.location.getValue();
@@ -231,12 +242,16 @@ public class CreateEventActivity extends AppCompatActivity {
             location == null || location.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields on the first page", Toast.LENGTH_SHORT).show();
             binding.viewPager.setCurrentItem(0);
+            isSaving = false;
+            enablePublishButtons();
             return;
         }
 
         if (auth.getCurrentUser() == null) {
             Toast.makeText(this, "You must be logged in to create events. Please log in first.", Toast.LENGTH_LONG).show();
             android.util.Log.e("CreateEventActivity", "Cannot save event: User is not authenticated");
+            isSaving = false;
+            enablePublishButtons();
             return;
         }
         
@@ -300,6 +315,8 @@ public class CreateEventActivity extends AppCompatActivity {
                     .update(eventData)
                     .addOnSuccessListener(aVoid -> {
                         android.util.Log.d("CreateEventActivity", "Event updated successfully with ID: " + eventId);
+                        isSaving = false;
+                        enablePublishButtons();
                         Toast.makeText(this, "Event updated successfully", Toast.LENGTH_SHORT).show();
                         
                         if (listener != null) {
@@ -310,6 +327,8 @@ public class CreateEventActivity extends AppCompatActivity {
                     })
                     .addOnFailureListener(e -> {
                         android.util.Log.e("CreateEventActivity", "Error updating event", e);
+                        isSaving = false;
+                        enablePublishButtons();
                         Toast.makeText(this, "Error updating event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
         } else {
@@ -330,6 +349,8 @@ public class CreateEventActivity extends AppCompatActivity {
                             }
                         });
                     
+                    isSaving = false;
+                    enablePublishButtons();
                     Toast.makeText(this, "Event created successfully", Toast.LENGTH_SHORT).show();
                     
                     if (listener != null) {
@@ -342,6 +363,8 @@ public class CreateEventActivity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> {
                     android.util.Log.e("CreateEventActivity", "Error creating event", e);
+                    isSaving = false;
+                    enablePublishButtons();
                     Toast.makeText(this, "Error creating event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
         }
@@ -414,6 +437,49 @@ public class CreateEventActivity extends AppCompatActivity {
                 Toast.makeText(this, "Error loading event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 finish();
                 });
+    }
+
+    /**
+     * Disable publish buttons to prevent multiple clicks while saving
+     */
+    private void disablePublishButtons() {
+        // Find the Step6Fragment and disable buttons
+        Fragment step6Fragment = findStep6Fragment();
+        if (step6Fragment instanceof CreateEventStep6Fragment) {
+            ((CreateEventStep6Fragment) step6Fragment).setPublishButtonsEnabled(false);
+        }
+    }
+
+    /**
+     * Enable publish buttons after save operation completes
+     */
+    private void enablePublishButtons() {
+        // Find the Step6Fragment and enable buttons
+        Fragment step6Fragment = findStep6Fragment();
+        if (step6Fragment instanceof CreateEventStep6Fragment) {
+            ((CreateEventStep6Fragment) step6Fragment).setPublishButtonsEnabled(true);
+        }
+    }
+
+    /**
+     * Find the Step6Fragment from the ViewPager
+     */
+    private Fragment findStep6Fragment() {
+        // ViewPager2 creates fragments with tags: "android:switcher:" + viewPagerId + ":" + position
+        int viewPagerId = binding.viewPager.getId();
+        int step6Position = pagerAdapter.getItemCount() - 1;
+        String fragmentTag = "android:switcher:" + viewPagerId + ":" + step6Position;
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(fragmentTag);
+        
+        // Fallback: try to find by iterating through fragments
+        if (fragment == null) {
+            for (Fragment f : getSupportFragmentManager().getFragments()) {
+                if (f instanceof CreateEventStep6Fragment) {
+                    return f;
+                }
+            }
+        }
+        return fragment;
     }
 
     public interface OnEventSavedListener {

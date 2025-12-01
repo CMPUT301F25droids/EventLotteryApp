@@ -18,6 +18,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class OrganizerHomePage extends AppCompatActivity {
     private FirebaseFirestore db;
     private MyEventsFragment myEventsFragment;
+    private TabLayout tabLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,16 +32,41 @@ public class OrganizerHomePage extends AppCompatActivity {
         });
 
         db = FirebaseFirestore.getInstance();
-        setOnTabSelectedListener(findViewById(R.id.organizer_home_tabs));
+        tabLayout = findViewById(R.id.organizer_home_tabs);
+        setOnTabSelectedListener(tabLayout);
         
         // Show My Events fragment by default when Dashboard tab is selected
         myEventsFragment = new MyEventsFragment();
         selectFragment(myEventsFragment);
+        
+        // Ensure Dashboard tab is selected by default
+        TabLayout.Tab dashboardTab = tabLayout.getTabAt(0);
+        if (dashboardTab != null) {
+            dashboardTab.select();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        
+        // Check if we're currently showing Dashboard fragment
+        Fragment currentFragment = getSupportFragmentManager()
+            .findFragmentById(R.id.fragment_container);
+        
+        // If Dashboard fragment is shown but Create tab is selected, reset to Dashboard tab
+        // This fixes the issue where Create tab appears selected after pressing back from CreateEventActivity
+        if (tabLayout != null && currentFragment instanceof MyEventsFragment) {
+            int selectedTabPosition = tabLayout.getSelectedTabPosition();
+            // If Create tab (position 1) is selected but we're showing Dashboard, reset to Dashboard
+            if (selectedTabPosition == 1) {
+                TabLayout.Tab dashboardTab = tabLayout.getTabAt(0);
+                if (dashboardTab != null) {
+                    dashboardTab.select();
+                }
+            }
+        }
+        
         // Reload events when returning to this activity (e.g., from CreateEventActivity)
         if (myEventsFragment != null && myEventsFragment.isAdded()) {
             myEventsFragment.loadEvents();
@@ -60,6 +86,7 @@ public class OrganizerHomePage extends AppCompatActivity {
                     selectFragment(myEventsFragment);
                 } else if (position == 1) {
                     // Create tab - navigate to CreateEventActivity
+                    // When user returns, they'll see Dashboard, so we'll reset tab in onResume
                     Intent intent = new Intent(OrganizerHomePage.this, CreateEventActivity.class);
                     startActivity(intent);
                 } else if (position == 2) {
