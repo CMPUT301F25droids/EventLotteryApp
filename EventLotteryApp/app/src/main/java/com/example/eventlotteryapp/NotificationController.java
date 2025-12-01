@@ -20,7 +20,7 @@ public class NotificationController {
 
         for (String entrantId : entrantIds) {
             db.collection("users").document(entrantId).get().addOnSuccessListener(entrantDoc -> {
-                Boolean notificationsEnabled = entrantDoc.getBoolean("lotteryPreference");
+                Boolean notificationsEnabled = entrantDoc.getBoolean("notificationPreference");
                 if (notificationsEnabled == null || notificationsEnabled) {
                     System.out.println("Sending notification to entrant: " + entrantId);
                     sendNotificationToEntrant(entrantDoc, title, message, eventId);

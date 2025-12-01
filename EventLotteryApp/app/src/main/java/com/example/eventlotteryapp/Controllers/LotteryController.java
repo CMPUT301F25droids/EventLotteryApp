@@ -103,20 +103,31 @@ public class LotteryController {
     }
 
     /**
-     * Helper: Create notification for user
+     * Helper: Create notification for user (only if notifications are enabled)
      */
     private void createNotification(String userId, String eventId, String type, String message) {
-        Map<String, Object> notification = new HashMap<>();
-        notification.put("UserId", userId);  // Store as string, not DocumentReference
-        notification.put("EventId", db.collection("Events").document(eventId));
-        notification.put("Type", type);
-        notification.put("Message", message);
-        notification.put("TimeStamp", new java.util.Date().toString());
-        notification.put("Read", false);
+        // Check if user has notifications enabled
+        db.collection("users").document(userId).get().addOnSuccessListener(userDoc -> {
+            Boolean notificationsEnabled = userDoc.getBoolean("notificationPreference");
+            // If notificationPreference is null or true, send notification
+            if (notificationsEnabled == null || notificationsEnabled) {
+                Map<String, Object> notification = new HashMap<>();
+                notification.put("UserId", userId);  // Store as string, not DocumentReference
+                notification.put("EventId", db.collection("Events").document(eventId));
+                notification.put("Type", type);
+                notification.put("Message", message);
+                notification.put("TimeStamp", new java.util.Date().toString());
+                notification.put("Read", false);
 
-        db.collection("Notifications").add(notification)
-                .addOnSuccessListener(ref -> Log.d(TAG, "Notification created: " + ref.getId()))
-                .addOnFailureListener(e -> Log.e(TAG, "Error creating notification", e));
+                db.collection("Notifications").add(notification)
+                        .addOnSuccessListener(ref -> Log.d(TAG, "Notification created: " + ref.getId()))
+                        .addOnFailureListener(e -> Log.e(TAG, "Error creating notification", e));
+            } else {
+                Log.d(TAG, "Notification not sent - user has notifications disabled");
+            }
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Error checking notification preference", e);
+        });
     }
 
     // Callback interfaces

@@ -118,15 +118,6 @@ public class ProfileFragment extends Fragment {
         );
         notificationsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         binding.allowNotificationsSpinner.setAdapter(notificationsAdapter);
-
-        // Lottery Results Spinner
-        ArrayAdapter<CharSequence> lotteryAdapter = ArrayAdapter.createFromResource(
-            requireContext(),
-            R.array.notification_options,
-            android.R.layout.simple_spinner_item
-        );
-        lotteryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.lotteryResultsSpinner.setAdapter(lotteryAdapter);
     }
 
     private void setupButtons() {
@@ -174,12 +165,6 @@ public class ProfileFragment extends Fragment {
                         } else {
                             binding.allowNotificationsSpinner.setSelection(0); // default is allow notifications
                         }
-                        if (document.getBoolean("lotteryPreference") != null) {
-                            boolean allow_lottery = document.getBoolean("lotteryPreference");
-                            binding.lotteryResultsSpinner.setSelection(allow_lottery ? 0 : 1);
-                        } else {
-                            binding.lotteryResultsSpinner.setSelection(0); // default is allow notifications
-                        }
 
                         // Optionally, detect role if you store it in the user document
 //                        String role = document.getString("role");
@@ -225,8 +210,6 @@ public class ProfileFragment extends Fragment {
             return;
         }
         boolean allow_notification = binding.allowNotificationsSpinner.getSelectedItemPosition() == 0;
-        boolean lottery_results = binding.lotteryResultsSpinner.getSelectedItemPosition() == 0;
-
 
         // Update)
         String collection = isOrganizer ? "organizers" : "entrants";
@@ -235,8 +218,7 @@ public class ProfileFragment extends Fragment {
             "name", name,
             "email", email,
             "phone", phone,
-            "notificationPreference", allow_notification,
-            "lotteryPreference", lottery_results
+            "notificationPreference", allow_notification
         ).addOnSuccessListener(aVoid -> {
             // Update display fields
             binding.profileName.setText(name);
