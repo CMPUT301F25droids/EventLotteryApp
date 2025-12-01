@@ -721,6 +721,15 @@ public class EntrantListActivity extends AppCompatActivity {
                                             marker.setTitle(name);
                                             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
                                             
+                                            // Set click listener to show user name
+                                            marker.setOnMarkerClickListener((marker1, mapView) -> {
+                                                String userName = marker1.getTitle();
+                                                if (userName != null && !userName.isEmpty()) {
+                                                    Toast.makeText(EntrantListActivity.this, userName, Toast.LENGTH_SHORT).show();
+                                                }
+                                                return true; // Return true to indicate the click was handled
+                                            });
+                                            
                                             entrantsMapView.getOverlays().add(marker);
                                             
                                             loaded[0]++;
@@ -741,6 +750,15 @@ public class EntrantListActivity extends AppCompatActivity {
                                             marker.setPosition(location);
                                             marker.setTitle("Entrant");
                                             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                                            
+                                            // Set click listener to show user name
+                                            marker.setOnMarkerClickListener((marker1, mapView) -> {
+                                                String userName = marker1.getTitle();
+                                                if (userName != null && !userName.isEmpty()) {
+                                                    Toast.makeText(EntrantListActivity.this, userName, Toast.LENGTH_SHORT).show();
+                                                }
+                                                return true; // Return true to indicate the click was handled
+                                            });
                                             
                                             entrantsMapView.getOverlays().add(marker);
                                             
