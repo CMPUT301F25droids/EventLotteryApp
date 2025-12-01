@@ -2,7 +2,11 @@ package com.example.eventlotteryapp.EntrantView;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.view.View;
@@ -996,8 +1000,29 @@ public class EventDetailsActivity extends AppCompatActivity {
             // Hide the status message when selected - we show "You've Been Selected!" text instead
             tvStatusMessage.setVisibility(View.GONE);
         } else if (isAccepted) {
-            tvStatusMessage.setText("✅ You're registered for this event!");
-            tvStatusMessage.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            // Create a nice success message with green checkmark in inactive pill button style
+            String successText = "✓ You're registered for this event!";
+            SpannableString spannable = new SpannableString(successText);
+            // Make the checkmark green
+            spannable.setSpan(
+                new ForegroundColorSpan(getResources().getColor(R.color.success_green)),
+                0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+            // Rest of text is dark grey for inactive look
+            spannable.setSpan(
+                new ForegroundColorSpan(getResources().getColor(R.color.medium_grey)),
+                1, successText.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+            tvStatusMessage.setText(spannable);
+            tvStatusMessage.setBackgroundResource(R.drawable.success_button_background);
+            tvStatusMessage.setTextSize(17);
+            tvStatusMessage.setTypeface(tvStatusMessage.getTypeface(), android.graphics.Typeface.BOLD);
+            tvStatusMessage.setPadding(
+                (int) (20 * getResources().getDisplayMetrics().density),
+                (int) (16 * getResources().getDisplayMetrics().density),
+                (int) (20 * getResources().getDisplayMetrics().density),
+                (int) (16 * getResources().getDisplayMetrics().density)
+            );
             tvStatusMessage.setVisibility(View.VISIBLE);
         } else if (isCancelled) {
             tvStatusMessage.setText("ℹ️ You cancelled your registration for this event.");
