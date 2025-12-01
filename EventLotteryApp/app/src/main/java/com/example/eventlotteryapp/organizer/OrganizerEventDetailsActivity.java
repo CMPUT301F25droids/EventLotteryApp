@@ -308,16 +308,27 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                     isOpen = false; // Registration closed
                 }
                 
-                // Ensure maxParticipants is valid (at least 1)
-                if (maxParticipants <= 0) {
-                    maxParticipants = 1; // Default to 1 to avoid division by zero or weird display
+                // Check if waiting list is limited
+                Boolean limitWaitingList = document.getBoolean("limitWaitingList");
+                boolean isLimitEnabled = (limitWaitingList != null && limitWaitingList);
+                Long waitingListSizeLong = document.getLong("waitingListSize");
+                int waitingListSize = (waitingListSizeLong != null) ? waitingListSizeLong.intValue() : 0;
+                
+                // Build status text - use waiting list size as denominator if limited, otherwise show just numerator
+                String statusText;
+                String countText;
+                if (isLimitEnabled && waitingListSize > 0) {
+                    // Waiting list is limited - show numerator/denominator
+                    countText = selectedCount + "/" + waitingListSize;
+                } else {
+                    // Waiting list is infinite - show just numerator without slash
+                    countText = String.valueOf(selectedCount);
                 }
                 
-                String statusText;
                 if (isOpen) {
-                    statusText = "🟢 Open - " + selectedCount + "/" + maxParticipants;
+                    statusText = "🟢 Open - " + countText;
                 } else {
-                    statusText = "🔴 Closed - " + selectedCount + "/" + maxParticipants;
+                    statusText = "🔴 Closed - " + countText;
                 }
                 
                 eventStatusTag.setText(statusText);
