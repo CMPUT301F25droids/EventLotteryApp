@@ -89,44 +89,56 @@ public class NotificationsFragment extends Fragment {
                     String userRole = userDoc.getString("role");
                     String userType = (userRole != null && userRole.equals("organizer")) ? "organizer" : "entrant";
                     
-                    // Filter notifications by both UserId and UserType to separate logs
-                    // Also include notifications without UserType for backward compatibility
+                    // Query notifications by UserId and UserType to properly separate organizer and entrant notifications
+                    final ArrayList<DocumentSnapshot> filteredDocs = new ArrayList<>();
+                    final AtomicInteger queryCount = new AtomicInteger(0);
+                    final int totalQueries = 2;
+                    
+                    // Query 1: Get notifications with matching UserType
                     notificationsRef.whereEqualTo("UserId", currentUserId)
+                            .whereEqualTo("UserType", userType)
                             .get()
                             .addOnCompleteListener((task) -> {
                                 if (task.isSuccessful()) {
-                                    // Filter by UserType in memory for backward compatibility with old notifications
-                                    ArrayList<DocumentSnapshot> filteredDocs = new ArrayList<>();
                                     for (DocumentSnapshot doc : task.getResult()) {
-                                        String docUserType = doc.getString("UserType");
-                                        // Include if UserType matches, or if UserType is null (old notifications for backward compatibility)
-                                        if (docUserType == null || docUserType.equals(userType)) {
-                                            filteredDocs.add(doc);
-                                        }
-                                    }
-
-                                    int totalDocs = filteredDocs.size();
-
-                                    if (totalDocs == 0) {
-                                        updateUI();
-                                        return;
-                                    }
-
-                                    AtomicInteger loadedCount = new AtomicInteger(0);
-
-                                    for (DocumentSnapshot doc : filteredDocs) {
-                                        Notification.fromDocument(doc, notification -> {
-                                            notificationsArray.add(notification);
-
-                                            if (loadedCount.incrementAndGet() == totalDocs) {
-                                                Collections.sort(notificationsArray);
-                                                updateUI();
-                                            }
-                                        });
+                                        filteredDocs.add(doc);
                                     }
                                 } else {
-                                    Log.e("notif", "error getting documents", task.getException());
-                                    updateUI();
+                                    Log.e("notif", "error getting documents with UserType", task.getException());
+                                }
+                                
+                                if (queryCount.incrementAndGet() == totalQueries) {
+                                    processFilteredDocs(filteredDocs);
+                                }
+                            });
+                    
+                    // Query 2: Get all notifications for backward compatibility (those without UserType)
+                    notificationsRef.whereEqualTo("UserId", currentUserId)
+                            .get()
+                            .addOnCompleteListener((backwardTask) -> {
+                                if (backwardTask.isSuccessful()) {
+                                    for (DocumentSnapshot doc : backwardTask.getResult()) {
+                                        String docUserType = doc.getString("UserType");
+                                        // Only add if UserType is null (old notifications) and not already added
+                                        if (docUserType == null) {
+                                            boolean exists = false;
+                                            for (DocumentSnapshot existing : filteredDocs) {
+                                                if (existing.getId().equals(doc.getId())) {
+                                                    exists = true;
+                                                    break;
+                                                }
+                                            }
+                                            if (!exists) {
+                                                filteredDocs.add(doc);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Log.e("notif", "error getting all documents", backwardTask.getException());
+                                }
+                                
+                                if (queryCount.incrementAndGet() == totalQueries) {
+                                    processFilteredDocs(filteredDocs);
                                 }
                             });
                 })
@@ -137,31 +149,39 @@ public class NotificationsFragment extends Fragment {
                             .get()
                             .addOnCompleteListener((task) -> {
                                 if (task.isSuccessful()) {
-                                    int totalDocs = task.getResult().size();
-
-                                    if (totalDocs == 0) {
-                                        updateUI();
-                                        return;
-                                    }
-
-                                    AtomicInteger loadedCount = new AtomicInteger(0);
-
+                                    ArrayList<DocumentSnapshot> allDocs = new ArrayList<>();
                                     for (DocumentSnapshot doc : task.getResult()) {
-                                        Notification.fromDocument(doc, notification -> {
-                                            notificationsArray.add(notification);
-
-                                            if (loadedCount.incrementAndGet() == totalDocs) {
-                                                Collections.sort(notificationsArray);
-                                                updateUI();
-                                            }
-                                        });
+                                        allDocs.add(doc);
                                     }
+                                    processFilteredDocs(allDocs);
                                 } else {
                                     Log.e("notif", "error getting documents", task.getException());
                                     updateUI();
                                 }
                             });
                 });
+    }
+
+    private void processFilteredDocs(ArrayList<DocumentSnapshot> filteredDocs) {
+        int totalDocs = filteredDocs.size();
+
+        if (totalDocs == 0) {
+            updateUI();
+            return;
+        }
+
+        AtomicInteger loadedCount = new AtomicInteger(0);
+
+        for (DocumentSnapshot doc : filteredDocs) {
+            Notification.fromDocument(doc, notification -> {
+                notificationsArray.add(notification);
+
+                if (loadedCount.incrementAndGet() == totalDocs) {
+                    Collections.sort(notificationsArray);
+                    updateUI();
+                }
+            });
+        }
     }
 
     private void updateUI() {

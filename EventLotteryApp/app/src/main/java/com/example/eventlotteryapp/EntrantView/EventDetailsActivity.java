@@ -114,7 +114,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                             JoinConfirmationFragment confirmation = new JoinConfirmationFragment().newInstance(eventId);
                             confirmation.show(getSupportFragmentManager(), confirmation.getTag());
                             // Send notification to organizer about the new entrant
-                            notificationController.sendToSelectedEntrants(eventId,
+                            notificationController.sendToOrganizer(eventId,
                                     "New Entrant",
                                     "A user has joined the waiting list for your event.");
                         }
