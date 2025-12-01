@@ -226,8 +226,8 @@ public class MyEventsFragment extends Fragment {
                 updateFilterButtonStyles(buttons, selected);
             }
             
-            // Center the selected button in the scroll view
-            if (currentFilter != null) {
+            // Center the selected button in the scroll view (if scroll view exists)
+            if (currentFilter != null && scrollView != null) {
                 centerButtonInScrollView(scrollView, selected);
             }
             
