@@ -231,8 +231,9 @@ public class EventDetailsActivity extends AppCompatActivity {
                             Integer maxParticipants = documentSnapshot.get("maxParticipants") != null ? 
                                 documentSnapshot.getLong("maxParticipants").intValue() : 0;
                             
-                            List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
-                            int waitlistSize = waitlist != null ? waitlist.size() : 0;
+                            // Get waitlist count (new system - waitingListEntrantIds)
+                            List<String> waitingListEntrantIds = (List<String>) documentSnapshot.get("waitingListEntrantIds");
+                            int waitlistSize = waitingListEntrantIds != null ? waitingListEntrantIds.size() : 0;
                             
                             // Get selected entrants count (new system)
                             List<String> selectedEntrants = (List<String>) documentSnapshot.get("selectedEntrantIds");
@@ -317,16 +318,22 @@ public class EventDetailsActivity extends AppCompatActivity {
                                 String userId = auth.getCurrentUser().getUid();
                                 
                                 // Check new system (waitingListEntrantIds)
-                                List<String> waitingListEntrantIds = (List<String>) documentSnapshot.get("waitingListEntrantIds");
                                 if (waitingListEntrantIds != null && waitingListEntrantIds.contains(userId)) {
                                     userInWaitlist = true;
                                 } else {
-                                    // Check old system (Waitlist) - reuse existing waitlist variable
-                                    DocumentReference user_ref = db.collection("users").document(userId);
-                                    userInWaitlist = waitlist != null && waitlist.contains(user_ref);
+                                    // Check old system (Waitlist) for backward compatibility
+                                    List<DocumentReference> waitlist = (List<DocumentReference>) documentSnapshot.get("Waitlist");
+                                    if (waitlist != null) {
+                                        DocumentReference user_ref = db.collection("users").document(userId);
+                                        userInWaitlist = waitlist.contains(user_ref);
+                                    }
                                 }
                             }
                             updateRegistrationInfo(registrationInfo, registrationOpenDate, registrationCloseDate, userInWaitlist);
+                            
+                            // Set waitlist count
+                            tvWaitlistCount.setText("Waiting List Entrants: " + waitlistSize);
+                            tvWaitlistCount.setVisibility(View.VISIBLE);
                             
                             // Lottery info
                             displayLotteryCriteria(lotteryInfo);
