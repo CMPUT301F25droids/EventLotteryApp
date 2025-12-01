@@ -28,28 +28,27 @@ public class LotteryController {
 
     /**
      * US 01.05.02: Accept invitation to participate in event
-     * Moves user from SelectedEntrants to AcceptedEntrants list
+     * Moves user from selectedEntrantIds to acceptedEntrantIds list
      */
     public void acceptInvitation(String eventId, String userId, AcceptCallback callback) {
         DocumentReference eventRef = db.collection("Events").document(eventId);
-        DocumentReference userRef = db.collection("users").document(userId);
 
         db.runTransaction((Transaction.Function<Void>) transaction -> {
             // Get current event data
-            List<DocumentReference> selectedEntrants =
-                    (List<DocumentReference>) transaction.get(eventRef).get("SelectedEntrants");
-            List<DocumentReference> acceptedEntrants =
-                    (List<DocumentReference>) transaction.get(eventRef).get("AcceptedEntrants");
+            List<String> selectedEntrants = (List<String>) transaction.get(eventRef).get("selectedEntrantIds");
+            List<String> acceptedEntrants = (List<String>) transaction.get(eventRef).get("acceptedEntrantIds");
 
             if (selectedEntrants == null) selectedEntrants = new ArrayList<>();
             if (acceptedEntrants == null) acceptedEntrants = new ArrayList<>();
 
             // Remove from selected, add to accepted
-            selectedEntrants.remove(userRef);
-            acceptedEntrants.add(userRef);
+            selectedEntrants.remove(userId);
+            if (!acceptedEntrants.contains(userId)) {
+                acceptedEntrants.add(userId);
+            }
 
-            transaction.update(eventRef, "SelectedEntrants", selectedEntrants);
-            transaction.update(eventRef, "AcceptedEntrants", acceptedEntrants);
+            transaction.update(eventRef, "selectedEntrantIds", selectedEntrants);
+            transaction.update(eventRef, "acceptedEntrantIds", acceptedEntrants);
 
             // Create notification
             createNotification(userId, eventId, "invitation_accepted",
@@ -67,28 +66,27 @@ public class LotteryController {
 
     /**
      * US 01.05.03: Decline invitation to participate in event
-     * Moves user to DeclinedEntrants
+     * Moves user from selectedEntrantIds to declinedEntrantIds
      */
     public void declineInvitation(String eventId, String userId, DeclineCallback callback) {
         DocumentReference eventRef = db.collection("Events").document(eventId);
-        DocumentReference userRef = db.collection("users").document(userId);
 
         db.runTransaction((Transaction.Function<Void>) transaction -> {
             // Get current event data
-            List<DocumentReference> selectedEntrants =
-                    (List<DocumentReference>) transaction.get(eventRef).get("SelectedEntrants");
-            List<DocumentReference> declinedEntrants =
-                    (List<DocumentReference>) transaction.get(eventRef).get("DeclinedEntrants");
+            List<String> selectedEntrants = (List<String>) transaction.get(eventRef).get("selectedEntrantIds");
+            List<String> declinedEntrants = (List<String>) transaction.get(eventRef).get("declinedEntrantIds");
 
             if (selectedEntrants == null) selectedEntrants = new ArrayList<>();
             if (declinedEntrants == null) declinedEntrants = new ArrayList<>();
 
             // Remove from selected, add to declined
-            selectedEntrants.remove(userRef);
-            declinedEntrants.add(userRef);
+            selectedEntrants.remove(userId);
+            if (!declinedEntrants.contains(userId)) {
+                declinedEntrants.add(userId);
+            }
 
-            transaction.update(eventRef, "SelectedEntrants", selectedEntrants);
-            transaction.update(eventRef, "DeclinedEntrants", declinedEntrants);
+            transaction.update(eventRef, "selectedEntrantIds", selectedEntrants);
+            transaction.update(eventRef, "declinedEntrantIds", declinedEntrants);
 
             // Create notification
             createNotification(userId, eventId, "invitation_declined",
@@ -109,7 +107,7 @@ public class LotteryController {
      */
     private void createNotification(String userId, String eventId, String type, String message) {
         Map<String, Object> notification = new HashMap<>();
-        notification.put("UserId", db.collection("users").document(userId));
+        notification.put("UserId", userId);  // Store as string, not DocumentReference
         notification.put("EventId", db.collection("Events").document(eventId));
         notification.put("Type", type);
         notification.put("Message", message);

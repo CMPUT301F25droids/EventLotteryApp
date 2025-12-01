@@ -1,5 +1,6 @@
 package com.example.eventlotteryapp.organizer;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,15 +31,16 @@ import java.util.Locale;
 
 /**
  * Activity for displaying and managing the finalized list of selected entrants.
+ * Implements US 02.06.04: Cancel entrants who didn't sign up
  */
 public class FinalizedListActivity extends AppCompatActivity {
 
     private static final String TAG = "FinalizedListActivity";
-    
+
     private String eventId;
     private FirebaseFirestore firestore;
     private CsvExportController csvExportController;
-    
+
     private TextView eventTitle;
     private TextView totalAttendeesText;
     private TextView cancelledCountText;
@@ -49,13 +51,13 @@ public class FinalizedListActivity extends AppCompatActivity {
     private RecyclerView participantsRecyclerView;
     private Button drawReplacementButton;
     private Button exportCsvButton;
-    
+
     private List<FinalizedParticipant> allParticipants = new ArrayList<>();
     private List<FinalizedParticipant> filteredParticipants = new ArrayList<>();
     private FinalizedParticipantAdapter adapter;
     private String currentFilter = "accepted";
     private FinalizedParticipant selectedParticipant = null;
-    
+
     private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d", Locale.getDefault());
 
     @Override
@@ -63,29 +65,38 @@ public class FinalizedListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_finalized_list);
-        
+
         eventId = getIntent().getStringExtra("eventId");
         if (eventId == null || eventId.isEmpty()) {
             Toast.makeText(this, "Event ID not provided", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
-        
+
         firestore = FirebaseFirestore.getInstance();
         csvExportController = new CsvExportController();
-        
+
         initializeViews();
         setupClickListeners();
-        updateFilterButtons(); // Initialize filter button states
-        
+        updateFilterButtons();
+
         // Initialize draw replacement button as disabled (grey)
         drawReplacementButton.setBackground(getResources().getDrawable(R.drawable.disabled_button_bg));
         drawReplacementButton.setBackgroundTintList(null);
         drawReplacementButton.setTextColor(getResources().getColor(R.color.white, null));
-        
+
         loadEventData();
     }
-    
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh data when returning to this activity
+        if (eventId != null) {
+            loadEventData();
+        }
+    }
+
     private void initializeViews() {
         eventTitle = findViewById(R.id.event_title);
         totalAttendeesText = findViewById(R.id.total_attendees_text);
@@ -97,16 +108,16 @@ public class FinalizedListActivity extends AppCompatActivity {
         participantsRecyclerView = findViewById(R.id.participants_recycler_view);
         drawReplacementButton = findViewById(R.id.draw_replacement_button);
         exportCsvButton = findViewById(R.id.export_csv_button);
-        
+
         // Back button
         ImageView backButton = findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> finish());
-        
+
         // Setup RecyclerView
         adapter = new FinalizedParticipantAdapter(filteredParticipants);
         participantsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         participantsRecyclerView.setAdapter(adapter);
-        
+
         // Bottom navigation
         TabLayout bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -134,20 +145,20 @@ public class FinalizedListActivity extends AppCompatActivity {
                     finish();
                 }
             }
-            
+
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {}
-            
+
             @Override
             public void onTabReselected(TabLayout.Tab tab) {}
         });
     }
-    
+
     private void setupClickListeners() {
         filterAcceptedButton.setOnClickListener(v -> setFilter("accepted"));
         filterDeclinedButton.setOnClickListener(v -> setFilter("declined"));
         filterCancelledButton.setOnClickListener(v -> setFilter("cancelled"));
-        
+
         drawReplacementButton.setOnClickListener(v -> {
             if (!drawReplacementButton.isEnabled()) {
                 Toast.makeText(this, "Please select a participant first", Toast.LENGTH_SHORT).show();
@@ -157,7 +168,7 @@ public class FinalizedListActivity extends AppCompatActivity {
         });
         exportCsvButton.setOnClickListener(v -> exportCsv());
     }
-    
+
     private void setFilter(String filter) {
         currentFilter = filter;
         // Clear selection when filter changes
@@ -169,24 +180,24 @@ public class FinalizedListActivity extends AppCompatActivity {
         updateFilterButtons();
         filterParticipants();
     }
-    
+
     private void updateFilterButtons() {
         // Reset all buttons to default state (grey)
         filterAcceptedButton.setBackground(getResources().getDrawable(R.drawable.export_csv_button_bg));
         filterAcceptedButton.setBackgroundTintList(null);
         filterAcceptedButton.setTextColor(getResources().getColor(R.color.black, null));
         filterAcceptedButton.setCompoundDrawableTintList(getResources().getColorStateList(R.color.black_color_state_list));
-        
+
         filterDeclinedButton.setBackground(getResources().getDrawable(R.drawable.export_csv_button_bg));
         filterDeclinedButton.setBackgroundTintList(null);
         filterDeclinedButton.setTextColor(getResources().getColor(R.color.black, null));
         filterDeclinedButton.setCompoundDrawableTintList(getResources().getColorStateList(R.color.black_color_state_list));
-        
+
         filterCancelledButton.setBackground(getResources().getDrawable(R.drawable.export_csv_button_bg));
         filterCancelledButton.setBackgroundTintList(null);
         filterCancelledButton.setTextColor(getResources().getColor(R.color.black, null));
         filterCancelledButton.setCompoundDrawableTintList(getResources().getColorStateList(R.color.black_color_state_list));
-        
+
         // Highlight selected filter (purple)
         switch (currentFilter) {
             case "accepted":
@@ -209,126 +220,127 @@ public class FinalizedListActivity extends AppCompatActivity {
                 break;
         }
     }
-    
+
     private void loadEventData() {
         firestore.collection("Events").document(eventId)
-            .get()
-            .addOnSuccessListener(document -> {
-                // Load event title
-                String title = document.getString("title");
-                if (title == null) title = document.getString("Name");
-                if (title != null) {
-                    eventTitle.setText(title);
-                }
-                
-                // Load participants
-                loadParticipants(document);
-            })
-            .addOnFailureListener(e -> {
-                Log.e(TAG, "Error loading event data", e);
-                Toast.makeText(this, "Error loading event data", Toast.LENGTH_SHORT).show();
-            });
+                .get()
+                .addOnSuccessListener(document -> {
+                    // Load event title
+                    String title = document.getString("title");
+                    if (title == null) title = document.getString("Name");
+                    if (title != null) {
+                        eventTitle.setText(title);
+                    }
+
+                    // Load participants
+                    loadParticipants(document);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error loading event data", e);
+                    Toast.makeText(this, "Error loading event data", Toast.LENGTH_SHORT).show();
+                });
     }
-    
+
     private void loadParticipants(DocumentSnapshot document) {
         List<String> selectedIds = (List<String>) document.get("selectedEntrantIds");
         List<String> cancelledIds = (List<String>) document.get("cancelledEntrantIds");
         List<String> declinedIds = (List<String>) document.get("declinedEntrantIds");
-        
+
         if (selectedIds == null) selectedIds = new ArrayList<>();
         if (cancelledIds == null) cancelledIds = new ArrayList<>();
         if (declinedIds == null) declinedIds = new ArrayList<>();
-        
+
         allParticipants.clear();
-        
+
         // Count totals
         int totalSelected = selectedIds.size();
         int totalCancelled = cancelledIds.size();
         int totalDeclined = declinedIds.size();
         Long maxParticipants = document.getLong("maxParticipants");
         int max = (maxParticipants != null) ? maxParticipants.intValue() : 0;
-        
+
         totalAttendeesText.setText("Total Attendees: " + totalSelected + "/" + max);
         cancelledCountText.setText("Cancelled: " + totalCancelled);
         declinedCountText.setText("Declined: " + totalDeclined);
-        
+
         // Load all participants
         final int[] loaded = {0};
         final int total = selectedIds.size() + cancelledIds.size() + declinedIds.size();
-        
+
         if (total == 0) {
             adapter.notifyDataSetChanged();
             return;
         }
-        
+
         // Load selected (accepted) participants
         for (String entrantId : selectedIds) {
             loadParticipant(entrantId, "accepted", loaded, total);
         }
-        
+
         // Load cancelled participants
         for (String entrantId : cancelledIds) {
             loadParticipant(entrantId, "cancelled", loaded, total);
         }
-        
+
         // Load declined participants
         for (String entrantId : declinedIds) {
             loadParticipant(entrantId, "declined", loaded, total);
         }
     }
-    
+
     private void loadParticipant(String entrantId, String status, int[] loaded, int total) {
         firestore.collection("users").document(entrantId)
-            .get()
-            .addOnSuccessListener(document -> {
-                if (document.exists()) {
-                    String name = document.getString("Name");
-                    Date createdAt = document.getDate("createdAt");
-                    Date confirmedDate = new Date(); // Use current date as confirmed date for now
-                    
-                    FinalizedParticipant participant = new FinalizedParticipant(
-                        entrantId,
-                        name != null ? name : "Unknown",
-                        status,
-                        createdAt != null ? createdAt : new Date(),
-                        confirmedDate
-                    );
-                    
-                    allParticipants.add(participant);
-                }
-                
-                loaded[0]++;
-                if (loaded[0] == total) {
-                    filterParticipants();
-                }
-            })
-            .addOnFailureListener(e -> {
-                Log.e(TAG, "Error loading participant: " + entrantId, e);
-                loaded[0]++;
-                if (loaded[0] == total) {
-                    filterParticipants();
-                }
-            });
+                .get()
+                .addOnSuccessListener(document -> {
+                    if (document.exists()) {
+                        String name = document.getString("Name");
+                        if (name == null) name = document.getString("name");
+                        Date createdAt = document.getDate("createdAt");
+                        Date confirmedDate = new Date(); // Use current date as confirmed date for now
+
+                        FinalizedParticipant participant = new FinalizedParticipant(
+                                entrantId,
+                                name != null ? name : "Unknown",
+                                status,
+                                createdAt != null ? createdAt : new Date(),
+                                confirmedDate
+                        );
+
+                        allParticipants.add(participant);
+                    }
+
+                    loaded[0]++;
+                    if (loaded[0] == total) {
+                        filterParticipants();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error loading participant: " + entrantId, e);
+                    loaded[0]++;
+                    if (loaded[0] == total) {
+                        filterParticipants();
+                    }
+                });
     }
-    
+
     private void filterParticipants() {
         filteredParticipants.clear();
-        
+
         for (FinalizedParticipant participant : allParticipants) {
             if (participant.status.equals(currentFilter)) {
                 filteredParticipants.add(participant);
             }
         }
-        
+
         adapter.notifyDataSetChanged();
     }
-    
+
     private void drawReplacement() {
         if (selectedParticipant == null) {
             Toast.makeText(this, "Please select a participant", Toast.LENGTH_SHORT).show();
             return;
         }
-        
+
         // Navigate to Run Lottery page with the selected participant ID
         // The removal will happen after a replacement is drawn
         Intent intent = new Intent(this, RunLotteryActivity.class);
@@ -337,56 +349,107 @@ public class FinalizedListActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-    
+
+    /**
+     * US 02.06.04: Cancel a selected entrant who didn't sign up
+     * Moves them from selectedEntrantIds to cancelledEntrantIds
+     */
+    private void cancelParticipant(FinalizedParticipant participant) {
+        new AlertDialog.Builder(this)
+                .setTitle("Cancel Participant")
+                .setMessage("Are you sure you want to cancel " + participant.name + "? They will be moved to the cancelled list.")
+                .setPositiveButton("Cancel Participant", (dialog, which) -> {
+                    // Move from selected to cancelled in Firestore
+                    firestore.collection("Events").document(eventId)
+                            .get()
+                            .addOnSuccessListener(document -> {
+                                List<String> selectedIds = (List<String>) document.get("selectedEntrantIds");
+                                List<String> cancelledIds = (List<String>) document.get("cancelledEntrantIds");
+
+                                if (selectedIds == null) selectedIds = new ArrayList<>();
+                                if (cancelledIds == null) cancelledIds = new ArrayList<>();
+
+                                // Remove from selected
+                                selectedIds.remove(participant.entrantId);
+
+                                // Add to cancelled
+                                if (!cancelledIds.contains(participant.entrantId)) {
+                                    cancelledIds.add(participant.entrantId);
+                                }
+
+                                // Update Firestore
+                                firestore.collection("Events").document(eventId)
+                                        .update("selectedEntrantIds", selectedIds,
+                                                "cancelledEntrantIds", cancelledIds)
+                                        .addOnSuccessListener(aVoid -> {
+                                            Toast.makeText(this, participant.name + " has been cancelled", Toast.LENGTH_SHORT).show();
+                                            // Reload data
+                                            loadEventData();
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Log.e(TAG, "Error cancelling participant", e);
+                                            Toast.makeText(this, "Error cancelling participant: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                        });
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "Error loading event", e);
+                                Toast.makeText(this, "Error loading event", Toast.LENGTH_SHORT).show();
+                            });
+                })
+                .setNegativeButton("Keep Participant", null)
+                .show();
+    }
+
     private void exportCsv() {
         firestore.collection("Events").document(eventId)
-            .get()
-            .addOnSuccessListener(document -> {
-                List<String> selectedIds = (List<String>) document.get("selectedEntrantIds");
-                if (selectedIds == null || selectedIds.isEmpty()) {
-                    Toast.makeText(this, "No finalized entrants to export", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+                .get()
+                .addOnSuccessListener(document -> {
+                    List<String> selectedIds = (List<String>) document.get("selectedEntrantIds");
+                    if (selectedIds == null || selectedIds.isEmpty()) {
+                        Toast.makeText(this, "No finalized entrants to export", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
 
-                String tempEventTitle = document.getString("title");
-                if (tempEventTitle == null) tempEventTitle = document.getString("Name");
-                if (tempEventTitle == null) tempEventTitle = "Event";
-                final String eventTitle = tempEventTitle;
+                    String tempEventTitle = document.getString("title");
+                    if (tempEventTitle == null) tempEventTitle = document.getString("Name");
+                    if (tempEventTitle == null) tempEventTitle = "Event";
+                    final String eventTitle = tempEventTitle;
 
-                // Load all entrant details
-                List<Entrant> entrants = new ArrayList<>();
-                final int[] loaded = {0};
+                    // Load all entrant details
+                    List<Entrant> entrants = new ArrayList<>();
+                    final int[] loaded = {0};
 
-                for (String entrantId : selectedIds) {
-                    firestore.collection("users").document(entrantId)
-                        .get()
-                        .addOnSuccessListener(userDoc -> {
-                            String name = userDoc.getString("Name");
-                            String email = userDoc.getString("email");
-                            if (name != null && email != null) {
-                                entrants.add(new Entrant(entrantId, name, email));
-                            }
+                    for (String entrantId : selectedIds) {
+                        firestore.collection("users").document(entrantId)
+                                .get()
+                                .addOnSuccessListener(userDoc -> {
+                                    String name = userDoc.getString("Name");
+                                    if (name == null) name = userDoc.getString("name");
+                                    String email = userDoc.getString("email");
+                                    if (name != null && email != null) {
+                                        entrants.add(new Entrant(entrantId, name, email));
+                                    }
 
-                            loaded[0]++;
-                            if (loaded[0] == selectedIds.size()) {
-                                csvExportController.exportFinalListToCSV(this, eventTitle, entrants);
-                            }
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e(TAG, "Error loading entrant: " + entrantId, e);
-                            loaded[0]++;
-                            if (loaded[0] == selectedIds.size()) {
-                                csvExportController.exportFinalListToCSV(this, eventTitle, entrants);
-                            }
-                        });
-                }
-            })
-            .addOnFailureListener(e -> {
-                Log.e(TAG, "Error loading event for export", e);
-                Toast.makeText(this, "Error loading event for export", Toast.LENGTH_SHORT).show();
-            });
+                                    loaded[0]++;
+                                    if (loaded[0] == selectedIds.size()) {
+                                        csvExportController.exportFinalListToCSV(this, eventTitle, entrants);
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "Error loading entrant: " + entrantId, e);
+                                    loaded[0]++;
+                                    if (loaded[0] == selectedIds.size()) {
+                                        csvExportController.exportFinalListToCSV(this, eventTitle, entrants);
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error loading event for export", e);
+                    Toast.makeText(this, "Error loading event for export", Toast.LENGTH_SHORT).show();
+                });
     }
-    
+
     private void onParticipantSelected(FinalizedParticipant participant, boolean isSelected) {
         if (isSelected) {
             // Deselect previous selection
@@ -413,7 +476,7 @@ public class FinalizedListActivity extends AppCompatActivity {
             }
         }
     }
-    
+
     // Helper class for participants
     private static class FinalizedParticipant {
         String entrantId;
@@ -421,7 +484,7 @@ public class FinalizedListActivity extends AppCompatActivity {
         String status;
         Date joinedDate;
         Date confirmedDate;
-        
+
         FinalizedParticipant(String entrantId, String name, String status, Date joinedDate, Date confirmedDate) {
             this.entrantId = entrantId;
             this.name = name;
@@ -430,62 +493,75 @@ public class FinalizedListActivity extends AppCompatActivity {
             this.confirmedDate = confirmedDate;
         }
     }
-    
+
     // Adapter for participants
     private class FinalizedParticipantAdapter extends RecyclerView.Adapter<FinalizedParticipantAdapter.ViewHolder> {
         private List<FinalizedParticipant> participants;
-        
+
         FinalizedParticipantAdapter(List<FinalizedParticipant> participants) {
             this.participants = participants;
         }
-        
+
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_finalized_participant, parent, false);
+                    .inflate(R.layout.item_finalized_participant, parent, false);
             return new ViewHolder(view);
         }
-        
+
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             FinalizedParticipant participant = participants.get(position);
             holder.nameText.setText(participant.name);
-            
+
             String datesText = "Confirmed " + dateFormat.format(participant.confirmedDate) +
-                             " · Joined " + dateFormat.format(participant.joinedDate);
+                    " · Joined " + dateFormat.format(participant.joinedDate);
             holder.datesText.setText(datesText);
-            
+
             holder.checkbox.setChecked(selectedParticipant == participant);
-            
+
+            // US 02.06.04: Show cancel button only for accepted (selected) participants
+            if (currentFilter.equals("accepted")) {
+                holder.cancelButton.setVisibility(View.VISIBLE);
+            } else {
+                holder.cancelButton.setVisibility(View.GONE);
+            }
+
             holder.itemView.setOnClickListener(v -> {
                 boolean newState = !holder.checkbox.isChecked();
                 holder.checkbox.setChecked(newState);
                 onParticipantSelected(participant, newState);
             });
-            
+
             holder.checkbox.setOnClickListener(v -> {
                 onParticipantSelected(participant, holder.checkbox.isChecked());
             });
+
+            // US 02.06.04: Cancel button click handler
+            holder.cancelButton.setOnClickListener(v -> {
+                cancelParticipant(participant);
+            });
         }
-        
+
         @Override
         public int getItemCount() {
             return participants.size();
         }
-        
+
         class ViewHolder extends RecyclerView.ViewHolder {
             CheckBox checkbox;
             TextView nameText;
             TextView datesText;
-            
+            Button cancelButton;
+
             ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 checkbox = itemView.findViewById(R.id.participant_checkbox);
                 nameText = itemView.findViewById(R.id.participant_name);
                 datesText = itemView.findViewById(R.id.participant_dates);
+                cancelButton = itemView.findViewById(R.id.cancel_button);
             }
         }
     }
 }
-

@@ -9,10 +9,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.eventlotteryapp.Controllers.LotteryController;
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.EntrantView.JoinConfirmationFragment;
 import com.example.eventlotteryapp.EntrantView.LeaveConfirmationFragment;
@@ -29,6 +31,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import com.example.eventlotteryapp.Controllers.LotteryController;
+import android.widget.Toast;
 
 public class EventDetailsActivity extends AppCompatActivity {
     private String eventId;
@@ -39,6 +43,9 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     private NotificationController notificationController;
 
+    private Button acceptInvitationButton;
+    private Button declineInvitationButton;
+    private LotteryController lotteryController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +83,18 @@ public class EventDetailsActivity extends AppCompatActivity {
             notificationController.sendToCancelledEntrants(eventId,
                     "Entrant Left",
                     "A user has left the waiting list for your event.");
+        });
+
+        acceptInvitationButton = findViewById(R.id.accept_invitation_button);
+        declineInvitationButton = findViewById(R.id.decline_invitation_button);
+        lotteryController = new LotteryController();
+
+        acceptInvitationButton.setOnClickListener(v -> {
+            acceptInvitation();
+        });
+
+        declineInvitationButton.setOnClickListener(v -> {
+            declineInvitation();
         });
 
         eventId = getIntent().getStringExtra("eventId");
@@ -131,44 +150,66 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        // Check waiting list and other status arrays
+                        // Check all status arrays
                         List<String> waitingListEntrantIds = (List<String>) documentSnapshot.get("waitingListEntrantIds");
                         List<String> selectedEntrantIds = (List<String>) documentSnapshot.get("selectedEntrantIds");
+                        List<String> acceptedEntrantIds = (List<String>) documentSnapshot.get("acceptedEntrantIds");
                         List<String> cancelledEntrantIds = (List<String>) documentSnapshot.get("cancelledEntrantIds");
-                        
+                        List<String> declinedEntrantIds = (List<String>) documentSnapshot.get("declinedEntrantIds");
+
                         Button join_button = findViewById(R.id.join_waitlist_button);
                         Button leave_button = findViewById(R.id.leave_waitlist_button);
-                        
-                        // User is enrolled if they're in any of these arrays
-                        boolean isEnrolled = (waitingListEntrantIds != null && waitingListEntrantIds.contains(userId)) ||
-                                            (selectedEntrantIds != null && selectedEntrantIds.contains(userId)) ||
-                                            (cancelledEntrantIds != null && cancelledEntrantIds.contains(userId));
-                        
-                        Log.d("Firestore", "Waitlist check - waitingList: " + (waitingListEntrantIds != null && waitingListEntrantIds.contains(userId)) +
-                                ", selected: " + (selectedEntrantIds != null && selectedEntrantIds.contains(userId)) +
-                                ", cancelled: " + (cancelledEntrantIds != null && cancelledEntrantIds.contains(userId)) +
-                                ", enrolled: " + isEnrolled);
 
-                        if (isEnrolled) {
-                            join_button.setEnabled(false);
-                            leave_button.setEnabled(true);
+                        // Check user status
+                        boolean isInWaitingList = (waitingListEntrantIds != null && waitingListEntrantIds.contains(userId));
+                        boolean isSelected = (selectedEntrantIds != null && selectedEntrantIds.contains(userId));
+                        boolean isAccepted = (acceptedEntrantIds != null && acceptedEntrantIds.contains(userId));
+                        boolean isCancelled = (cancelledEntrantIds != null && cancelledEntrantIds.contains(userId));
+                        boolean isDeclined = (declinedEntrantIds != null && declinedEntrantIds.contains(userId));
+
+                        Log.d("Firestore", "Status check - waiting: " + isInWaitingList +
+                                ", selected: " + isSelected +
+                                ", accepted: " + isAccepted +
+                                ", cancelled: " + isCancelled +
+                                ", declined: " + isDeclined);
+
+                        // Show appropriate buttons based on status
+                        if (isSelected) {
+                            // User is SELECTED - show Accept/Decline buttons
+                            join_button.setVisibility(Button.GONE);
+                            leave_button.setVisibility(Button.GONE);
+                            acceptInvitationButton.setVisibility(Button.VISIBLE);
+                            declineInvitationButton.setVisibility(Button.VISIBLE);
+                        } else if (isAccepted) {
+                            // User has ACCEPTED - show confirmation message
+                            join_button.setVisibility(Button.GONE);
+                            leave_button.setVisibility(Button.GONE);
+                            acceptInvitationButton.setVisibility(Button.GONE);
+                            declineInvitationButton.setVisibility(Button.GONE);
+                            // Optionally show a "You're registered!" message
+                        } else if (isDeclined) {
+                            // User has DECLINED - show Leave button to rejoin waiting list
                             join_button.setVisibility(Button.GONE);
                             leave_button.setVisibility(Button.VISIBLE);
-                            join_button.setAlpha(0.5f);
-                            leave_button.setAlpha(1f);
+                            acceptInvitationButton.setVisibility(Button.GONE);
+                            declineInvitationButton.setVisibility(Button.GONE);
+                        } else if (isInWaitingList || isCancelled) {
+                            // User is in waiting list - show Leave button
+                            join_button.setVisibility(Button.GONE);
+                            leave_button.setVisibility(Button.VISIBLE);
+                            acceptInvitationButton.setVisibility(Button.GONE);
+                            declineInvitationButton.setVisibility(Button.GONE);
                         } else {
-                            join_button.setEnabled(true);
-                            leave_button.setEnabled(false);
+                            // User is NOT enrolled - show Join button
                             join_button.setVisibility(Button.VISIBLE);
                             leave_button.setVisibility(Button.GONE);
-                            join_button.setAlpha(1f);
-                            leave_button.setAlpha(0.5f);
+                            acceptInvitationButton.setVisibility(Button.GONE);
+                            declineInvitationButton.setVisibility(Button.GONE);
                         }
                     }
                 })
                 .addOnFailureListener(e -> Log.e("Firestore", "Error reading waitlist", e));
     }
-
     protected void populateUI() {
         if (eventId != null) {
             db.collection("Events").document(eventId).get()
@@ -416,5 +457,66 @@ public class EventDetailsActivity extends AppCompatActivity {
             tvLotteryInfo.setText("Lottery Info: Random selection. All entrants have equal chance.");
             tvLotteryInfo.setVisibility(View.VISIBLE);
         }
+    }
+    /**
+     * US 01.05.02: Accept invitation to register for event
+     */
+    private void acceptInvitation() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(this, "Please log in first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String userId = auth.getCurrentUser().getUid();
+
+        lotteryController.acceptInvitation(eventId, userId, new LotteryController.AcceptCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(EventDetailsActivity.this, "Invitation accepted! You're registered for the event.", Toast.LENGTH_SHORT).show();
+                // Refresh the UI to show updated status
+                userInWaitlist();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(EventDetailsActivity.this, "Error accepting invitation: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    /**
+     * US 01.05.03: Decline invitation to participate in event
+     */
+    private void declineInvitation() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(this, "Please log in first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String userId = auth.getCurrentUser().getUid();
+
+        // Show confirmation dialog
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Decline Invitation")
+                .setMessage("Are you sure you want to decline this invitation?")
+                .setPositiveButton("Decline", (dialog, which) -> {
+                    lotteryController.declineInvitation(eventId, userId, new LotteryController.DeclineCallback() {
+                        @Override
+                        public void onSuccess() {
+                            Toast.makeText(EventDetailsActivity.this, "Invitation declined.", Toast.LENGTH_SHORT).show();
+                            // Refresh the UI to show updated status
+                            userInWaitlist();
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Toast.makeText(EventDetailsActivity.this, "Error declining invitation: " + error, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }

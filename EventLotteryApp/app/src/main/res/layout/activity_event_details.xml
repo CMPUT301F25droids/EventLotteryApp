@@ -425,6 +425,50 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
+            <!-- Accept Invitation Button (only shown when selected) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/accept_invitation_button"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp"
+                android:text="Accept"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="@android:color/holo_green_dark"
+                app:cornerRadius="56dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@+id/registration_info"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/decline_invitation_button"
+                app:layout_constraintHorizontal_weight="1" />
+
+            <!-- Decline Invitation Button (only shown when selected) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/decline_invitation_button"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp"
+                android:text="Decline"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="@android:color/holo_red_dark"
+                app:cornerRadius="56dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@+id/registration_info"
+                app:layout_constraintStart_toEndOf="@+id/accept_invitation_button"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_weight="1" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
