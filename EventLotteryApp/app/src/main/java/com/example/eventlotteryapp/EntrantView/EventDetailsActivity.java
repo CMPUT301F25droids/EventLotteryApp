@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
 import com.example.eventlotteryapp.Controllers.LotteryController;
@@ -42,6 +43,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private TextView tvLotteryInfo;
     private TextView tvWaitlistCount;
     private TextView tvStatusMessage;
+    private TextView tvSelectedStatus;
 
     private NotificationController notificationController;
 
@@ -187,6 +189,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         tvLotteryInfo = findViewById(R.id.tv_lottery_info);
         tvWaitlistCount = findViewById(R.id.waitlist_count);
         tvStatusMessage = findViewById(R.id.status_message);
+        tvSelectedStatus = findViewById(R.id.selected_status_text);
         userInWaitlist();
         populateUI();
     }
@@ -283,12 +286,34 @@ public class EventDetailsActivity extends AppCompatActivity {
                             leave_button.setVisibility(Button.GONE);
                             acceptInvitationButton.setVisibility(Button.VISIBLE);
                             declineInvitationButton.setVisibility(Button.VISIBLE);
+                            // Show "You've Been Selected!" status text
+                            if (tvSelectedStatus != null) {
+                                tvSelectedStatus.setVisibility(View.VISIBLE);
+                            }
+                            // Adjust event name margin when selected status is visible
+                            TextView eventName = findViewById(R.id.event_name);
+                            if (eventName != null && eventName.getLayoutParams() instanceof ConstraintLayout.LayoutParams) {
+                                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) eventName.getLayoutParams();
+                                params.topMargin = (int) (4 * getResources().getDisplayMetrics().density); // 4dp
+                                eventName.setLayoutParams(params);
+                            }
                         } else if (isAccepted) {
                             // User has ACCEPTED - show confirmation message
                             join_button.setVisibility(Button.GONE);
                             leave_button.setVisibility(Button.GONE);
                             acceptInvitationButton.setVisibility(Button.GONE);
                             declineInvitationButton.setVisibility(Button.GONE);
+                            // Hide selected status text
+                            if (tvSelectedStatus != null) {
+                                tvSelectedStatus.setVisibility(View.GONE);
+                            }
+                            // Reset event name margin when selected status is hidden
+                            TextView eventName = findViewById(R.id.event_name);
+                            if (eventName != null && eventName.getLayoutParams() instanceof ConstraintLayout.LayoutParams) {
+                                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) eventName.getLayoutParams();
+                                params.topMargin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp
+                                eventName.setLayoutParams(params);
+                            }
                             // Optionally show a "You're registered!" message
                         } else if (isDeclined) {
                             // User has DECLINED - show Leave button to rejoin waiting list (only if event not closed)
@@ -300,6 +325,17 @@ public class EventDetailsActivity extends AppCompatActivity {
                             }
                             acceptInvitationButton.setVisibility(Button.GONE);
                             declineInvitationButton.setVisibility(Button.GONE);
+                            // Hide selected status text
+                            if (tvSelectedStatus != null) {
+                                tvSelectedStatus.setVisibility(View.GONE);
+                            }
+                            // Reset event name margin when selected status is hidden
+                            TextView eventName = findViewById(R.id.event_name);
+                            if (eventName != null && eventName.getLayoutParams() instanceof ConstraintLayout.LayoutParams) {
+                                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) eventName.getLayoutParams();
+                                params.topMargin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp
+                                eventName.setLayoutParams(params);
+                            }
                         } else if (isInWaitingList || isCancelled) {
                             // User is in waiting list - show Leave button (only if lottery hasn't run or user wasn't selected)
                             join_button.setVisibility(Button.GONE);
@@ -311,6 +347,17 @@ public class EventDetailsActivity extends AppCompatActivity {
                             }
                             acceptInvitationButton.setVisibility(Button.GONE);
                             declineInvitationButton.setVisibility(Button.GONE);
+                            // Hide selected status text
+                            if (tvSelectedStatus != null) {
+                                tvSelectedStatus.setVisibility(View.GONE);
+                            }
+                            // Reset event name margin when selected status is hidden
+                            TextView eventName = findViewById(R.id.event_name);
+                            if (eventName != null && eventName.getLayoutParams() instanceof ConstraintLayout.LayoutParams) {
+                                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) eventName.getLayoutParams();
+                                params.topMargin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp
+                                eventName.setLayoutParams(params);
+                            }
                         } else {
                             // User is NOT enrolled - show Join button (only if event is not closed and waiting list not full)
                             if (isEventClosed) {
@@ -359,6 +406,17 @@ public class EventDetailsActivity extends AppCompatActivity {
                             leave_button.setVisibility(Button.GONE);
                             acceptInvitationButton.setVisibility(Button.GONE);
                             declineInvitationButton.setVisibility(Button.GONE);
+                            // Hide selected status text
+                            if (tvSelectedStatus != null) {
+                                tvSelectedStatus.setVisibility(View.GONE);
+                            }
+                            // Reset event name margin when selected status is hidden
+                            TextView eventName = findViewById(R.id.event_name);
+                            if (eventName != null && eventName.getLayoutParams() instanceof ConstraintLayout.LayoutParams) {
+                                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) eventName.getLayoutParams();
+                                params.topMargin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp
+                                eventName.setLayoutParams(params);
+                            }
                         }
                     }
                 })
@@ -638,9 +696,8 @@ public class EventDetailsActivity extends AppCompatActivity {
             tvStatusMessage.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
             tvStatusMessage.setVisibility(View.VISIBLE);
         } else if (isSelected && !isAccepted) {
-            tvStatusMessage.setText("🎉 Congratulations! You've been selected in the lottery. Please accept or decline your invitation.");
-            tvStatusMessage.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-            tvStatusMessage.setVisibility(View.VISIBLE);
+            // Hide the status message when selected - we show "You've Been Selected!" text instead
+            tvStatusMessage.setVisibility(View.GONE);
         } else if (isAccepted) {
             tvStatusMessage.setText("✅ You're registered for this event!");
             tvStatusMessage.setTextColor(getResources().getColor(android.R.color.holo_green_dark));

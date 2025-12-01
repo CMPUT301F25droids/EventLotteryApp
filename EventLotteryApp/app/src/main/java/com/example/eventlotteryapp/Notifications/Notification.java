@@ -14,12 +14,14 @@ public class Notification implements Comparable<Notification>{
     private final Date timeStamp;
     private final String message;
     private String eventName;
+    private String eventId;
 
     public Notification(Date timeStamp, String type, String message){
         this.timeStamp = timeStamp;
         this.type = type;
         this.message = message;
         this.eventName = "Unknown";
+        this.eventId = null;
     }
 
     public interface NotificationLoadCallback {
@@ -39,6 +41,8 @@ public class Notification implements Comparable<Notification>{
         Notification notification = new Notification(date, type, message);
 
         if (eventRef != null) {
+            // Store the eventId from the DocumentReference
+            notification.setEventId(eventRef.getId());
             eventRef.get().addOnSuccessListener(eventSnap -> {
                 if (eventSnap.exists()) {
                     notification.setEventName(eventSnap.getString("Name"));
@@ -60,6 +64,10 @@ public class Notification implements Comparable<Notification>{
         this.eventName = eventName;
     }
 
+    public void setEventId(String eventId) {
+        this.eventId = eventId;
+    }
+
     // Return type as string
     public String getType() {
         return type;
@@ -71,6 +79,10 @@ public class Notification implements Comparable<Notification>{
 
     public String getEventName() {
         return eventName;
+    }
+
+    public String getEventId() {
+        return eventId;
     }
 
     public Date getTimeStamp() {

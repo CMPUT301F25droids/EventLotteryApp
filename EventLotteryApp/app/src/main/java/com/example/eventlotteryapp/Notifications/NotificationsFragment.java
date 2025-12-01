@@ -1,5 +1,6 @@
 package com.example.eventlotteryapp.Notifications;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -10,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.example.eventlotteryapp.EntrantView.EventDetailsActivity;
 import com.example.eventlotteryapp.R;
 import com.example.eventlotteryapp.UserSession;
 import com.google.firebase.Firebase;
@@ -112,5 +114,17 @@ public class NotificationsFragment extends Fragment {
         } else {
             notificationAdapter.notifyDataSetChanged();
         }
+
+        // Add click listener to navigate to event details
+        notificationsList.setOnItemClickListener((parent, view, position, id) -> {
+            Notification notification = notificationsArray.get(position);
+            String eventId = notification.getEventId();
+            
+            if (eventId != null && !eventId.isEmpty()) {
+                Intent intent = new Intent(getContext(), EventDetailsActivity.class);
+                intent.putExtra("eventId", eventId);
+                startActivity(intent);
+            }
+        });
     }
 }

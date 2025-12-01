@@ -89,6 +89,23 @@
                 app:layout_constraintBottom_toBottomOf="@+id/event_poster"
                 app:layout_constraintStart_toStartOf="@+id/event_poster" />
 
+            <!-- Selected Status Text (shown when user is selected) -->
+            <TextView
+                android:id="@+id/selected_status_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="16dp"
+                android:text="You've Been Selected!"
+                android:textColor="@color/calendar_weekday_text"
+                android:textSize="17sp"
+                android:fontFamily="sans-serif"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@+id/event_poster"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
             <!-- Event Title -->
             <TextView
                 android:id="@+id/event_name"
@@ -96,14 +113,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="4dp"
                 android:text="Jazz Night at the Park"
                 android:textColor="@color/black"
                 android:textSize="28sp"
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-medium"
                 android:letterSpacing="-0.01"
-                app:layout_constraintTop_toBottomOf="@+id/event_poster"
+                app:layout_constraintTop_toBottomOf="@+id/selected_status_text"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
@@ -416,43 +433,41 @@
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_marginStart="16dp"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp"
-                android:text="Accept"
+                android:layout_marginBottom="8dp"
+                android:text="Accept Invitation"
                 android:textSize="17sp"
                 android:textStyle="bold"
                 android:textColor="@color/white"
                 android:fontFamily="sans-serif-medium"
-                app:backgroundTint="@android:color/holo_green_dark"
+                app:backgroundTint="@color/selected_tab_color"
                 app:cornerRadius="56dp"
                 android:visibility="gone"
                 app:layout_constraintTop_toBottomOf="@+id/status_message"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/decline_invitation_button"
-                app:layout_constraintHorizontal_weight="1" />
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <!-- Decline Invitation Button (only shown when selected) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/decline_invitation_button"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginBottom="24dp"
-                android:text="Decline"
+                android:text="Decline Invitation"
                 android:textSize="17sp"
                 android:textStyle="bold"
                 android:textColor="@color/white"
                 android:fontFamily="sans-serif-medium"
-                app:backgroundTint="@android:color/holo_red_dark"
+                android:background="@drawable/disabled_button_bg"
                 app:cornerRadius="56dp"
                 android:visibility="gone"
-                app:layout_constraintTop_toBottomOf="@+id/status_message"
-                app:layout_constraintStart_toEndOf="@+id/accept_invitation_button"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_weight="1" />
+                app:layout_constraintTop_toBottomOf="@+id/accept_invitation_button"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
