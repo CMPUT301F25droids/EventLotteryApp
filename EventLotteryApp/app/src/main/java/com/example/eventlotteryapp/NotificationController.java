@@ -19,9 +19,10 @@ public class NotificationController {
         if (entrantIds == null || entrantIds.isEmpty()) return;
 
         for (String entrantId : entrantIds) {
-            db.collection("entrants").document(entrantId).get().addOnSuccessListener(entrantDoc -> {
-                Boolean notificationsEnabled = entrantDoc.getBoolean("notificationsEnabled");
-                if (notificationsEnabled != null && notificationsEnabled) {
+            db.collection("users").document(entrantId).get().addOnSuccessListener(entrantDoc -> {
+                Boolean notificationsEnabled = entrantDoc.getBoolean("lotteryPreference");
+                if (notificationsEnabled == null || notificationsEnabled) {
+                    System.out.println("Sending notification to entrant: " + entrantId);
                     sendNotificationToEntrant(entrantDoc, title, message, eventId);
                 }
             });
@@ -30,23 +31,27 @@ public class NotificationController {
 
     //** Actually sends a notification AND logs it in Firestore */
     private void sendNotificationToEntrant(DocumentSnapshot entrantDoc, String title, String message, String eventId) {
+        System.out.println("Notification.....");
 
         // 1. Make sure the user has an FCM token (device registered)
         String fcmToken = entrantDoc.getString("fcmToken");
-        if (fcmToken == null) {
-            return; // No device token = cannot send push notification
-        }
+//        if (fcmToken == null) {
+//            extracted();
+//            return; // No device token = cannot send push notification
+//        }
+        System.out.println("Notification1111");
 
         // 2. Build a notification object to save
         Map<String, Object> notifData = new HashMap<>();
-        notifData.put("message", message);
-        notifData.put("title", title);
-        notifData.put("eventId", eventId);
-        notifData.put("type", "MESSAGE");
-        notifData.put("timeStamp", new Date());
+        notifData.put("Message", message);
+        notifData.put("Title", title);
+        notifData.put("EventId", db.collection("Events").document(eventId));
+        notifData.put("Type", "MESSAGE");
+        notifData.put("TimeStamp", new Date());
+        notifData.put("UserId", entrantDoc.getId());
 
         // 3. Save into Firestore under /notifications
-        db.collection("notifications")
+        db.collection("Notifications")
                 .add(notifData)
                 .addOnSuccessListener(docRef -> {
                     // Optional: log success
@@ -62,6 +67,10 @@ public class NotificationController {
         fcmPayload.put("body", message);
 
         // Here you would send using your backend or Cloud Function
+    }
+
+    private static void extracted() {
+        return;
     }
 
     /** Public methods to send notifications to different event groups */

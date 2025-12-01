@@ -7,11 +7,20 @@ import com.example.eventlotteryapp.R;
 import com.google.android.material.tabs.TabLayout;
 import java.util.Objects;
 
+/**
+ * The main activity for user authentication.
+ * This activity hosts the Login and Sign Up fragments, allowing users to switch between them.
+ */
 public class AuthActivity extends AppCompatActivity {
-    TabLayout tabLayout;
-    ViewPager2 viewPager2;
-    AuthViewPagerAdapter viewPagerAdapter;
+    private TabLayout tabLayout;
+    private ViewPager2 viewPager2;
+    private AuthViewPagerAdapter viewPagerAdapter;
 
+    /**
+     * Called when the activity is first created.
+     * This method initializes the layout, sets up the ViewPager and TabLayout for login and sign-up forms.
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down then this Bundle contains the data it most recently supplied in onSaveInstanceState(Bundle).
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -48,7 +57,8 @@ public class AuthActivity extends AppCompatActivity {
     }
     
     /**
-     * Switch to the Sign Up tab (typically position 1)
+     * Programmatically switches the ViewPager to the Sign Up fragment.
+     * This is useful for scenarios where you want to direct the user to the sign-up form, for example, from an external link or another part of the app.
      */
     public void switchToSignUp() {
         if (viewPager2 != null && viewPager2.getAdapter() != null) {
