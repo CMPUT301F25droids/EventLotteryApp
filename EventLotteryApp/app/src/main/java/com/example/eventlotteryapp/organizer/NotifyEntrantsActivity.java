@@ -26,11 +26,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Activity for notifying entrants (selected or waitlisted) about event updates.
+ * Activity for notifying entrants (selected, waitlisted, or cancelled) about event updates.
  */
 public class NotifyEntrantsActivity extends AppCompatActivity {
 
     private static final String TAG = "NotifyEntrantsActivity";
+    
+    private static final int MODE_SELECTED = 0;
+    private static final int MODE_WAITLISTED = 1;
+    private static final int MODE_CANCELLED = 2;
     
     private String eventId;
     private FirebaseFirestore firestore;
@@ -41,10 +45,13 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
     private TextView participantCounts;
     private LinearLayout selectedTab;
     private LinearLayout waitlistedTab;
+    private LinearLayout cancelledTab;
     private RadioButton selectedRadio;
     private RadioButton waitlistedRadio;
+    private RadioButton cancelledRadio;
     private TextView selectedText;
     private TextView waitlistedText;
+    private TextView cancelledText;
     private TextView messageLabel;
     private EditText messageEditText;
     private LinearLayout recipientsContainer;
@@ -52,9 +59,10 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
     private TextView moreRecipientsText;
     private Button sendNotificationsButton;
     
-    private boolean isSelectedMode = true;
+    private int currentMode = MODE_SELECTED;
     private List<String> selectedEntrantIds = new ArrayList<>();
     private List<String> waitlistedEntrantIds = new ArrayList<>();
+    private List<String> cancelledEntrantIds = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,10 +91,13 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
         participantCounts = findViewById(R.id.participant_counts);
         selectedTab = findViewById(R.id.selected_tab);
         waitlistedTab = findViewById(R.id.waitlisted_tab);
+        cancelledTab = findViewById(R.id.cancelled_tab);
         selectedRadio = findViewById(R.id.selected_radio);
         waitlistedRadio = findViewById(R.id.waitlisted_radio);
+        cancelledRadio = findViewById(R.id.cancelled_radio);
         selectedText = findViewById(R.id.selected_text);
         waitlistedText = findViewById(R.id.waitlisted_text);
+        cancelledText = findViewById(R.id.cancelled_text);
         messageLabel = findViewById(R.id.message_label);
         messageEditText = findViewById(R.id.message_edit_text);
         recipientsContainer = findViewById(R.id.recipients_container);
@@ -135,46 +146,60 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
     }
     
     private void setupClickListeners() {
-        selectedTab.setOnClickListener(v -> setTab(true));
-        waitlistedTab.setOnClickListener(v -> setTab(false));
+        selectedTab.setOnClickListener(v -> setTab(MODE_SELECTED));
+        waitlistedTab.setOnClickListener(v -> setTab(MODE_WAITLISTED));
+        cancelledTab.setOnClickListener(v -> setTab(MODE_CANCELLED));
         
-        selectedRadio.setOnClickListener(v -> setTab(true));
-        waitlistedRadio.setOnClickListener(v -> setTab(false));
+        selectedRadio.setOnClickListener(v -> setTab(MODE_SELECTED));
+        waitlistedRadio.setOnClickListener(v -> setTab(MODE_WAITLISTED));
+        cancelledRadio.setOnClickListener(v -> setTab(MODE_CANCELLED));
         
         sendNotificationsButton.setOnClickListener(v -> sendNotifications());
         
         recipientListHeader.setOnClickListener(v -> showAllRecipients());
     }
     
-    private void setTab(boolean selected) {
-        isSelectedMode = selected;
-        selectedRadio.setChecked(selected);
-        waitlistedRadio.setChecked(!selected);
+    private void setTab(int mode) {
+        currentMode = mode;
+        selectedRadio.setChecked(mode == MODE_SELECTED);
+        waitlistedRadio.setChecked(mode == MODE_WAITLISTED);
+        cancelledRadio.setChecked(mode == MODE_CANCELLED);
         
-        if (selected) {
-            // Selected Entrants is active
+        // Reset all tabs to inactive state
+        selectedText.setTextColor(getResources().getColor(R.color.black, null));
+        selectedText.setTypeface(null, android.graphics.Typeface.NORMAL);
+        selectedRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.medium_grey, null)));
+        
+        waitlistedText.setTextColor(getResources().getColor(R.color.black, null));
+        waitlistedText.setTypeface(null, android.graphics.Typeface.NORMAL);
+        waitlistedRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.medium_grey, null)));
+        
+        cancelledText.setTextColor(getResources().getColor(R.color.black, null));
+        cancelledText.setTypeface(null, android.graphics.Typeface.NORMAL);
+        cancelledRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.medium_grey, null)));
+        
+        // Set active tab
+        if (mode == MODE_SELECTED) {
             selectedText.setTextColor(getResources().getColor(R.color.selected_tab_color, null));
             selectedText.setTypeface(null, android.graphics.Typeface.BOLD);
             selectedRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.selected_tab_color, null)));
             
-            waitlistedText.setTextColor(getResources().getColor(R.color.black, null));
-            waitlistedText.setTypeface(null, android.graphics.Typeface.NORMAL);
-            waitlistedRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.medium_grey, null)));
-            
             messageLabel.setText("Message to Selected Entrants");
             messageEditText.setHint("Congratulations! You've been selected to...");
-        } else {
-            // Waitlisted Entrants is active
+        } else if (mode == MODE_WAITLISTED) {
             waitlistedText.setTextColor(getResources().getColor(R.color.selected_tab_color, null));
             waitlistedText.setTypeface(null, android.graphics.Typeface.BOLD);
             waitlistedRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.selected_tab_color, null)));
             
-            selectedText.setTextColor(getResources().getColor(R.color.black, null));
-            selectedText.setTypeface(null, android.graphics.Typeface.NORMAL);
-            selectedRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.medium_grey, null)));
-            
             messageLabel.setText("Message to Waitlisted Entrants");
             messageEditText.setHint("Thank you for your interest. The lottery draw has been completed...");
+        } else if (mode == MODE_CANCELLED) {
+            cancelledText.setTextColor(getResources().getColor(R.color.selected_tab_color, null));
+            cancelledText.setTypeface(null, android.graphics.Typeface.BOLD);
+            cancelledRadio.setButtonTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.selected_tab_color, null)));
+            
+            messageLabel.setText("Message to Cancelled Entrants");
+            messageEditText.setHint("We wanted to inform you about an update regarding your cancelled registration...");
         }
         
         updateRecipients();
@@ -200,14 +225,17 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
                 // Load entrant lists
                 selectedEntrantIds = (List<String>) document.get("selectedEntrantIds");
                 waitlistedEntrantIds = (List<String>) document.get("waitingListEntrantIds");
+                cancelledEntrantIds = (List<String>) document.get("cancelledEntrantIds");
                 
                 if (selectedEntrantIds == null) selectedEntrantIds = new ArrayList<>();
                 if (waitlistedEntrantIds == null) waitlistedEntrantIds = new ArrayList<>();
+                if (cancelledEntrantIds == null) cancelledEntrantIds = new ArrayList<>();
                 
                 // Update participant counts
                 int selectedCount = selectedEntrantIds.size();
                 int waitlistedCount = waitlistedEntrantIds.size();
-                participantCounts.setText("Selected: " + selectedCount + ", Waitlisted: " + waitlistedCount);
+                int cancelledCount = cancelledEntrantIds.size();
+                participantCounts.setText("Selected: " + selectedCount + ", Waitlisted: " + waitlistedCount + ", Cancelled: " + cancelledCount);
                 
                 // Update recipients
                 updateRecipients();
@@ -239,7 +267,15 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
     private void updateRecipients() {
         recipientsContainer.removeAllViews();
         
-        List<String> currentList = isSelectedMode ? selectedEntrantIds : waitlistedEntrantIds;
+        List<String> currentList;
+        if (currentMode == MODE_SELECTED) {
+            currentList = selectedEntrantIds;
+        } else if (currentMode == MODE_WAITLISTED) {
+            currentList = waitlistedEntrantIds;
+        } else {
+            currentList = cancelledEntrantIds;
+        }
+        
         int maxVisible = 4;
         int total = currentList.size();
         
@@ -324,18 +360,31 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
             return;
         }
         
-        List<String> targetList = isSelectedMode ? selectedEntrantIds : waitlistedEntrantIds;
+        List<String> targetList;
+        String title;
+        
+        if (currentMode == MODE_SELECTED) {
+            targetList = selectedEntrantIds;
+            title = "Lottery Selection";
+        } else if (currentMode == MODE_WAITLISTED) {
+            targetList = waitlistedEntrantIds;
+            title = "Lottery Results";
+        } else {
+            targetList = cancelledEntrantIds;
+            title = "Event Update";
+        }
+        
         if (targetList.isEmpty()) {
             Toast.makeText(this, "No recipients to notify", Toast.LENGTH_SHORT).show();
             return;
         }
         
-        String title = isSelectedMode ? "Lottery Selection" : "Lottery Results";
-        
-        if (isSelectedMode) {
+        if (currentMode == MODE_SELECTED) {
             notificationController.sendToSelectedEntrants(eventId, title, message);
-        } else {
+        } else if (currentMode == MODE_WAITLISTED) {
             notificationController.sendToWaitingList(eventId, title, message);
+        } else {
+            notificationController.sendToCancelledEntrants(eventId, title, message);
         }
         
         Toast.makeText(this, "Notifications sent to " + targetList.size() + " recipient(s)", Toast.LENGTH_SHORT).show();
@@ -343,7 +392,14 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
     }
     
     private void showAllRecipients() {
-        List<String> currentList = isSelectedMode ? selectedEntrantIds : waitlistedEntrantIds;
+        List<String> currentList;
+        if (currentMode == MODE_SELECTED) {
+            currentList = selectedEntrantIds;
+        } else if (currentMode == MODE_WAITLISTED) {
+            currentList = waitlistedEntrantIds;
+        } else {
+            currentList = cancelledEntrantIds;
+        }
         
         if (currentList == null || currentList.isEmpty()) {
             Toast.makeText(this, "No recipients to display", Toast.LENGTH_SHORT).show();
@@ -391,7 +447,14 @@ public class NotifyEntrantsActivity extends AppCompatActivity {
     }
     
     private void showRecipientsDialog(List<String> recipientNames) {
-        String title = isSelectedMode ? "Selected Entrants (" + recipientNames.size() + ")" : "Waitlisted Entrants (" + recipientNames.size() + ")";
+        String title;
+        if (currentMode == MODE_SELECTED) {
+            title = "Selected Entrants (" + recipientNames.size() + ")";
+        } else if (currentMode == MODE_WAITLISTED) {
+            title = "Waitlisted Entrants (" + recipientNames.size() + ")";
+        } else {
+            title = "Cancelled Entrants (" + recipientNames.size() + ")";
+        }
         
         StringBuilder message = new StringBuilder();
         for (int i = 0; i < recipientNames.size(); i++) {

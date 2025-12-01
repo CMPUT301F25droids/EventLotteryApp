@@ -104,7 +104,7 @@
                 android:id="@+id/participant_counts"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Selected: 20, Waitlisted: 25"
+                android:text="Selected: 20, Waitlisted: 25, Cancelled: 5"
                 android:textColor="@color/medium_grey"
                 android:textSize="14sp"
                 android:paddingHorizontal="16dp"
@@ -130,7 +130,7 @@
                     android:background="@drawable/chip_background"
                     android:clickable="true"
                     android:focusable="true"
-                    android:layout_marginEnd="8dp">
+                    android:layout_marginEnd="4dp">
 
                     <RadioButton
                         android:id="@+id/selected_radio"
@@ -143,11 +143,13 @@
                         android:id="@+id/selected_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Selected Entrants"
+                        android:text="Selected"
                         android:textColor="@color/selected_tab_color"
-                        android:textSize="14sp"
+                        android:textSize="11sp"
                         android:textStyle="bold"
-                        android:layout_marginStart="8dp" />
+                        android:singleLine="true"
+                        android:ellipsize="none"
+                        android:layout_marginStart="4dp" />
                 </LinearLayout>
 
                 <!-- Waitlisted Entrants Tab -->
@@ -161,7 +163,8 @@
                     android:padding="12dp"
                     android:background="@drawable/chip_background"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:layout_marginEnd="4dp">
 
                     <RadioButton
                         android:id="@+id/waitlisted_radio"
@@ -174,10 +177,44 @@
                         android:id="@+id/waitlisted_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Waitlisted Entrants"
+                        android:text="Waitlisted"
                         android:textColor="@color/black"
-                        android:textSize="14sp"
-                        android:layout_marginStart="8dp" />
+                        android:textSize="11sp"
+                        android:singleLine="true"
+                        android:ellipsize="none"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+
+                <!-- Cancelled Entrants Tab -->
+                <LinearLayout
+                    android:id="@+id/cancelled_tab"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="12dp"
+                    android:background="@drawable/chip_background"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <RadioButton
+                        android:id="@+id/cancelled_radio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="false"
+                        android:buttonTint="@color/medium_grey" />
+
+                    <TextView
+                        android:id="@+id/cancelled_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cancelled"
+                        android:textColor="@color/black"
+                        android:textSize="11sp"
+                        android:singleLine="true"
+                        android:ellipsize="none"
+                        android:layout_marginStart="4dp" />
                 </LinearLayout>
             </LinearLayout>
 
