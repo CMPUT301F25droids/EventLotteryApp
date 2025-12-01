@@ -47,6 +47,10 @@ public class AdminNotificationLogsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_notification_logs);
 
+        // Back button
+        android.widget.ImageView backButton = findViewById(R.id.back_button);
+        backButton.setOnClickListener(v -> finish());
+
         recyclerView = findViewById(R.id.recyclerAdminNotificationLogs);
         progressBar = findViewById(R.id.adminNotificationLogsProgress);
         emptyView = findViewById(R.id.adminNotificationLogsEmpty);

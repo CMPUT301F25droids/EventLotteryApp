@@ -41,7 +41,10 @@ public class Event {
     
     /** The unique identifier of the organizer who created this event. */
     private String organizerId;
-
+    
+    /** Whether this event has been cancelled by the organizer (Firestore field: "cancelled"). */
+    private boolean cancelled;
+    
     /** The event poster image stored as a base64-encoded string (Firestore field). */
     private String Image;
 
@@ -119,7 +122,16 @@ public class Event {
      * @return the organizer ID
      */
     public String getOrganizerId() { return organizerId; }
-
+    
+    /**
+     * Returns whether this event has been cancelled by the organizer.
+     *
+     * This maps directly from the Firestore boolean field "cancelled".
+     *
+     * @return true if the event is cancelled; false otherwise
+     */
+    public boolean isCancelled() { return cancelled; }
+    
     /**
      * Gets the event poster image as a base64-encoded string.
      * 
@@ -128,7 +140,7 @@ public class Event {
     public String getImage() {
         return Image;
     }
-
+    
     /**
      * Sets the event poster image as a base64-encoded string.
      * 
