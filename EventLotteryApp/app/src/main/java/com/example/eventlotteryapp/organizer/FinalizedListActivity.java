@@ -26,8 +26,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Activity for displaying and managing the finalized list of selected entrants.
@@ -250,9 +252,18 @@ public class FinalizedListActivity extends AppCompatActivity {
         if (cancelledIds == null) cancelledIds = new ArrayList<>();
         if (declinedIds == null) declinedIds = new ArrayList<>();
 
+        // Remove duplicates from each list while preserving order
+        Set<String> selectedSet = new LinkedHashSet<>(selectedIds);
+        Set<String> cancelledSet = new LinkedHashSet<>(cancelledIds);
+        Set<String> declinedSet = new LinkedHashSet<>(declinedIds);
+        
+        selectedIds = new ArrayList<>(selectedSet);
+        cancelledIds = new ArrayList<>(cancelledSet);
+        declinedIds = new ArrayList<>(declinedSet);
+
         allParticipants.clear();
 
-        // Count totals
+        // Count totals (using deduplicated lists)
         int totalSelected = selectedIds.size();
         int totalCancelled = cancelledIds.size();
         int totalDeclined = declinedIds.size();
@@ -272,19 +283,31 @@ public class FinalizedListActivity extends AppCompatActivity {
             return;
         }
 
+        // Track loaded entrant IDs to prevent duplicates across different statuses
+        Set<String> loadedEntrantIds = new LinkedHashSet<>();
+
         // Load selected (accepted) participants
         for (String entrantId : selectedIds) {
-            loadParticipant(entrantId, "accepted", loaded, total);
+            if (!loadedEntrantIds.contains(entrantId)) {
+                loadedEntrantIds.add(entrantId);
+                loadParticipant(entrantId, "accepted", loaded, total);
+            }
         }
 
-        // Load cancelled participants
+        // Load cancelled participants (only if not already loaded)
         for (String entrantId : cancelledIds) {
-            loadParticipant(entrantId, "cancelled", loaded, total);
+            if (!loadedEntrantIds.contains(entrantId)) {
+                loadedEntrantIds.add(entrantId);
+                loadParticipant(entrantId, "cancelled", loaded, total);
+            }
         }
 
-        // Load declined participants
+        // Load declined participants (only if not already loaded)
         for (String entrantId : declinedIds) {
-            loadParticipant(entrantId, "declined", loaded, total);
+            if (!loadedEntrantIds.contains(entrantId)) {
+                loadedEntrantIds.add(entrantId);
+                loadParticipant(entrantId, "declined", loaded, total);
+            }
         }
     }
 
@@ -293,20 +316,31 @@ public class FinalizedListActivity extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
-                        String name = document.getString("Name");
-                        if (name == null) name = document.getString("name");
-                        Date createdAt = document.getDate("createdAt");
-                        Date confirmedDate = new Date(); // Use current date as confirmed date for now
+                        // Check if this participant already exists to prevent duplicates
+                        boolean alreadyExists = false;
+                        for (FinalizedParticipant existing : allParticipants) {
+                            if (existing.entrantId.equals(entrantId)) {
+                                alreadyExists = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!alreadyExists) {
+                            String name = document.getString("Name");
+                            if (name == null) name = document.getString("name");
+                            Date createdAt = document.getDate("createdAt");
+                            Date confirmedDate = new Date(); // Use current date as confirmed date for now
 
-                        FinalizedParticipant participant = new FinalizedParticipant(
-                                entrantId,
-                                name != null ? name : "Unknown",
-                                status,
-                                createdAt != null ? createdAt : new Date(),
-                                confirmedDate
-                        );
+                            FinalizedParticipant participant = new FinalizedParticipant(
+                                    entrantId,
+                                    name != null ? name : "Unknown",
+                                    status,
+                                    createdAt != null ? createdAt : new Date(),
+                                    confirmedDate
+                            );
 
-                        allParticipants.add(participant);
+                            allParticipants.add(participant);
+                        }
                     }
 
                     loaded[0]++;
