@@ -46,6 +46,10 @@ public class AdminBrowseProfilesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_browse_profiles);
 
+        // Back button
+        android.widget.ImageView backButton = findViewById(R.id.back_button);
+        backButton.setOnClickListener(v -> finish());
+
         recyclerView = findViewById(R.id.recyclerAdminProfiles);
         progressBar = findViewById(R.id.adminProfilesProgress);
         emptyView = findViewById(R.id.adminProfilesEmpty);

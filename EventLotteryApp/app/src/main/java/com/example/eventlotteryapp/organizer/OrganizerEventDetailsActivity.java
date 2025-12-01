@@ -163,12 +163,14 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
         
         popupMenu.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
+            Log.d(TAG, "Menu item clicked: " + itemId);
             if (itemId == R.id.menu_edit_event) {
                 Intent intent = new Intent(this, CreateEventActivity.class);
                 intent.putExtra("eventId", eventId);
                 startActivity(intent);
                 return true;
             } else if (itemId == R.id.menu_cancel_event) {
+                Log.d(TAG, "Cancel event menu item clicked");
                 showCancelEventDialog();
                 return true;
             } else if (itemId == R.id.menu_share_event) {
@@ -180,7 +182,12 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
             return false;
         });
         
-        popupMenu.show();
+        try {
+            popupMenu.show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing popup menu", e);
+            Toast.makeText(this, "Error showing menu", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -486,23 +493,101 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
      * If confirmed, marks the event as cancelled in Firestore.
      */
     private void showCancelEventDialog() {
+        if (eventId == null || eventId.isEmpty()) {
+            Log.e(TAG, "Cannot cancel event: eventId is null or empty");
+            Toast.makeText(this, "Error: Event ID is missing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        Log.d(TAG, "Showing cancel event dialog for eventId: " + eventId);
+        
         new AlertDialog.Builder(this)
             .setTitle("Cancel Event")
             .setMessage("Are you sure you want to cancel this event? This action cannot be undone.")
             .setPositiveButton("Cancel Event", (dialog, which) -> {
+                Log.d(TAG, "User confirmed cancellation for eventId: " + eventId);
+                cancelEvent();
+            })
+            .setNegativeButton("Keep Event", (dialog, which) -> {
+                Log.d(TAG, "User cancelled the cancellation dialog");
+            })
+            .setOnDismissListener(dialog -> {
+                Log.d(TAG, "Cancel event dialog dismissed");
+            })
+            .show();
+    }
+    
+    /**
+     * Performs the actual cancellation of the event in Firestore.
+     * Sends notifications to all signed-up entrants and the organizer.
+     */
+    private void cancelEvent() {
+        if (eventId == null || eventId.isEmpty()) {
+            Log.e(TAG, "Cannot cancel event: eventId is null or empty");
+            Toast.makeText(this, "Error: Event ID is missing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        Log.d(TAG, "Attempting to cancel event in Firestore: " + eventId);
+        
+        // First, get the event document to get the title and send notifications
+        firestore.collection("Events").document(eventId)
+            .get()
+            .addOnSuccessListener(eventDoc -> {
+                if (!eventDoc.exists()) {
+                    Log.e(TAG, "Event document does not exist: " + eventId);
+                    Toast.makeText(this, "Error: Event not found", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                
+                // Get event title for notification
+                String titleFromDoc = eventDoc.getString("title");
+                if (titleFromDoc == null) {
+                    titleFromDoc = eventDoc.getString("Name");
+                }
+                if (titleFromDoc == null || titleFromDoc.isEmpty()) {
+                    titleFromDoc = "Event";
+                }
+                // Make final for use in lambda
+                final String eventTitle = titleFromDoc;
+                
+                // Now update the event to cancelled
+                Map<String, Object> updateData = new HashMap<>();
+                updateData.put("cancelled", true);
+                
                 firestore.collection("Events").document(eventId)
-                    .update("cancelled", true)
+                    .update(updateData)
                     .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(this, "Event cancelled", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "Event successfully cancelled: " + eventId);
+                        
+                        // Send notifications to all signed-up entrants
+                        String notificationTitle = "Event Cancelled";
+                        String notificationMessage = "The event \"" + eventTitle + "\" has been cancelled by the organizer.";
+                        
+                        Log.d(TAG, "Sending cancellation notifications to all signed-up entrants");
+                        notificationController.sendToAllSignedUpEntrants(eventId, notificationTitle, notificationMessage);
+                        
+                        // Send notification to the organizer
+                        Log.d(TAG, "Sending cancellation notification to organizer");
+                        notificationController.sendToOrganizer(eventId, notificationTitle, 
+                            "You have cancelled the event \"" + eventTitle + "\". All participants have been notified.");
+                        
+                        Toast.makeText(this, "Event cancelled successfully. All participants have been notified.", Toast.LENGTH_LONG).show();
                         finish();
                     })
                     .addOnFailureListener(e -> {
-                        Log.e(TAG, "Error cancelling event", e);
-                        Toast.makeText(this, "Error cancelling event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Error cancelling event: " + eventId, e);
+                        String errorMessage = "Error cancelling event";
+                        if (e.getMessage() != null) {
+                            errorMessage += ": " + e.getMessage();
+                        }
+                        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
                     });
             })
-            .setNegativeButton("Keep Event", null)
-            .show();
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error loading event document: " + eventId, e);
+                Toast.makeText(this, "Error loading event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            });
     }
     
     @Override

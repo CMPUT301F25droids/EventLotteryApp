@@ -48,6 +48,10 @@ public class AdminBrowseEventsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_browse_events);
 
+        // Back button
+        android.widget.ImageView backButton = findViewById(R.id.back_button);
+        backButton.setOnClickListener(v -> finish());
+
         recyclerView = findViewById(R.id.recyclerAdminEvents);
         progressBar = findViewById(R.id.adminEventsProgress);
         emptyView = findViewById(R.id.adminEventsEmpty);

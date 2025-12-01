@@ -39,6 +39,10 @@ public class AdminBrowseImagesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_browse_images);
 
+        // Back button
+        android.widget.ImageView backButton = findViewById(R.id.back_button);
+        backButton.setOnClickListener(v -> finish());
+
         recyclerView = findViewById(R.id.recyclerAdminImages);
         progressBar = findViewById(R.id.adminImagesProgress);
 
