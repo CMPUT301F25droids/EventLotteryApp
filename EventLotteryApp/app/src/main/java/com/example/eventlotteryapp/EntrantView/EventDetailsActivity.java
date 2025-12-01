@@ -331,12 +331,46 @@ public class EventDetailsActivity extends AppCompatActivity {
                             }
                             // Optionally show a "You're registered!" message
                         } else if (isDeclined) {
-                            // User has DECLINED - show Leave button to rejoin waiting list (only if event not closed)
-                            join_button.setVisibility(Button.GONE);
+                            // User has DECLINED - show Join Waitlist button to rejoin (only if event not closed)
+                            leave_button.setVisibility(Button.GONE);
                             if (isEventClosed) {
-                                leave_button.setVisibility(Button.GONE);
+                                join_button.setVisibility(Button.GONE);
                             } else {
-                                leave_button.setVisibility(Button.VISIBLE);
+                                // Check waiting list limit
+                                Boolean limitWaitingList = documentSnapshot.getBoolean("limitWaitingList");
+                                boolean isLimitEnabled = (limitWaitingList != null && limitWaitingList);
+                                boolean canJoin = true;
+                                
+                                if (isLimitEnabled) {
+                                    Long waitingListSizeLong = documentSnapshot.getLong("waitingListSize");
+                                    int waitingListLimit = (waitingListSizeLong != null) ? waitingListSizeLong.intValue() : 0;
+                                    
+                                    // If limit is 0 or not set, treat as infinite (no limit)
+                                    if (waitingListLimit > 0) {
+                                        int currentWaitingListSize = (waitingListEntrantIds != null) ? waitingListEntrantIds.size() : 0;
+                                        if (currentWaitingListSize >= waitingListLimit) {
+                                            canJoin = false;
+                                        }
+                                    }
+                                }
+                                
+                                if (!canJoin) {
+                                    join_button.setVisibility(Button.GONE);
+                                } else {
+                                    join_button.setVisibility(Button.VISIBLE);
+                                    // Disable button if registration hasn't opened yet
+                                    join_button.setEnabled(isRegistrationOpen);
+                                    // Update button text and background color based on registration status
+                                    if (!isRegistrationOpen) {
+                                        join_button.setText("Registration is not open");
+                                        join_button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                                                ContextCompat.getColor(this, R.color.medium_grey)));
+                                    } else {
+                                        join_button.setText("Join Waiting List");
+                                        join_button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                                                ContextCompat.getColor(this, R.color.selected_tab_color)));
+                                    }
+                                }
                             }
                             acceptInvitationButton.setVisibility(Button.GONE);
                             declineInvitationButton.setVisibility(Button.GONE);
@@ -520,12 +554,46 @@ public class EventDetailsActivity extends AppCompatActivity {
                                 }
                                 // Optionally show a "You're registered!" message
                             } else if (isDeclined) {
-                                // User has DECLINED - show Leave button to rejoin waiting list (only if event not closed)
-                                join_button.setVisibility(Button.GONE);
+                                // User has DECLINED - show Join Waitlist button to rejoin (only if event not closed)
+                                leave_button.setVisibility(Button.GONE);
                                 if (isEventClosed) {
-                                    leave_button.setVisibility(Button.GONE);
+                                    join_button.setVisibility(Button.GONE);
                                 } else {
-                                    leave_button.setVisibility(Button.VISIBLE);
+                                    // Check waiting list limit
+                                    Boolean limitWaitingList = documentSnapshot.getBoolean("limitWaitingList");
+                                    boolean isLimitEnabled = (limitWaitingList != null && limitWaitingList);
+                                    boolean canJoin = true;
+                                    
+                                    if (isLimitEnabled) {
+                                        Long waitingListSizeLong = documentSnapshot.getLong("waitingListSize");
+                                        int waitingListLimit = (waitingListSizeLong != null) ? waitingListSizeLong.intValue() : 0;
+                                        
+                                        // If limit is 0 or not set, treat as infinite (no limit)
+                                        if (waitingListLimit > 0) {
+                                            int currentWaitingListSize = (waitingListEntrantIds != null) ? waitingListEntrantIds.size() : 0;
+                                            if (currentWaitingListSize >= waitingListLimit) {
+                                                canJoin = false;
+                                            }
+                                        }
+                                    }
+                                    
+                                    if (!canJoin) {
+                                        join_button.setVisibility(Button.GONE);
+                                    } else {
+                                        join_button.setVisibility(Button.VISIBLE);
+                                        // Disable button if registration hasn't opened yet
+                                        join_button.setEnabled(isRegistrationOpen);
+                                        // Update button text and background color based on registration status
+                                        if (!isRegistrationOpen) {
+                                            join_button.setText("Registration is not open");
+                                            join_button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                                                    ContextCompat.getColor(this, R.color.medium_grey)));
+                                        } else {
+                                            join_button.setText("Join Waiting List");
+                                            join_button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                                                    ContextCompat.getColor(this, R.color.selected_tab_color)));
+                                        }
+                                    }
                                 }
                                 acceptInvitationButton.setVisibility(Button.GONE);
                                 declineInvitationButton.setVisibility(Button.GONE);

@@ -386,7 +386,7 @@ public class MyEventsFragment extends Fragment {
 
         Log.d(TAG, "Lists cleared. Starting queries...");
 
-        final int totalQueries = 6; // JoinedEvents + 5 waitlist queries (waitingList, selected, accepted, declined, cancelled)
+        final int totalQueries = 5; // JoinedEvents + 4 waitlist queries (waitingList, selected, accepted, cancelled)
 
         // Helper to check if all queries and status loads are done
         java.util.function.Consumer<Void> checkAllDone = (v) -> {
@@ -532,9 +532,6 @@ public class MyEventsFragment extends Fragment {
 
         // Query for events where user is in acceptedEntrantIds (accepted invitations)
         queryEventsWhere("acceptedEntrantIds", loadEvent, checkAllDone);
-
-        // Query for events where user is in declinedEntrantIds (declined invitations)
-        queryEventsWhere("declinedEntrantIds", loadEvent, checkAllDone);
 
         // Query for events where user is in cancelledEntrantIds
         queryEventsWhere("cancelledEntrantIds", loadEvent, checkAllDone);

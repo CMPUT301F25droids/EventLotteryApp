@@ -78,6 +78,7 @@ public class LotteryController {
             DocumentSnapshot eventDoc = transaction.get(eventRef);
             List<String> selectedEntrants = (List<String>) eventDoc.get("selectedEntrantIds");
             List<String> declinedEntrants = (List<String>) eventDoc.get("declinedEntrantIds");
+            List<String> waitingListEntrants = (List<String>) eventDoc.get("waitingListEntrantIds");
             
             // Try to get organizer ID from DocumentReference or string field
             String organizerId = null;
@@ -97,14 +98,17 @@ public class LotteryController {
 
             if (selectedEntrants == null) selectedEntrants = new ArrayList<>();
             if (declinedEntrants == null) declinedEntrants = new ArrayList<>();
+            if (waitingListEntrants == null) waitingListEntrants = new ArrayList<>();
 
-            // Remove from selected, add to declined
+            // Remove from selected and waiting list, add to declined
             selectedEntrants.remove(userId);
+            waitingListEntrants.remove(userId);
             if (!declinedEntrants.contains(userId)) {
                 declinedEntrants.add(userId);
             }
 
             transaction.update(eventRef, "selectedEntrantIds", selectedEntrants);
+            transaction.update(eventRef, "waitingListEntrantIds", waitingListEntrants);
             transaction.update(eventRef, "declinedEntrantIds", declinedEntrants);
 
             return organizerId;
