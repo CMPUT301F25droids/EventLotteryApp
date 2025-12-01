@@ -442,7 +442,9 @@ public class EntrantListActivity extends AppCompatActivity {
                             }
                             
                             if (userDoc.exists()) {
-                                String name = userDoc.getString("name");
+                                // Try both "Name" and "name" to handle field name inconsistencies
+                                String name = userDoc.getString("Name");
+                                if (name == null) name = userDoc.getString("name");
                                 String email = userDoc.getString("email");
                                 // Try to get join date from user's joined events timestamp, or use current date as fallback
                                 Date joinedDate = new Date(); // Default to current date
@@ -464,7 +466,21 @@ public class EntrantListActivity extends AppCompatActivity {
                                     filterEntrants();
                                 }
                             } else {
-                                loadedEntrantIds.add(entrantId); // Mark as processed even if user doesn't exist
+                                // User document doesn't exist, but still add to list with placeholder info
+                                Log.w(TAG, "User document not found for entrant ID: " + entrantId);
+                                Date joinedDate = new Date(); // Default to current date
+                                
+                                EntrantWithStatus entrant = new EntrantWithStatus(
+                                    entrantId,
+                                    "Unknown User (ID: " + entrantId.substring(0, Math.min(8, entrantId.length())) + "...)",
+                                    "",
+                                    finalStatus,
+                                    joinedDate
+                                );
+                                
+                                loadedEntrantIds.add(entrantId); // Mark as loaded
+                                allEntrants.add(entrant);
+                                
                                 loaded[0]++;
                                 if (loaded[0] == total) {
                                     filterEntrants();

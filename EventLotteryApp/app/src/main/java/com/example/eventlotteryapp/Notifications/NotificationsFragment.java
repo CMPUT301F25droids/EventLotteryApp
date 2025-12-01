@@ -4,8 +4,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,23 +15,21 @@ import androidx.fragment.app.Fragment;
 
 import com.example.eventlotteryapp.EntrantView.EventDetailsActivity;
 import com.example.eventlotteryapp.R;
-import com.example.eventlotteryapp.UserSession;
-import com.google.firebase.Firebase;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class NotificationsFragment extends Fragment {
 
     private ListView notificationsList;
     private ProgressBar progressBar;
+    private Button btnDeleteSelected;
     private ArrayList<Notification> notificationsArray;
     private NotificationArrayAdapter notificationAdapter;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -51,9 +51,14 @@ public class NotificationsFragment extends Fragment {
 
         notificationsList = view.findViewById(R.id.lvNotifications);
         progressBar = view.findViewById(R.id.progressBar);
+        btnDeleteSelected = view.findViewById(R.id.btnDeleteSelected);
+        
         if (db == null) {
             db = FirebaseFirestore.getInstance();
         }
+
+        // Set up delete selected button
+        btnDeleteSelected.setOnClickListener(v -> deleteSelectedNotifications());
 
         loadNotifications();
     }
@@ -111,9 +116,19 @@ public class NotificationsFragment extends Fragment {
         if (notificationAdapter == null) {
             notificationAdapter = new NotificationArrayAdapter(requireContext(), notificationsArray);
             notificationsList.setAdapter(notificationAdapter);
-        } else {
-            notificationAdapter.notifyDataSetChanged();
         }
+        
+        // Set up selection change listener
+        notificationAdapter.setOnSelectionChangeListener(selectedCount -> {
+            if (selectedCount > 0) {
+                btnDeleteSelected.setVisibility(View.VISIBLE);
+                btnDeleteSelected.setText("Delete Selected (" + selectedCount + ")");
+            } else {
+                btnDeleteSelected.setVisibility(View.GONE);
+            }
+        });
+        
+        notificationAdapter.notifyDataSetChanged();
 
         // Add click listener to navigate to event details
         notificationsList.setOnItemClickListener((parent, view, position, id) -> {
@@ -126,5 +141,63 @@ public class NotificationsFragment extends Fragment {
                 startActivity(intent);
             }
         });
+    }
+
+    private void deleteSelectedNotifications() {
+        Set<Notification> selected = notificationAdapter.getSelectedNotifications();
+        
+        if (selected.isEmpty()) {
+            Toast.makeText(getContext(), "No notifications selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        progressBar.setVisibility(View.VISIBLE);
+        btnDeleteSelected.setEnabled(false);
+        
+        AtomicInteger deletedCount = new AtomicInteger(0);
+        int totalToDelete = selected.size();
+        
+        for (Notification notification : selected) {
+            String documentId = notification.getDocumentId();
+            if (documentId == null || documentId.isEmpty()) {
+                if (deletedCount.incrementAndGet() == totalToDelete) {
+                    finishDeletion();
+                }
+                continue;
+            }
+
+            // Delete from Firestore
+            db.collection("Notifications")
+                    .document(documentId)
+                    .delete()
+                    .addOnSuccessListener(aVoid -> {
+                        // Remove from local array
+                        notificationsArray.remove(notification);
+                        
+                        if (deletedCount.incrementAndGet() == totalToDelete) {
+                            finishDeletion();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("NotificationsFragment", "Error deleting notification: " + documentId, e);
+                        if (deletedCount.incrementAndGet() == totalToDelete) {
+                            finishDeletion();
+                        }
+                    });
+        }
+    }
+
+    private void finishDeletion() {
+        progressBar.setVisibility(View.GONE);
+        btnDeleteSelected.setEnabled(true);
+        
+        // Clear selection and update UI
+        notificationAdapter.clearSelection();
+        notificationAdapter.notifyDataSetChanged();
+        
+        // Reload notifications to ensure sync
+        loadNotifications();
+        
+        Toast.makeText(getContext(), "Notifications deleted", Toast.LENGTH_SHORT).show();
     }
 }

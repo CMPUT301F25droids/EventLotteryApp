@@ -2,6 +2,7 @@ package com.example.eventlotteryapp.Controllers;
 
 import android.util.Log;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Transaction;
@@ -67,14 +68,17 @@ public class LotteryController {
     /**
      * US 01.05.03: Decline invitation to participate in event
      * Moves user from selectedEntrantIds to declinedEntrantIds
+     * Notifies the organizer that someone declined and suggests they redraw
      */
     public void declineInvitation(String eventId, String userId, DeclineCallback callback) {
         DocumentReference eventRef = db.collection("Events").document(eventId);
 
-        db.runTransaction((Transaction.Function<Void>) transaction -> {
+        db.runTransaction((Transaction.Function<DocumentReference>) transaction -> {
             // Get current event data
-            List<String> selectedEntrants = (List<String>) transaction.get(eventRef).get("selectedEntrantIds");
-            List<String> declinedEntrants = (List<String>) transaction.get(eventRef).get("declinedEntrantIds");
+            DocumentSnapshot eventDoc = transaction.get(eventRef);
+            List<String> selectedEntrants = (List<String>) eventDoc.get("selectedEntrantIds");
+            List<String> declinedEntrants = (List<String>) eventDoc.get("declinedEntrantIds");
+            DocumentReference organizerRef = eventDoc.getDocumentReference("Organizer");
 
             if (selectedEntrants == null) selectedEntrants = new ArrayList<>();
             if (declinedEntrants == null) declinedEntrants = new ArrayList<>();
@@ -88,13 +92,60 @@ public class LotteryController {
             transaction.update(eventRef, "selectedEntrantIds", selectedEntrants);
             transaction.update(eventRef, "declinedEntrantIds", declinedEntrants);
 
-            // Create notification
+            return organizerRef;
+        }).addOnSuccessListener(organizerRef -> {
+            Log.d(TAG, "Invitation declined successfully");
+            
+            // Create notification for the person who declined
             createNotification(userId, eventId, "invitation_declined",
                     "You've declined the invitation. Thank you for letting us know.");
-
-            return null;
-        }).addOnSuccessListener(aVoid -> {
-            Log.d(TAG, "Invitation declined successfully");
+            
+            // Notify the organizer
+            if (organizerRef != null) {
+                // Get event name and user name for the notification
+                eventRef.get().addOnSuccessListener(eventDoc -> {
+                    String eventNameRaw = eventDoc.getString("Name");
+                    final String eventName = (eventNameRaw == null || eventNameRaw.isEmpty()) 
+                            ? "your event" 
+                            : eventNameRaw;
+                    
+                    // Get the user's name who declined
+                    db.collection("users").document(userId).get().addOnSuccessListener(userDoc -> {
+                        String userNameRaw = userDoc.getString("name");
+                        final String userName = (userNameRaw == null || userNameRaw.isEmpty()) 
+                                ? "An entrant" 
+                                : userNameRaw;
+                        
+                        final String notificationMessage = userName + " has declined their invitation for " + eventName + ". " +
+                                "You may want to run another lottery draw to fill the spot, but it's your choice.";
+                        
+                        // Get organizer's user ID
+                        organizerRef.get().addOnSuccessListener(organizerDoc -> {
+                            if (organizerDoc.exists()) {
+                                String organizerId = organizerDoc.getId();
+                                createNotification(organizerId, eventId, "entrant_declined",
+                                        notificationMessage);
+                                Log.d(TAG, "Organizer notified about decline: " + organizerId);
+                            }
+                        }).addOnFailureListener(e -> {
+                            Log.e(TAG, "Error getting organizer document", e);
+                        });
+                    }).addOnFailureListener(e -> {
+                        Log.e(TAG, "Error getting user document", e);
+                        // Still notify organizer even if we can't get user name
+                        final String fallbackMessage = "An entrant has declined their invitation for " + eventName + ". " +
+                                "You may want to run another lottery draw to fill the spot, but it's your choice.";
+                        organizerRef.get().addOnSuccessListener(organizerDoc -> {
+                            if (organizerDoc.exists()) {
+                                String organizerId = organizerDoc.getId();
+                                createNotification(organizerId, eventId, "entrant_declined",
+                                        fallbackMessage);
+                            }
+                        });
+                    });
+                });
+            }
+            
             if (callback != null) callback.onSuccess();
         }).addOnFailureListener(e -> {
             Log.e(TAG, "Error declining invitation", e);

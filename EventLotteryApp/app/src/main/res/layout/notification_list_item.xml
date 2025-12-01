@@ -10,14 +10,24 @@
     android:paddingBottom="12dp"
     android:background="?attr/selectableItemBackground">
 
+    <CheckBox
+        android:id="@+id/cbSelectNotification"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:contentDescription="Select notification"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
     <ImageView
         android:id="@+id/ivNotificationIcon"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:contentDescription="Notification icon"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/cbSelectNotification"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/tvNotificationTitle"
+        android:layout_marginStart="8dp"
         android:paddingRight="3dp"
         tools:src="@drawable/ticket" />
 
@@ -55,7 +65,7 @@
         android:textColor="@color/medium_grey"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/ivNotificationIcon"
         app:layout_constraintTop_toBottomOf="@id/tvNotificationTitle"
         tools:text="Loading" />
 

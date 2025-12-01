@@ -707,9 +707,8 @@ public class EventDetailsActivity extends AppCompatActivity {
             tvStatusMessage.setTextColor(getResources().getColor(android.R.color.darker_gray));
             tvStatusMessage.setVisibility(View.VISIBLE);
         } else if (isDeclined) {
-            tvStatusMessage.setText("ℹ️ You declined the invitation for this event.");
-            tvStatusMessage.setTextColor(getResources().getColor(android.R.color.darker_gray));
-            tvStatusMessage.setVisibility(View.VISIBLE);
+            // Hide status message for declined - we'll show a toast instead
+            tvStatusMessage.setVisibility(View.GONE);
         } else {
             tvStatusMessage.setVisibility(View.GONE);
         }

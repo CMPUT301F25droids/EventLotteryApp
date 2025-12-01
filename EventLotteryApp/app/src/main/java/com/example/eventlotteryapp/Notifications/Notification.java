@@ -15,6 +15,7 @@ public class Notification implements Comparable<Notification>{
     private final String message;
     private String eventName;
     private String eventId;
+    private String documentId;
 
     public Notification(Date timeStamp, String type, String message){
         this.timeStamp = timeStamp;
@@ -22,6 +23,7 @@ public class Notification implements Comparable<Notification>{
         this.message = message;
         this.eventName = "Unknown";
         this.eventId = null;
+        this.documentId = null;
     }
 
     public interface NotificationLoadCallback {
@@ -39,6 +41,8 @@ public class Notification implements Comparable<Notification>{
         }
         DocumentReference eventRef = doc.getDocumentReference("EventId");
         Notification notification = new Notification(date, type, message);
+        // Store the document ID for deletion
+        notification.setDocumentId(doc.getId());
 
         if (eventRef != null) {
             // Store the eventId from the DocumentReference
@@ -87,6 +91,14 @@ public class Notification implements Comparable<Notification>{
 
     public Date getTimeStamp() {
         return timeStamp;
+    }
+
+    public String getDocumentId() {
+        return documentId;
+    }
+
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId;
     }
 
     // Implement compareTo for ordering by relevant time
