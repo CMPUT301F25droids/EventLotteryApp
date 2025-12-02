@@ -43,7 +43,7 @@
     <color name="calendar_day_bg">#0F000000</color>
     <color name="calendar_weekday_text">#80000000</color>
     <color name="calendar_other_month_text">#4D000000</color>
-    
+
     <!-- Success/Green Colors -->
     <color name="success_green">#4CAF50</color>
     <color name="success_green_dark">#388E3C</color>

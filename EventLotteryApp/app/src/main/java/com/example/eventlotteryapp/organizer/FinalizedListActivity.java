@@ -48,6 +48,7 @@ public class FinalizedListActivity extends AppCompatActivity {
     private TextView cancelledCountText;
     private TextView declinedCountText;
     private Button filterAcceptedButton;
+    private Button filterDrawnButton;
     private Button filterDeclinedButton;
     private Button filterCancelledButton;
     private RecyclerView participantsRecyclerView;
@@ -58,7 +59,7 @@ public class FinalizedListActivity extends AppCompatActivity {
     private List<FinalizedParticipant> allParticipants = new ArrayList<>();
     private List<FinalizedParticipant> filteredParticipants = new ArrayList<>();
     private FinalizedParticipantAdapter adapter;
-    private String currentFilter = "accepted";
+    private String currentFilter = "accepted"; // accepted, drawn, declined, cancelled
     private FinalizedParticipant selectedParticipant = null;
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d", Locale.getDefault());
@@ -106,6 +107,7 @@ public class FinalizedListActivity extends AppCompatActivity {
         cancelledCountText = findViewById(R.id.cancelled_count_text);
         declinedCountText = findViewById(R.id.declined_count_text);
         filterAcceptedButton = findViewById(R.id.filter_accepted_button);
+        filterDrawnButton = findViewById(R.id.filter_drawn_button);
         filterDeclinedButton = findViewById(R.id.filter_declined_button);
         filterCancelledButton = findViewById(R.id.filter_cancelled_button);
         participantsRecyclerView = findViewById(R.id.participants_recycler_view);
@@ -160,6 +162,7 @@ public class FinalizedListActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         filterAcceptedButton.setOnClickListener(v -> setFilter("accepted"));
+        filterDrawnButton.setOnClickListener(v -> setFilter("drawn"));
         filterDeclinedButton.setOnClickListener(v -> setFilter("declined"));
         filterCancelledButton.setOnClickListener(v -> setFilter("cancelled"));
 
@@ -195,6 +198,11 @@ public class FinalizedListActivity extends AppCompatActivity {
         filterAcceptedButton.setTextColor(getResources().getColor(R.color.black, null));
         filterAcceptedButton.setCompoundDrawableTintList(getResources().getColorStateList(R.color.black_color_state_list));
 
+        filterDrawnButton.setBackground(getResources().getDrawable(R.drawable.export_csv_button_bg));
+        filterDrawnButton.setBackgroundTintList(null);
+        filterDrawnButton.setTextColor(getResources().getColor(R.color.black, null));
+        filterDrawnButton.setCompoundDrawableTintList(getResources().getColorStateList(R.color.black_color_state_list));
+
         filterDeclinedButton.setBackground(getResources().getDrawable(R.drawable.export_csv_button_bg));
         filterDeclinedButton.setBackgroundTintList(null);
         filterDeclinedButton.setTextColor(getResources().getColor(R.color.black, null));
@@ -212,6 +220,12 @@ public class FinalizedListActivity extends AppCompatActivity {
                 filterAcceptedButton.setBackgroundTintList(null);
                 filterAcceptedButton.setTextColor(getResources().getColor(R.color.white, null));
                 filterAcceptedButton.setCompoundDrawableTintList(getResources().getColorStateList(R.color.white_color_state_list));
+                break;
+            case "drawn":
+                filterDrawnButton.setBackground(getResources().getDrawable(R.drawable.notify_button_bg));
+                filterDrawnButton.setBackgroundTintList(null);
+                filterDrawnButton.setTextColor(getResources().getColor(R.color.white, null));
+                filterDrawnButton.setCompoundDrawableTintList(getResources().getColorStateList(R.color.white_color_state_list));
                 break;
             case "declined":
                 filterDeclinedButton.setBackground(getResources().getDrawable(R.drawable.notify_button_bg));
@@ -273,10 +287,16 @@ public class FinalizedListActivity extends AppCompatActivity {
         declinedIds = new ArrayList<>(declinedSet);
 
         allParticipants.clear();
+        filteredParticipants.clear(); // Clear filtered list when reloading
 
         // Count totals (using deduplicated lists)
-        // Accepted users are the finalized attendees
-        int totalAccepted = acceptedIds.size();
+        // Accepted users are the finalized attendees - EXCLUDE cancelled users
+        int totalAccepted = 0;
+        for (String id : acceptedIds) {
+            if (!cancelledSet.contains(id)) {
+                totalAccepted++;
+            }
+        }
         int totalCancelled = cancelledIds.size();
         int totalDeclined = declinedIds.size();
         Long maxParticipants = document.getLong("maxParticipants");
@@ -290,7 +310,15 @@ public class FinalizedListActivity extends AppCompatActivity {
         final int[] loaded = {0};
         final int total = acceptedIds.size() + selectedIds.size() + cancelledIds.size() + declinedIds.size();
 
+        Log.d(TAG, "Loading participants - selectedIds: " + selectedIds.size() + ", acceptedIds: " + acceptedIds.size() + 
+              ", cancelledIds: " + cancelledIds.size() + ", declinedIds: " + declinedIds.size() + ", total: " + total);
+        Log.d(TAG, "selectedIds: " + selectedIds);
+        Log.d(TAG, "acceptedIds: " + acceptedIds);
+        Log.d(TAG, "cancelledSet: " + cancelledSet);
+        Log.d(TAG, "acceptedSet: " + acceptedSet);
+
         if (total == 0) {
+            Log.d(TAG, "No participants to load, total is 0");
             adapter.notifyDataSetChanged();
             return;
         }
@@ -298,20 +326,33 @@ public class FinalizedListActivity extends AppCompatActivity {
         // Track loaded entrant IDs to prevent duplicates across different statuses
         Set<String> loadedEntrantIds = new LinkedHashSet<>();
 
-        // Load accepted participants (users who accepted invitation) - these are the finalized attendees
-        for (String entrantId : acceptedIds) {
-            if (!loadedEntrantIds.contains(entrantId)) {
+        // Load selected participants FIRST (users who were selected but haven't responded yet)
+        // These should show in "Drawn" filter, NOT in "Accepted"
+        // If they're in selectedIds, they were just selected and need to accept again
+        // Even if they're also in acceptedIds (stale from previous acceptance), they should show as "drawn"
+        // EXCLUDE cancelled users from drawn
+        for (String entrantId : selectedIds) {
+            // If in selectedIds, always show as "drawn" (they need to accept the new selection)
+            // The acceptedIds entry is stale from a previous acceptance
+            if (!cancelledSet.contains(entrantId) && !loadedEntrantIds.contains(entrantId)) {
                 loadedEntrantIds.add(entrantId);
-                loadParticipant(entrantId, "accepted", loaded, total);
+                Log.d(TAG, "Loading as DRAWN: " + entrantId + " (in selectedIds - needs to accept again)");
+                loadParticipant(entrantId, "drawn", loaded, total);
             }
         }
 
-        // Load selected participants (users who were selected but haven't responded yet)
-        // These should also show as "accepted" in the UI since they're pending acceptance
-        for (String entrantId : selectedIds) {
-            if (!loadedEntrantIds.contains(entrantId)) {
+        // Load accepted participants (users who explicitly accepted invitation) - these are the finalized attendees
+        // EXCLUDE cancelled users from accepted
+        // Only users who are in acceptedIds AND NOT in selectedIds (have accepted and are not currently selected again)
+        for (String entrantId : acceptedIds) {
+            // If they're in selectedIds, they're currently selected and need to accept again
+            // So show them as "drawn" instead (already handled above)
+            if (!cancelledSet.contains(entrantId) && !selectedSet.contains(entrantId) && !loadedEntrantIds.contains(entrantId)) {
                 loadedEntrantIds.add(entrantId);
+                Log.d(TAG, "Loading as ACCEPTED: " + entrantId + " (in acceptedIds, NOT in selectedIds)");
                 loadParticipant(entrantId, "accepted", loaded, total);
+            } else if (selectedSet.contains(entrantId)) {
+                Log.d(TAG, "Skipping ACCEPTED for " + entrantId + " (also in selectedIds, already loaded as drawn)");
             }
         }
 
@@ -381,12 +422,15 @@ public class FinalizedListActivity extends AppCompatActivity {
     private void filterParticipants() {
         filteredParticipants.clear();
 
+        Log.d(TAG, "Filtering participants - currentFilter: " + currentFilter + ", allParticipants size: " + allParticipants.size());
         for (FinalizedParticipant participant : allParticipants) {
+            Log.d(TAG, "Participant: " + participant.name + ", status: " + participant.status + ", matches filter: " + participant.status.equals(currentFilter));
             if (participant.status.equals(currentFilter)) {
                 filteredParticipants.add(participant);
             }
         }
 
+        Log.d(TAG, "Filtered participants size: " + filteredParticipants.size());
         adapter.notifyDataSetChanged();
     }
 
@@ -419,22 +463,26 @@ public class FinalizedListActivity extends AppCompatActivity {
                             .get()
                             .addOnSuccessListener(document -> {
                                 List<String> selectedIds = (List<String>) document.get("selectedEntrantIds");
+                                List<String> acceptedIds = (List<String>) document.get("acceptedEntrantIds");
                                 List<String> cancelledIds = (List<String>) document.get("cancelledEntrantIds");
 
                                 if (selectedIds == null) selectedIds = new ArrayList<>();
+                                if (acceptedIds == null) acceptedIds = new ArrayList<>();
                                 if (cancelledIds == null) cancelledIds = new ArrayList<>();
 
-                                // Remove from selected
+                                // Remove from selected AND accepted (they could be in either)
                                 selectedIds.remove(participant.entrantId);
+                                acceptedIds.remove(participant.entrantId);
 
                                 // Add to cancelled
                                 if (!cancelledIds.contains(participant.entrantId)) {
                                     cancelledIds.add(participant.entrantId);
                                 }
 
-                                // Update Firestore
+                                // Update Firestore - remove from both selected and accepted, add to cancelled
                                 firestore.collection("Events").document(eventId)
                                         .update("selectedEntrantIds", selectedIds,
+                                                "acceptedEntrantIds", acceptedIds,
                                                 "cancelledEntrantIds", cancelledIds)
                                         .addOnSuccessListener(aVoid -> {
                                             Toast.makeText(this, participant.name + " has been cancelled", Toast.LENGTH_SHORT).show();
@@ -550,12 +598,12 @@ public class FinalizedListActivity extends AppCompatActivity {
     }
 
     private void updateButtonVisibility() {
-        if (selectedParticipant != null && currentFilter.equals("accepted")) {
-            // Show both buttons when a participant is selected in accepted filter
+        if (selectedParticipant != null && (currentFilter.equals("accepted") || currentFilter.equals("drawn"))) {
+            // Show both buttons when a participant is selected in accepted or drawn filter
             cancelButton.setVisibility(View.VISIBLE);
             drawReplacementButton.setVisibility(View.VISIBLE);
         } else {
-            // Hide both buttons when no participant is selected or not in accepted filter
+            // Hide both buttons when no participant is selected or not in accepted/drawn filter
             cancelButton.setVisibility(View.GONE);
             drawReplacementButton.setVisibility(View.GONE);
         }

@@ -293,11 +293,15 @@ public class JoinConfirmationFragment extends BottomSheetDialogFragment {
                             }
                         }
                         
-                        // Add user to waiting list and remove from declined list (if they were declined)
-                        // Use batch update to ensure both operations succeed together
+                        // Add user to waiting list and remove from declined/cancelled/accepted lists (if they were in any of those)
+                        // When rejoining, they should start fresh on the waitlist
+                        // Use batch update to ensure all operations succeed together
                         WriteBatch batch = db.batch();
                         batch.update(event_ref, "waitingListEntrantIds", com.google.firebase.firestore.FieldValue.arrayUnion(userId));
                         batch.update(event_ref, "declinedEntrantIds", com.google.firebase.firestore.FieldValue.arrayRemove(userId));
+                        batch.update(event_ref, "cancelledEntrantIds", com.google.firebase.firestore.FieldValue.arrayRemove(userId));
+                        batch.update(event_ref, "acceptedEntrantIds", com.google.firebase.firestore.FieldValue.arrayRemove(userId));
+                        batch.update(event_ref, "selectedEntrantIds", com.google.firebase.firestore.FieldValue.arrayRemove(userId));
                         batch.update(user_ref, "JoinedEvents", com.google.firebase.firestore.FieldValue.arrayUnion(event_ref));
                         
                         batch.commit()

@@ -80,8 +80,9 @@ public class EntrantListActivity extends AppCompatActivity {
     private MaterialButton filterPendingTab;
     private MaterialButton filterSelectedTab;
     private MaterialButton filterDeclinedTab;
+    private MaterialButton filterCancelledTab;
     
-    private String currentFilter = "all"; // all, pending, selected, declined
+    private String currentFilter = "all"; // all, pending, selected, declined, cancelled
     private List<EntrantWithStatus> allEntrants = new ArrayList<>();
     private List<EntrantWithStatus> filteredEntrants = new ArrayList<>();
     private WaitingListAdapter adapter;
@@ -145,6 +146,7 @@ public class EntrantListActivity extends AppCompatActivity {
         filterPendingTab = findViewById(R.id.filter_pending_tab);
         filterSelectedTab = findViewById(R.id.filter_selected_tab);
         filterDeclinedTab = findViewById(R.id.filter_declined_tab);
+        filterCancelledTab = findViewById(R.id.filter_cancelled_tab);
         
         // Back button
         ImageView backButton = findViewById(R.id.back_button);
@@ -208,6 +210,7 @@ public class EntrantListActivity extends AppCompatActivity {
         filterPendingTab.setOnClickListener(v -> setFilter("pending"));
         filterSelectedTab.setOnClickListener(v -> setFilter("selected"));
         filterDeclinedTab.setOnClickListener(v -> setFilter("declined"));
+        filterCancelledTab.setOnClickListener(v -> setFilter("cancelled"));
         
         // Run Lottery button - uses same logic as OrganizerEventDetailsActivity
         runLotteryButton.setOnClickListener(v -> runLottery());
@@ -263,7 +266,7 @@ public class EntrantListActivity extends AppCompatActivity {
     
     private void updateFilterTabs() {
         List<MaterialButton> buttons = java.util.Arrays.asList(
-            filterAllTab, filterPendingTab, filterSelectedTab, filterDeclinedTab
+            filterAllTab, filterPendingTab, filterSelectedTab, filterDeclinedTab, filterCancelledTab
         );
         
         MaterialButton selectedButton = null;
@@ -279,6 +282,9 @@ public class EntrantListActivity extends AppCompatActivity {
                 break;
             case "declined":
                 selectedButton = filterDeclinedTab;
+                break;
+            case "cancelled":
+                selectedButton = filterCancelledTab;
                 break;
         }
         
@@ -435,16 +441,16 @@ public class EntrantListActivity extends AppCompatActivity {
                         continue;
                     }
                     
-                    // Determine status - check accepted first, then selected, then others
+                    // Determine status - check cancelled first, then accepted, then selected, then others
                     String status = "pending";
-                    if (acceptedIds != null && acceptedIds.contains(entrantId)) {
+                    if (cancelledIds != null && cancelledIds.contains(entrantId)) {
+                        status = "cancelled"; // Cancelled users have their own filter
+                    } else if (acceptedIds != null && acceptedIds.contains(entrantId)) {
                         status = "selected"; // Accepted users show as "selected" in the waiting list view
                     } else if (selectedIds != null && selectedIds.contains(entrantId)) {
                         status = "selected";
                     } else if (declinedIds != null && declinedIds.contains(entrantId)) {
                         status = "declined";
-                    } else if (cancelledIds != null && cancelledIds.contains(entrantId)) {
-                        status = "declined"; // Cancelled also shows as declined
                     }
                     
                     final String finalStatus = status;
@@ -533,9 +539,9 @@ public class EntrantListActivity extends AppCompatActivity {
             if (!uniqueEntrants.containsKey(entrant.id)) {
                 uniqueEntrants.put(entrant.id, entrant);
             } else {
-                // If duplicate exists, prefer selected or declined status over pending
+                // If duplicate exists, prefer selected, declined, or cancelled status over pending
                 EntrantWithStatus existing = uniqueEntrants.get(entrant.id);
-                if (entrant.status.equals("selected") || entrant.status.equals("declined")) {
+                if (entrant.status.equals("selected") || entrant.status.equals("declined") || entrant.status.equals("cancelled")) {
                     if (existing.status.equals("pending")) {
                         uniqueEntrants.put(entrant.id, entrant);
                     }
@@ -648,6 +654,9 @@ public class EntrantListActivity extends AppCompatActivity {
                     break;
                 case "declined":
                     statusColorRes = R.drawable.status_indicator_red;
+                    break;
+                case "cancelled":
+                    statusColorRes = R.drawable.status_indicator_grey;
                     break;
                 default: // pending
                     statusColorRes = R.drawable.status_indicator_yellow;

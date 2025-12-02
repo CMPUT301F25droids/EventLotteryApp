@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,8 +36,10 @@ import com.example.eventlotteryapp.NotificationController;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import com.example.eventlotteryapp.Controllers.LotteryController;
 import android.widget.Toast;
@@ -219,6 +222,13 @@ public class EventDetailsActivity extends AppCompatActivity {
         tvWaitlistCount = findViewById(R.id.waitlist_count);
         tvStatusMessage = findViewById(R.id.status_message);
         tvSelectedStatus = findViewById(R.id.selected_status_text);
+        
+        // Menu button (3 dots)
+        ImageView menuButton = findViewById(R.id.menu_button);
+        if (menuButton != null) {
+            menuButton.setOnClickListener(v -> showMenu(v));
+        }
+        
         userInWaitlist();
         populateUI();
     }
@@ -319,11 +329,19 @@ public class EventDetailsActivity extends AppCompatActivity {
                                 ", lotteryRanAndUserSelected: " + lotteryRanAndUserSelected +
                                 ", lotteryRanAndUserNotSelected: " + lotteryRanAndUserNotSelected);
                         
-                        // Update status message to show rejection if applicable
-                        updateStatusMessage(isEventClosed, isSelected, isAccepted, isInWaitingList, isCancelled, isDeclined);
-
-                        // Show appropriate buttons based on status
-                        if (isSelected) {
+                            // Update status message to show rejection if applicable
+                            updateStatusMessage(isEventClosed, isSelected, isAccepted, isInWaitingList, isCancelled, isDeclined);
+                            
+                            // Show/hide menu button based on registration status
+                            // Only show if user is registered (in waiting list, selected, or accepted)
+                            ImageView menuButton = findViewById(R.id.menu_button);
+                            if (menuButton != null) {
+                                boolean isRegistered = isInWaitingList || isSelected || isAccepted;
+                                menuButton.setVisibility(isRegistered ? View.VISIBLE : View.GONE);
+                            }
+                            
+                            // Show appropriate buttons based on status
+                            if (isSelected) {
                             // User is SELECTED - show Accept/Decline buttons
                             join_button.setVisibility(Button.GONE);
                             leave_button.setVisibility(Button.GONE);
@@ -340,8 +358,8 @@ public class EventDetailsActivity extends AppCompatActivity {
                                 params.topMargin = (int) (4 * getResources().getDisplayMetrics().density); // 4dp
                                 eventName.setLayoutParams(params);
                             }
-                        } else if (isAccepted) {
-                            // User has ACCEPTED - show confirmation message
+                        } else if (isAccepted && !isCancelled) {
+                            // User has ACCEPTED (and NOT cancelled) - show confirmation message
                             join_button.setVisibility(Button.GONE);
                             leave_button.setVisibility(Button.GONE);
                             acceptInvitationButton.setVisibility(Button.GONE);
@@ -358,8 +376,8 @@ public class EventDetailsActivity extends AppCompatActivity {
                                 eventName.setLayoutParams(params);
                             }
                             // Optionally show a "You're registered!" message
-                        } else if (isDeclined) {
-                            // User has DECLINED - show Join Waitlist button to rejoin (only if event not closed)
+                        } else if (isDeclined || isCancelled) {
+                            // User has DECLINED or CANCELLED - show Join Waitlist button to rejoin (only if event not closed)
                             leave_button.setVisibility(Button.GONE);
                             if (isEventClosed) {
                                 join_button.setVisibility(Button.GONE);
@@ -413,7 +431,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                                 params.topMargin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp
                                 eventName.setLayoutParams(params);
                             }
-                        } else if (isInWaitingList || isCancelled) {
+                        } else if (isInWaitingList) {
                             // User is in waiting list - show Leave button (only if lottery hasn't run or user wasn't selected)
                             join_button.setVisibility(Button.GONE);
                             if (lotteryRanAndUserSelected) {
@@ -545,6 +563,14 @@ public class EventDetailsActivity extends AppCompatActivity {
                             // Update status message to show rejection if applicable
                             updateStatusMessage(isEventClosed, isSelected, isAccepted, isInWaitingList, isCancelled, isDeclined);
 
+                            // Show/hide menu button based on registration status
+                            // Only show if user is registered (in waiting list, selected, or accepted)
+                            ImageView menuButton = findViewById(R.id.menu_button);
+                            if (menuButton != null) {
+                                boolean isRegistered = isInWaitingList || isSelected || isAccepted;
+                                menuButton.setVisibility(isRegistered ? View.VISIBLE : View.GONE);
+                            }
+
                             // Show appropriate buttons based on status
                             if (isSelected) {
                                 // User is SELECTED - show Accept/Decline buttons
@@ -563,8 +589,8 @@ public class EventDetailsActivity extends AppCompatActivity {
                                     params.topMargin = (int) (4 * getResources().getDisplayMetrics().density); // 4dp
                                     eventName.setLayoutParams(params);
                                 }
-                            } else if (isAccepted) {
-                                // User has ACCEPTED - show confirmation message
+                            } else if (isAccepted && !isCancelled) {
+                                // User has ACCEPTED (and NOT cancelled) - show confirmation message
                                 join_button.setVisibility(Button.GONE);
                                 leave_button.setVisibility(Button.GONE);
                                 acceptInvitationButton.setVisibility(Button.GONE);
@@ -581,8 +607,8 @@ public class EventDetailsActivity extends AppCompatActivity {
                                     eventName.setLayoutParams(params);
                                 }
                                 // Optionally show a "You're registered!" message
-                            } else if (isDeclined) {
-                                // User has DECLINED - show Join Waitlist button to rejoin (only if event not closed)
+                            } else if (isDeclined || isCancelled) {
+                                // User has DECLINED or CANCELLED - show Join Waitlist button to rejoin (only if event not closed)
                                 leave_button.setVisibility(Button.GONE);
                                 if (isEventClosed) {
                                     join_button.setVisibility(Button.GONE);
@@ -636,7 +662,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                                     params.topMargin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp
                                     eventName.setLayoutParams(params);
                                 }
-                            } else if (isInWaitingList || isCancelled) {
+                            } else if (isInWaitingList) {
                                 // User is in waiting list - show Leave button (only if lottery hasn't run or user wasn't selected)
                                 join_button.setVisibility(Button.GONE);
                                 if (lotteryRanAndUserSelected) {
@@ -818,9 +844,9 @@ public class EventDetailsActivity extends AppCompatActivity {
                             TextView scheduleView = findViewById(R.id.event_schedule);
                             scheduleView.setText("One-time event");
                             
-                            // Status tag - show selected count vs max participants
+                            // Status tag - show waitlist count vs waiting list size (like organizer view)
                             TextView statusTag = findViewById(R.id.event_status_tag);
-                            updateStatusTag(statusTag, documentSnapshot, selectedCount, maxParticipants);
+                            updateStatusTag(statusTag, documentSnapshot, waitlistSize);
                             
                             // Registration info
                             TextView registrationInfo = findViewById(R.id.registration_info);
@@ -854,7 +880,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         }
     }
     
-    private void updateStatusTag(TextView statusTag, DocumentSnapshot documentSnapshot, int selectedCount, int maxParticipants) {
+    private void updateStatusTag(TextView statusTag, DocumentSnapshot documentSnapshot, int waitlistCount) {
         Date now = new Date();
         Date registrationOpenDate = documentSnapshot.getDate("registrationOpenDate");
         Date registrationCloseDate = documentSnapshot.getDate("registrationCloseDate");
@@ -866,16 +892,28 @@ public class EventDetailsActivity extends AppCompatActivity {
             isOpen = false; // Registration closed
         }
         
-        // Ensure maxParticipants is valid (at least 1)
-        if (maxParticipants <= 0) {
-            maxParticipants = 1; // Default to 1 to avoid division by zero or weird display
+        // Check if waiting list is limited (like organizer view does)
+        Boolean limitWaitingList = documentSnapshot.getBoolean("limitWaitingList");
+        boolean isLimitEnabled = (limitWaitingList != null && limitWaitingList);
+        Long waitingListSizeLong = documentSnapshot.getLong("waitingListSize");
+        int waitingListSize = (waitingListSizeLong != null) ? waitingListSizeLong.intValue() : 0;
+        
+        // Build status text - use waiting list size as denominator if limited, otherwise show just numerator
+        // Numerator is the current waiting list count, denominator is waitingListSize
+        String statusText;
+        String countText;
+        if (isLimitEnabled && waitingListSize > 0) {
+            // Waiting list is limited - show numerator/denominator
+            countText = waitlistCount + "/" + waitingListSize;
+        } else {
+            // Waiting list is infinite - show just numerator without slash
+            countText = String.valueOf(waitlistCount);
         }
         
-        String statusText;
         if (isOpen) {
-            statusText = "🟢 Open - " + selectedCount + "/" + maxParticipants;
+            statusText = "🟢 Open - " + countText;
         } else {
-            statusText = "🔴 Closed - " + selectedCount + "/" + maxParticipants;
+            statusText = "🔴 Closed - " + countText;
         }
         
         statusTag.setText(statusText);
@@ -991,15 +1029,45 @@ public class EventDetailsActivity extends AppCompatActivity {
             return;
         }
         
-        // If lottery has run (event closed) and user is in waiting list but not selected/accepted, they were rejected
-        if (isEventClosed && isInWaitingList && !isSelected && !isAccepted && !isCancelled && !isDeclined) {
+        // Check cancelled FIRST - cancelled users should not see "registered" message
+        if (isCancelled) {
+            // Create inactive pill button style message
+            String cancelledText = "❌ The organizer cancelled your registration.";
+            SpannableString spannable = new SpannableString(cancelledText);
+            // Make the checkmark grey (inactive look)
+            spannable.setSpan(
+                new ForegroundColorSpan(getResources().getColor(R.color.medium_grey)),
+                0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+            // Rest of text is dark grey for inactive look
+            spannable.setSpan(
+                new ForegroundColorSpan(getResources().getColor(R.color.medium_grey)),
+                1, cancelledText.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+            tvStatusMessage.setText(spannable);
+            tvStatusMessage.setBackgroundResource(R.drawable.success_button_background);
+            tvStatusMessage.setTextSize(17);
+            tvStatusMessage.setTypeface(tvStatusMessage.getTypeface(), android.graphics.Typeface.BOLD);
+            tvStatusMessage.setPadding(
+                (int) (20 * getResources().getDisplayMetrics().density),
+                (int) (16 * getResources().getDisplayMetrics().density),
+                (int) (20 * getResources().getDisplayMetrics().density),
+                (int) (16 * getResources().getDisplayMetrics().density)
+            );
+            tvStatusMessage.setVisibility(View.VISIBLE);
+        } else if (isDeclined) {
+            // Hide status message for declined - we'll show Join Waitlist button instead
+            tvStatusMessage.setVisibility(View.GONE);
+        } else if (isEventClosed && isInWaitingList && !isSelected && !isAccepted) {
+            // If lottery has run (event closed) and user is in waiting list but not selected/accepted, they were rejected
             tvStatusMessage.setText("❌ You were not selected in the lottery draw. You remain on the waiting list.");
             tvStatusMessage.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
             tvStatusMessage.setVisibility(View.VISIBLE);
-        } else if (isSelected && !isAccepted) {
+        } else if (isSelected) {
             // Hide the status message when selected - we show "You've Been Selected!" text instead
+            // Even if they're also in acceptedIds (stale from previous acceptance), they need to accept again
             tvStatusMessage.setVisibility(View.GONE);
-        } else if (isAccepted) {
+        } else if (isAccepted && !isCancelled) {
             // Create a nice success message with green checkmark in inactive pill button style
             String successText = "✓ You're registered for this event!";
             SpannableString spannable = new SpannableString(successText);
@@ -1024,13 +1092,6 @@ public class EventDetailsActivity extends AppCompatActivity {
                 (int) (16 * getResources().getDisplayMetrics().density)
             );
             tvStatusMessage.setVisibility(View.VISIBLE);
-        } else if (isCancelled) {
-            tvStatusMessage.setText("ℹ️ You cancelled your registration for this event.");
-            tvStatusMessage.setTextColor(getResources().getColor(android.R.color.darker_gray));
-            tvStatusMessage.setVisibility(View.VISIBLE);
-        } else if (isDeclined) {
-            // Hide status message for declined - we'll show a toast instead
-            tvStatusMessage.setVisibility(View.GONE);
         } else {
             tvStatusMessage.setVisibility(View.GONE);
         }
@@ -1047,16 +1108,38 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         String userId = auth.getCurrentUser().getUid();
 
+        // Disable buttons immediately to prevent spam clicking
+        acceptInvitationButton.setEnabled(false);
+        declineInvitationButton.setEnabled(false);
+        
+        // Update UI immediately to show accepted state
+        acceptInvitationButton.setVisibility(Button.GONE);
+        declineInvitationButton.setVisibility(Button.GONE);
+        if (tvSelectedStatus != null) {
+            tvSelectedStatus.setVisibility(View.GONE);
+        }
+        
+        // Show registered message immediately
+        updateStatusMessage(false, false, true, false, false, false);
+
         lotteryController.acceptInvitation(eventId, userId, new LotteryController.AcceptCallback() {
             @Override
             public void onSuccess() {
                 Toast.makeText(EventDetailsActivity.this, "Invitation accepted! You're registered for the event.", Toast.LENGTH_SHORT).show();
-                // Refresh the UI to show updated status
+                // Refresh the UI to show updated status (this will confirm the state from Firestore)
                 userInWaitlist();
             }
 
             @Override
             public void onFailure(String error) {
+                // Re-enable buttons on error
+                acceptInvitationButton.setEnabled(true);
+                declineInvitationButton.setEnabled(true);
+                acceptInvitationButton.setVisibility(Button.VISIBLE);
+                declineInvitationButton.setVisibility(Button.VISIBLE);
+                if (tvSelectedStatus != null) {
+                    tvSelectedStatus.setVisibility(View.VISIBLE);
+                }
                 Toast.makeText(EventDetailsActivity.this, "Error accepting invitation: " + error, Toast.LENGTH_SHORT).show();
             }
         });
@@ -1079,21 +1162,227 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .setTitle("Decline Invitation")
                 .setMessage("Are you sure you want to decline this invitation?")
                 .setPositiveButton("Decline", (dialog, which) -> {
+                    // Disable buttons immediately to prevent spam clicking
+                    acceptInvitationButton.setEnabled(false);
+                    declineInvitationButton.setEnabled(false);
+                    
+                    // Update UI immediately to show declined state
+                    acceptInvitationButton.setVisibility(Button.GONE);
+                    declineInvitationButton.setVisibility(Button.GONE);
+                    if (tvSelectedStatus != null) {
+                        tvSelectedStatus.setVisibility(View.GONE);
+                    }
+                    
                     lotteryController.declineInvitation(eventId, userId, new LotteryController.DeclineCallback() {
                         @Override
                         public void onSuccess() {
                             Toast.makeText(EventDetailsActivity.this, "Invitation declined.", Toast.LENGTH_SHORT).show();
-                            // Refresh the UI to show updated status
+                            // Refresh the UI to show updated status (this will confirm the state from Firestore)
                             userInWaitlist();
                         }
 
                         @Override
                         public void onFailure(String error) {
+                            // Re-enable buttons on error
+                            acceptInvitationButton.setEnabled(true);
+                            declineInvitationButton.setEnabled(true);
+                            acceptInvitationButton.setVisibility(Button.VISIBLE);
+                            declineInvitationButton.setVisibility(Button.VISIBLE);
+                            if (tvSelectedStatus != null) {
+                                tvSelectedStatus.setVisibility(View.VISIBLE);
+                            }
                             Toast.makeText(EventDetailsActivity.this, "Error declining invitation: " + error, Toast.LENGTH_SHORT).show();
                         }
                     });
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    /**
+     * Displays a popup menu with option to cancel registration.
+     *
+     * @param anchor The view to anchor the popup menu to.
+     */
+    private void showMenu(View anchor) {
+        PopupMenu popupMenu = new PopupMenu(this, anchor);
+        popupMenu.getMenuInflater().inflate(R.menu.entrant_event_details_menu, popupMenu.getMenu());
+        
+        popupMenu.setOnMenuItemClickListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.menu_cancel_registration) {
+                showCancelRegistrationDialog();
+                return true;
+            }
+            return false;
+        });
+        
+        try {
+            popupMenu.show();
+        } catch (Exception e) {
+            Log.e("EventDetails", "Error showing popup menu", e);
+            Toast.makeText(this, "Error showing menu", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Shows a confirmation dialog for cancelling registration.
+     */
+    private void showCancelRegistrationDialog() {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Cancel Registration")
+                .setMessage("Are you sure you want to cancel your registration for this event?")
+                .setPositiveButton("Cancel Registration", (dialog, which) -> {
+                    cancelRegistration();
+                })
+                .setNegativeButton("Keep Registration", null)
+                .show();
+    }
+
+    /**
+     * Cancels the user's registration from the event.
+     * Removes from waitlist/accepted/selected and adds to cancelled.
+     * Sends notification to organizer only if user was accepted.
+     */
+    private void cancelRegistration() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(this, "Please log in first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String userId = auth.getCurrentUser().getUid();
+        DocumentReference eventRef = db.collection("Events").document(eventId);
+
+        // Get current event data to check if user is registered and was accepted
+        eventRef.get().addOnSuccessListener(eventDoc -> {
+            List<String> waitingListIds = (List<String>) eventDoc.get("waitingListEntrantIds");
+            List<String> acceptedIds = (List<String>) eventDoc.get("acceptedEntrantIds");
+            List<String> selectedIds = (List<String>) eventDoc.get("selectedEntrantIds");
+            List<String> cancelledIds = (List<String>) eventDoc.get("cancelledEntrantIds");
+
+            if (waitingListIds == null) waitingListIds = new ArrayList<>();
+            if (acceptedIds == null) acceptedIds = new ArrayList<>();
+            if (selectedIds == null) selectedIds = new ArrayList<>();
+            if (cancelledIds == null) cancelledIds = new ArrayList<>();
+
+            // Validate that user is actually registered (in waiting list, selected, or accepted)
+            boolean isInWaitingList = waitingListIds.contains(userId);
+            boolean isSelected = selectedIds.contains(userId);
+            boolean isAccepted = acceptedIds.contains(userId);
+            boolean isRegistered = isInWaitingList || isSelected || isAccepted;
+
+            if (!isRegistered) {
+                Toast.makeText(this, "You are not registered for this event.", Toast.LENGTH_SHORT).show();
+                Log.w("EventDetails", "User attempted to cancel registration but is not registered. userId: " + userId);
+                return;
+            }
+
+            // Check if user was accepted (to send notification)
+            boolean wasAccepted = isAccepted;
+
+            // Remove from all lists
+            waitingListIds.remove(userId);
+            acceptedIds.remove(userId);
+            selectedIds.remove(userId);
+
+            // Add to cancelled if not already there
+            if (!cancelledIds.contains(userId)) {
+                cancelledIds.add(userId);
+            }
+
+            // Update Firestore
+            eventRef.update(
+                    "waitingListEntrantIds", waitingListIds,
+                    "acceptedEntrantIds", acceptedIds,
+                    "selectedEntrantIds", selectedIds,
+                    "cancelledEntrantIds", cancelledIds
+            ).addOnSuccessListener(aVoid -> {
+                Toast.makeText(this, "You've cancelled your registration for this event.", Toast.LENGTH_SHORT).show();
+                
+                // Send notification to organizer only if user was accepted
+                if (wasAccepted) {
+                    // Get organizer ID
+                    String organizerId = null;
+                    DocumentReference organizerRef = eventDoc.getDocumentReference("Organizer");
+                    if (organizerRef != null) {
+                        String path = organizerRef.getPath();
+                        if (path != null && path.contains("/users/")) {
+                            organizerId = path.substring(path.lastIndexOf("/") + 1);
+                        } else if (path != null) {
+                            String[] parts = path.split("/");
+                            for (int i = 0; i < parts.length - 1; i++) {
+                                if (parts[i].equals("users") && i + 1 < parts.length) {
+                                    organizerId = parts[i + 1];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (organizerId == null || organizerId.isEmpty()) {
+                        organizerId = eventDoc.getString("organizerId");
+                    }
+
+                    // Make final copy for use in lambda
+                    final String finalOrganizerId = organizerId;
+
+                    if (finalOrganizerId != null && !finalOrganizerId.isEmpty()) {
+                        // Get event name and user name for notification
+                        String eventNameRaw = eventDoc.getString("Name");
+                        if (eventNameRaw == null || eventNameRaw.isEmpty()) {
+                            eventNameRaw = eventDoc.getString("title");
+                        }
+                        final String eventName = (eventNameRaw != null && !eventNameRaw.isEmpty()) ? eventNameRaw : "your event";
+
+                        db.collection("users").document(userId).get().addOnSuccessListener(userDoc -> {
+                            String userNameRaw = userDoc.getString("Name");
+                            if (userNameRaw == null || userNameRaw.isEmpty()) {
+                                userNameRaw = userDoc.getString("name");
+                            }
+                            final String userName = (userNameRaw != null && !userNameRaw.isEmpty()) ? userNameRaw : "An entrant";
+
+                            String notificationMessage = userName + " has cancelled their registration for " + eventName + ".";
+
+                            // Create notification for organizer
+                            Map<String, Object> notification = new HashMap<>();
+                            notification.put("UserId", finalOrganizerId);
+                            notification.put("EventId", eventRef);
+                            notification.put("Type", "entrant_cancelled");
+                            notification.put("Message", notificationMessage);
+                            notification.put("TimeStamp", new java.util.Date().toString());
+                            notification.put("Read", false);
+                            notification.put("UserType", "organizer");
+
+                            db.collection("Notifications").add(notification)
+                                    .addOnSuccessListener(ref -> Log.d("EventDetails", "Organizer notified about cancellation: " + ref.getId()))
+                                    .addOnFailureListener(e -> Log.e("EventDetails", "Error notifying organizer", e));
+                        }).addOnFailureListener(e -> {
+                            Log.e("EventDetails", "Error getting user document for notification", e);
+                            // Still notify with fallback message
+                            String fallbackMessage = "An entrant has cancelled their registration for " + eventName + ".";
+                            Map<String, Object> notification = new HashMap<>();
+                            notification.put("UserId", finalOrganizerId);
+                            notification.put("EventId", eventRef);
+                            notification.put("Type", "entrant_cancelled");
+                            notification.put("Message", fallbackMessage);
+                            notification.put("TimeStamp", new java.util.Date().toString());
+                            notification.put("Read", false);
+                            notification.put("UserType", "organizer");
+                            db.collection("Notifications").add(notification);
+                        });
+                    }
+                }
+
+                // Update UI immediately
+                updateStatusMessage(false, false, false, false, true, false);
+                userInWaitlist();
+            }).addOnFailureListener(e -> {
+                Log.e("EventDetails", "Error cancelling registration", e);
+                Toast.makeText(this, "Error cancelling registration: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            });
+        }).addOnFailureListener(e -> {
+            Log.e("EventDetails", "Error loading event data", e);
+            Toast.makeText(this, "Error loading event data", Toast.LENGTH_SHORT).show();
+        });
     }
 }

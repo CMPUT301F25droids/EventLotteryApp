@@ -369,7 +369,8 @@ public class MyEventsFragment extends Fragment {
 
     /**
      * Loads all events for the current user from Firestore.
-     * Queries multiple collections: JoinedEvents, waitingListEntrantIds, selectedEntrantIds, cancelledEntrantIds.
+     * Queries multiple collections: JoinedEvents, waitingListEntrantIds, selectedEntrantIds, acceptedEntrantIds.
+     * NOTE: cancelledEntrantIds is excluded - cancelled users should not see events in My Events.
      */
     private void loadEvents() {
         loading.setVisibility(View.VISIBLE);
@@ -386,7 +387,7 @@ public class MyEventsFragment extends Fragment {
 
         Log.d(TAG, "Lists cleared. Starting queries...");
 
-        final int totalQueries = 5; // JoinedEvents + 4 waitlist queries (waitingList, selected, accepted, cancelled)
+        final int totalQueries = 4; // JoinedEvents + 3 waitlist queries (waitingList, selected, accepted) - cancelled excluded
 
         // Helper to check if all queries and status loads are done
         java.util.function.Consumer<Void> checkAllDone = (v) -> {
@@ -434,6 +435,13 @@ public class MyEventsFragment extends Fragment {
             String eventId = eventDoc.getId();
             if (loadedEventIds.contains(eventId)) {
                 return; // Already loading or loaded
+            }
+
+            // Check if user is cancelled - if so, skip this event entirely
+            List<String> cancelledEntrants = (List<String>) eventDoc.get("cancelledEntrantIds");
+            if (cancelledEntrants != null && cancelledEntrants.contains(userId)) {
+                Log.d(TAG, "Skipping event " + eventId + " - user is cancelled");
+                return; // Don't load cancelled events
             }
 
             MyEventItem event = eventDoc.toObject(MyEventItem.class);
@@ -495,6 +503,18 @@ public class MyEventsFragment extends Fragment {
                                 Log.d(TAG, "Fetching event: " + eventRef.getId());
                                 eventRef.get()
                                         .addOnSuccessListener(eventDoc -> {
+                                            // Check if user is cancelled before loading - skip if cancelled
+                                            List<String> cancelledEntrants = (List<String>) eventDoc.get("cancelledEntrantIds");
+                                            if (cancelledEntrants != null && cancelledEntrants.contains(userId)) {
+                                                Log.d(TAG, "Skipping event " + eventRef.getId() + " from JoinedEvents - user is cancelled");
+                                                loadedFromJoined[0]++;
+                                                if (loadedFromJoined[0] >= totalJoined) {
+                                                    completedQueries[0]++;
+                                                    Log.d(TAG, "JoinedEvents query complete");
+                                                    checkAllDone.accept(null);
+                                                }
+                                                return;
+                                            }
                                             loadEvent.accept(eventDoc);
                                             loadedFromJoined[0]++;
                                             if (loadedFromJoined[0] >= totalJoined) {
@@ -533,8 +553,7 @@ public class MyEventsFragment extends Fragment {
         // Query for events where user is in acceptedEntrantIds (accepted invitations)
         queryEventsWhere("acceptedEntrantIds", loadEvent, checkAllDone);
 
-        // Query for events where user is in cancelledEntrantIds
-        queryEventsWhere("cancelledEntrantIds", loadEvent, checkAllDone);
+        // NOTE: cancelledEntrantIds query removed - cancelled users should not see events in My Events
     }
 
     /**
@@ -635,14 +654,9 @@ public class MyEventsFragment extends Fragment {
         List<String> cancelledEntrants = (List<String>) eventDoc.get("cancelledEntrantIds");
         List<String> waitingListEntrants = (List<String>) eventDoc.get("waitingListEntrantIds");
 
-        // Check accepted first - user has accepted invitation (should show as SELECTED/Accepted)
-        if (acceptedEntrants != null && acceptedEntrants.contains(userId)) {
-            return MyEventItem.Status.SELECTED;
-        }
-
-        // Check selected - user is selected but hasn't responded yet
-        if (selectedEntrants != null && selectedEntrants.contains(userId)) {
-            return MyEventItem.Status.SELECTED;
+        // Check cancelled FIRST - cancelled users should not show as accepted/selected
+        if (cancelledEntrants != null && cancelledEntrants.contains(userId)) {
+            return MyEventItem.Status.NOT_SELECTED;
         }
 
         // Check declined - user has declined invitation (should show as NOT_SELECTED)
@@ -650,12 +664,8 @@ public class MyEventsFragment extends Fragment {
             return MyEventItem.Status.NOT_SELECTED;
         }
 
-        // Check cancelled - user cancelled their registration
-        if (cancelledEntrants != null && cancelledEntrants.contains(userId)) {
-            return MyEventItem.Status.NOT_SELECTED;
-        }
-
-        // Check waiting list
+        // Check waiting list SECOND - if user is on waitlist, they're PENDING (even if also in accepted/selected)
+        // This handles the case where user rejoined waitlist but might still be in acceptedEntrantIds
         if (waitingListEntrants != null && waitingListEntrants.contains(userId)) {
             // Check if lottery has run (registration closed) and user was not selected/accepted
             java.util.Date registrationCloseDate = eventDoc.getDate("registrationCloseDate");
@@ -669,7 +679,20 @@ public class MyEventsFragment extends Fragment {
                 return MyEventItem.Status.NOT_SELECTED;
             }
             
+            // User is on waitlist - show as PENDING (they're waiting, not accepted yet)
             return MyEventItem.Status.PENDING;
+        }
+
+        // Check accepted - user has accepted invitation (should show as SELECTED/Accepted)
+        // Only if NOT in waiting list (already checked above) and NOT cancelled
+        if (acceptedEntrants != null && acceptedEntrants.contains(userId)) {
+            return MyEventItem.Status.SELECTED;
+        }
+
+        // Check selected - user is selected but hasn't responded yet
+        // Only if NOT in waiting list (already checked above) and NOT cancelled
+        if (selectedEntrants != null && selectedEntrants.contains(userId)) {
+            return MyEventItem.Status.SELECTED;
         }
 
         return MyEventItem.Status.UNKNOWN;

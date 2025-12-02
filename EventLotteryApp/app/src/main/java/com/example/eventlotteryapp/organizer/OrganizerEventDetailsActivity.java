@@ -519,6 +519,7 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
     
     /**
      * Performs the actual cancellation of the event in Firestore.
+     * Deletes the event completely and removes all references from user data.
      * Sends notifications to all signed-up entrants and the organizer.
      */
     private void cancelEvent() {
@@ -528,9 +529,9 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
             return;
         }
         
-        Log.d(TAG, "Attempting to cancel event in Firestore: " + eventId);
+        Log.d(TAG, "Attempting to cancel and delete event in Firestore: " + eventId);
         
-        // First, get the event document to get the title and send notifications
+        // First, get the event document to get the title, send notifications, and collect all user IDs
         firestore.collection("Events").document(eventId)
             .get()
             .addOnSuccessListener(eventDoc -> {
@@ -551,42 +552,96 @@ public class OrganizerEventDetailsActivity extends AppCompatActivity {
                 // Make final for use in lambda
                 final String eventTitle = titleFromDoc;
                 
-                // Now update the event to cancelled
-                Map<String, Object> updateData = new HashMap<>();
-                updateData.put("cancelled", true);
+                // Collect all user IDs from all arrays
+                List<String> waitingListIds = (List<String>) eventDoc.get("waitingListEntrantIds");
+                List<String> selectedIds = (List<String>) eventDoc.get("selectedEntrantIds");
+                List<String> acceptedIds = (List<String>) eventDoc.get("acceptedEntrantIds");
+                List<String> declinedIds = (List<String>) eventDoc.get("declinedEntrantIds");
+                List<String> cancelledIds = (List<String>) eventDoc.get("cancelledEntrantIds");
                 
-                firestore.collection("Events").document(eventId)
-                    .update(updateData)
-                    .addOnSuccessListener(aVoid -> {
-                        Log.d(TAG, "Event successfully cancelled: " + eventId);
-                        
-                        // Send notifications to all signed-up entrants
-                        String notificationTitle = "Event Cancelled";
-                        String notificationMessage = "The event \"" + eventTitle + "\" has been cancelled by the organizer.";
-                        
-                        Log.d(TAG, "Sending cancellation notifications to all signed-up entrants");
-                        notificationController.sendToAllSignedUpEntrants(eventId, notificationTitle, notificationMessage);
-                        
-                        // Send notification to the organizer
-                        Log.d(TAG, "Sending cancellation notification to organizer");
-                        notificationController.sendToOrganizer(eventId, notificationTitle, 
-                            "You have cancelled the event \"" + eventTitle + "\". All participants have been notified.");
-                        
-                        Toast.makeText(this, "Event cancelled successfully. All participants have been notified.", Toast.LENGTH_LONG).show();
-                        finish();
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Error cancelling event: " + eventId, e);
-                        String errorMessage = "Error cancelling event";
-                        if (e.getMessage() != null) {
-                            errorMessage += ": " + e.getMessage();
-                        }
-                        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
-                    });
+                // Combine all user IDs into a set to avoid duplicates
+                java.util.Set<String> allUserIds = new java.util.HashSet<>();
+                if (waitingListIds != null) allUserIds.addAll(waitingListIds);
+                if (selectedIds != null) allUserIds.addAll(selectedIds);
+                if (acceptedIds != null) allUserIds.addAll(acceptedIds);
+                if (declinedIds != null) allUserIds.addAll(declinedIds);
+                if (cancelledIds != null) allUserIds.addAll(cancelledIds);
+                
+                Log.d(TAG, "Found " + allUserIds.size() + " unique users to clean up references for");
+                
+                // Create event reference for removing from JoinedEvents
+                com.google.firebase.firestore.DocumentReference eventRef = 
+                    firestore.collection("Events").document(eventId);
+                
+                // Send notifications BEFORE deleting (so we can still use eventId)
+                String notificationTitle = "Event Cancelled";
+                String notificationMessage = "The event \"" + eventTitle + "\" has been cancelled by the organizer.";
+                
+                Log.d(TAG, "Sending cancellation notifications to all signed-up entrants");
+                notificationController.sendToAllSignedUpEntrants(eventId, notificationTitle, notificationMessage);
+                
+                // Send notification to the organizer
+                Log.d(TAG, "Sending cancellation notification to organizer");
+                notificationController.sendToOrganizer(eventId, notificationTitle, 
+                    "You have cancelled the event \"" + eventTitle + "\". All participants have been notified.");
+                
+                // Remove event reference from all users' JoinedEvents arrays
+                if (!allUserIds.isEmpty()) {
+                    final int[] completed = {0};
+                    final int total = allUserIds.size();
+                    
+                    for (String userId : allUserIds) {
+                        firestore.collection("users").document(userId)
+                            .update("JoinedEvents", com.google.firebase.firestore.FieldValue.arrayRemove(eventRef))
+                            .addOnSuccessListener(aVoid -> {
+                                completed[0]++;
+                                Log.d(TAG, "Removed event from user's JoinedEvents: " + userId + " (" + completed[0] + "/" + total + ")");
+                                
+                                if (completed[0] >= total) {
+                                    // All user references cleaned up, now delete the event
+                                    deleteEventDocument();
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                completed[0]++;
+                                Log.w(TAG, "Could not remove event from user's JoinedEvents: " + userId + " (may not exist): " + e.getMessage());
+                                
+                                if (completed[0] >= total) {
+                                    // All user references processed (even if some failed), now delete the event
+                                    deleteEventDocument();
+                                }
+                            });
+                    }
+                } else {
+                    // No users to clean up, delete event directly
+                    deleteEventDocument();
+                }
             })
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Error loading event document: " + eventId, e);
                 Toast.makeText(this, "Error loading event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            });
+    }
+    
+    /**
+     * Deletes the event document from Firestore.
+     * Called after all user references have been cleaned up.
+     */
+    private void deleteEventDocument() {
+        firestore.collection("Events").document(eventId)
+            .delete()
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Event successfully deleted: " + eventId);
+                Toast.makeText(this, "Event cancelled and deleted successfully. All participants have been notified.", Toast.LENGTH_LONG).show();
+                finish();
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error deleting event: " + eventId, e);
+                String errorMessage = "Error deleting event";
+                if (e.getMessage() != null) {
+                    errorMessage += ": " + e.getMessage();
+                }
+                Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
             });
     }
     

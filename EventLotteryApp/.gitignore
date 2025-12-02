@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Documentation and test guide files
+*.md
+!README.md

@@ -108,55 +108,83 @@
                 android:layout_marginBottom="16dp" />
 
             <!-- Filter Buttons -->
-            <LinearLayout
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="16dp"
+                android:scrollbars="none"
+                android:fadeScrollbars="false">
 
-                <!-- Accepted Button -->
-                <Button
-                    android:id="@+id/filter_accepted_button"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Accepted"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/button_background"
-                    android:layout_marginEnd="8dp"
-                    android:drawableStart="@drawable/ic_check_circle"
-                    android:drawablePadding="8dp"
-                    android:drawableTint="@color/white" />
+                    android:orientation="horizontal"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp">
 
-                <!-- Declined Button -->
-                <Button
-                    android:id="@+id/filter_declined_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Declined"
-                    android:textColor="@color/black"
-                    android:background="@drawable/export_csv_button_bg"
-                    android:backgroundTint="@null"
-                    android:layout_marginEnd="8dp"
-                    android:drawableStart="@drawable/ic_declined"
-                    android:drawablePadding="8dp"
-                    android:drawableTint="@color/black" />
+                    <!-- Accepted Button -->
+                    <Button
+                        android:id="@+id/filter_accepted_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Accepted"
+                        android:textColor="@color/white"
+                        android:backgroundTint="@color/button_background"
+                        android:layout_marginEnd="8dp"
+                        android:drawableStart="@drawable/ic_check_circle"
+                        android:drawablePadding="8dp"
+                        android:drawableTint="@color/white"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp" />
 
-                <!-- Cancelled Button -->
-                <Button
-                    android:id="@+id/filter_cancelled_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Cancelled"
-                    android:textColor="@color/black"
-                    android:background="@drawable/export_csv_button_bg"
-                    android:backgroundTint="@null"
-                    android:drawableStart="@drawable/ic_close_circle"
-                    android:drawablePadding="8dp"
-                    android:drawableTint="@color/black" />
-            </LinearLayout>
+                    <!-- Drawn Button -->
+                    <Button
+                        android:id="@+id/filter_drawn_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Drawn"
+                        android:textColor="@color/black"
+                        android:background="@drawable/export_csv_button_bg"
+                        android:backgroundTint="@null"
+                        android:layout_marginEnd="8dp"
+                        android:drawableStart="@drawable/ic_check_circle"
+                        android:drawablePadding="8dp"
+                        android:drawableTint="@color/black"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp" />
+
+                    <!-- Declined Button -->
+                    <Button
+                        android:id="@+id/filter_declined_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Declined"
+                        android:textColor="@color/black"
+                        android:background="@drawable/export_csv_button_bg"
+                        android:backgroundTint="@null"
+                        android:layout_marginEnd="8dp"
+                        android:drawableStart="@drawable/ic_declined"
+                        android:drawablePadding="8dp"
+                        android:drawableTint="@color/black"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp" />
+
+                    <!-- Cancelled Button -->
+                    <Button
+                        android:id="@+id/filter_cancelled_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cancelled"
+                        android:textColor="@color/black"
+                        android:background="@drawable/export_csv_button_bg"
+                        android:backgroundTint="@null"
+                        android:drawableStart="@drawable/ic_close_circle"
+                        android:drawablePadding="8dp"
+                        android:drawableTint="@color/black"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp" />
+                </LinearLayout>
+            </HorizontalScrollView>
 
             <!-- Participants Heading -->
             <TextView

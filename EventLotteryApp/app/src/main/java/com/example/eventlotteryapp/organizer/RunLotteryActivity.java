@@ -220,34 +220,47 @@ public class RunLotteryActivity extends AppCompatActivity {
                 
                 List<String> newlySelected = shuffled.subList(0, actualDrawCount);
                 
+                // Get accepted, declined, and cancelled lists to clean them up
+                List<String> acceptedEntrants = (List<String>) document.get("acceptedEntrantIds");
+                List<String> declinedEntrants = (List<String>) document.get("declinedEntrantIds");
+                List<String> cancelledEntrants = (List<String>) document.get("cancelledEntrantIds");
+                
+                if (acceptedEntrants == null) acceptedEntrants = new ArrayList<>();
+                if (declinedEntrants == null) declinedEntrants = new ArrayList<>();
+                if (cancelledEntrants == null) cancelledEntrants = new ArrayList<>();
+                
+                // Remove newly selected users from accepted/declined/cancelled lists
+                // They need to accept again, so start fresh
+                for (String userId : newlySelected) {
+                    acceptedEntrants.remove(userId);
+                    declinedEntrants.remove(userId);
+                    cancelledEntrants.remove(userId);
+                }
+                
                 // Update Firestore - add newly selected first
                 selectedEntrants.addAll(newlySelected);
                 waitingList.removeAll(newlySelected);
                 
                 // If this is a replacement draw, remove the original participant AFTER drawing
                 if (replacementForEntrantId != null && !replacementForEntrantId.isEmpty()) {
-                    // Remove from selected, cancelled, or declined lists
+                    // Remove replacement participant from all lists
                     selectedEntrants.remove(replacementForEntrantId);
-                    List<String> cancelledIds = (List<String>) document.get("cancelledEntrantIds");
-                    List<String> declinedIds = (List<String>) document.get("declinedEntrantIds");
-                    
-                    if (cancelledIds == null) cancelledIds = new ArrayList<>();
-                    if (declinedIds == null) declinedIds = new ArrayList<>();
-                    
-                    cancelledIds.remove(replacementForEntrantId);
-                    declinedIds.remove(replacementForEntrantId);
+                    cancelledEntrants.remove(replacementForEntrantId);
+                    declinedEntrants.remove(replacementForEntrantId);
+                    acceptedEntrants.remove(replacementForEntrantId);
                     
                     // Add back to waiting list if not already there
                     if (!waitingList.contains(replacementForEntrantId)) {
                         waitingList.add(replacementForEntrantId);
                     }
                     
-                    // Update with cancelled and declined lists too
+                    // Update with all lists
                     firestore.collection("Events").document(eventId)
                         .update("selectedEntrantIds", selectedEntrants, 
                                 "waitingListEntrantIds", waitingList,
-                                "cancelledEntrantIds", cancelledIds,
-                                "declinedEntrantIds", declinedIds)
+                                "cancelledEntrantIds", cancelledEntrants,
+                                "declinedEntrantIds", declinedEntrants,
+                                "acceptedEntrantIds", acceptedEntrants)
                         .addOnSuccessListener(aVoid -> {
                             String message = "Replacement drawn. " + actualDrawCount + " participant(s) selected.";
                             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
@@ -281,7 +294,11 @@ public class RunLotteryActivity extends AppCompatActivity {
                 } else {
                     // Normal lottery draw (not a replacement)
                     firestore.collection("Events").document(eventId)
-                        .update("selectedEntrantIds", selectedEntrants, "waitingListEntrantIds", waitingList)
+                        .update("selectedEntrantIds", selectedEntrants, 
+                                "waitingListEntrantIds", waitingList,
+                                "acceptedEntrantIds", acceptedEntrants,
+                                "declinedEntrantIds", declinedEntrants,
+                                "cancelledEntrantIds", cancelledEntrants)
                         .addOnSuccessListener(aVoid -> {
                             String message = "Lottery draw completed. " + actualDrawCount + " participant(s) selected.";
                             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
