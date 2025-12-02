@@ -46,7 +46,7 @@ public class Notification implements Comparable<Notification>{
         this.timeStamp = timeStamp;
         this.type = type;
         this.message = message;
-        this.eventName = "Unknown";
+        this.eventName = "You have a notification!";
         this.eventId = null;
         this.documentId = null;
     }
@@ -84,19 +84,50 @@ public class Notification implements Comparable<Notification>{
         // Store the document ID for deletion
         notification.setDocumentId(doc.getId());
 
+        // Try to get EventId as DocumentReference first
         if (eventRef != null) {
             // Store the eventId from the DocumentReference
             notification.setEventId(eventRef.getId());
             eventRef.get().addOnSuccessListener(eventSnap -> {
                 if (eventSnap.exists()) {
-                    notification.setEventName(eventSnap.getString("Name"));
+                    String eventNameRaw = eventSnap.getString("Name");
+                    if (eventNameRaw == null || eventNameRaw.isEmpty()) {
+                        eventNameRaw = eventSnap.getString("title");
+                    }
+                    if (eventNameRaw != null && !eventNameRaw.isEmpty()) {
+                        notification.setEventName(eventNameRaw);
+                    }
                 }
                 callback.onNotificationLoaded(notification);
             }).addOnFailureListener(e -> {
                 callback.onNotificationLoaded(notification);
             });
         } else {
-            callback.onNotificationLoaded(notification);
+            // Fallback: try to get EventId as a string
+            String eventIdString = doc.getString("EventId");
+            if (eventIdString != null && !eventIdString.isEmpty()) {
+                notification.setEventId(eventIdString);
+                // Try to load event name from the event ID
+                FirebaseFirestore.getInstance().collection("Events").document(eventIdString)
+                        .get()
+                        .addOnSuccessListener(eventSnap -> {
+                            if (eventSnap.exists()) {
+                                String eventNameRaw = eventSnap.getString("Name");
+                                if (eventNameRaw == null || eventNameRaw.isEmpty()) {
+                                    eventNameRaw = eventSnap.getString("title");
+                                }
+                                if (eventNameRaw != null && !eventNameRaw.isEmpty()) {
+                                    notification.setEventName(eventNameRaw);
+                                }
+                            }
+                            callback.onNotificationLoaded(notification);
+                        })
+                        .addOnFailureListener(e -> {
+                            callback.onNotificationLoaded(notification);
+                        });
+            } else {
+                callback.onNotificationLoaded(notification);
+            }
         }
     }
 
